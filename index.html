@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>도째비 테스트 · 100×100 적용 시안</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<style>
+  :root{
+    --ink:#1A1D24; --sub:#5B6270; --line:#E6E8EC; --line2:#D5D9E0; --bg:#F5F6F8;
+    --night:#1F2A44; --fire:#E8590C; --cta:#C2410C;
+    --sea:#1F6FEB; --food:#D9480F; --see:#2B8A3E; --stay:#5F3DC4; --near:#8A919E;
+    --badge-bg:#EAF1FE; --badge-ink:#1A4FB8; --stay-bg:#F1EEFB; --stay-ink:#3B2A7A;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%;background:#E9EBEF}
+  body{font-family:Pretendard,'Noto Sans KR',system-ui,-apple-system,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+  button{font-family:inherit;cursor:pointer}
+  .app{position:relative;max-width:430px;height:100dvh;margin:0 auto;background:var(--bg);overflow:hidden;box-shadow:0 0 0 1px rgba(0,0,0,.04)}
+  .screen{position:absolute;inset:0;display:none;flex-direction:column}
+  .screen.on{display:flex}
+
+  /* 공통 */
+  .hd{height:60px;flex-shrink:0;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;padding:0 16px;position:relative;z-index:3}
+  .hd-t{display:flex;align-items:center;gap:8px;font-size:17px;font-weight:700}
+  .pill{display:flex;align-items:center;gap:6px;height:44px;padding:0 14px;border-radius:22px;font-size:14px;font-weight:600;border:1px solid var(--line2);background:#fff;color:var(--ink)}
+  .pill.dark{background:var(--night);color:#fff;border-color:var(--night)}
+  .badge{display:inline-flex;align-items:center;gap:4px;height:24px;padding:0 8px;border-radius:6px;background:var(--badge-bg);color:var(--badge-ink);font-size:12px;font-weight:700;white-space:nowrap}
+  .badge.sm{height:20px;padding:0 6px;font-size:11px;border-radius:5px}
+  .drop{width:32px;height:32px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:2px solid #fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 4px rgba(0,0,0,.2)}
+  .drop span{transform:rotate(45deg);color:#fff;font-size:14px;font-weight:800}
+  .cta{height:52px;width:100%;border-radius:14px;border:none;background:var(--cta);color:#fff;font-size:16px;font-weight:700}
+  .btn{height:44px;padding:0 14px;border-radius:12px;border:1px solid var(--line2);background:#fff;font-size:14px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:6px}
+  .btn.icon{width:44px;padding:0;justify-content:center}
+  .btn.icon.on{background:var(--night);border-color:var(--night)}
+  .btn.icon.on svg{stroke:#fff}
+  .dot{width:10px;height:10px;border-radius:5px;flex-shrink:0;display:inline-block}
+
+  /* ① 오늘 코스 */
+  .meta{padding:12px 16px 4px;display:flex;justify-content:space-between;font-size:14px;color:var(--sub)}
+  .list{flex:1;overflow-y:auto;padding:8px 16px 170px;display:flex;flex-direction:column;gap:12px}
+  .card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 1px 3px rgba(20,24,36,.08);flex-shrink:0}
+  .ph{height:150px;position:relative;display:flex;align-items:center;justify-content:center;font-size:13px}
+  .ph .drop{position:absolute;left:12px;top:12px}
+  .cb{padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px}
+  .cm{font-size:13px;color:var(--sub)}
+  .ct{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .ct h2{margin:0;font-size:19px;font-weight:700}
+  .row{display:flex;gap:8px}
+  .bottom{position:absolute;left:0;right:0;bottom:0;padding:12px 16px calc(16px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px;z-index:2}
+  .stay{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;background:var(--stay-bg);font-size:13px;color:var(--stay-ink);line-height:1.4;border:none;text-align:left;width:100%}
+
+  /* ② 지도 */
+  .map{position:relative;height:500px;flex-shrink:0;background:#EEF1EA;overflow:hidden}
+  .sea{position:absolute;left:268px;top:-60px;width:400px;height:640px;background:#CFE3F5;transform:rotate(9deg)}
+  .road{position:absolute;left:196px;top:0;width:6px;height:500px;background:#F3D58A;transform:rotate(6deg)}
+  .mapnote{position:absolute;left:12px;top:12px;height:28px;padding:0 10px;border-radius:8px;background:rgba(255,255,255,.9);font-size:12px;color:var(--sub);display:flex;align-items:center}
+  .pin{position:absolute;border:none;background:none;padding:0}
+  .pin .drop{width:34px;height:34px}
+  .pin .drop span{font-size:15px}
+  .lbl{position:absolute;height:24px;padding:0 8px;border-radius:6px;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.15);font-size:12px;font-weight:700;display:flex;align-items:center;white-space:nowrap}
+  .nd{position:absolute;width:12px;height:12px;border-radius:6px;background:var(--near);border:2px solid #fff;padding:0}
+  .nd.show{background:var(--ink)}
+  .me{position:absolute;right:16px;bottom:60px;width:44px;height:44px;border-radius:22px;border:none;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.18);display:flex;align-items:center;justify-content:center}
+  .sheet{position:absolute;left:0;right:0;top:530px;bottom:0;background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 16px rgba(20,24,36,.12);padding-top:10px;display:flex;flex-direction:column;gap:12px;z-index:2;transition:top .25s ease}
+  .sheet.up{top:120px}
+  .grab{width:100%;height:24px;border:none;background:none;display:flex;justify-content:center;align-items:center;padding:0}
+  .grab i{width:40px;height:5px;border-radius:3px;background:var(--line2);display:block}
+  .sh-t{padding:0 16px;display:flex;align-items:baseline;justify-content:space-between}
+  .sh-t h2{margin:0;font-size:18px}
+  .mini{display:flex;gap:10px;padding:0 16px 2px;overflow-x:auto;scrollbar-width:none}
+  .mini::-webkit-scrollbar{display:none}
+  .mc{width:150px;flex-shrink:0;border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:6px;background:#fff;text-align:left}
+  .mc.sel{border-color:var(--night);box-shadow:0 0 0 1px var(--night)}
+  .num{width:22px;height:22px;border-radius:11px;color:#fff;font-size:12px;font-weight:800;display:inline-flex;align-items:center;justify-content:center}
+  .legend{padding:0 16px;display:flex;gap:12px;flex-wrap:wrap;font-size:12px;color:var(--sub)}
+  .legend span{display:flex;align-items:center;gap:5px}
+  .toast{position:absolute;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:#fff;font-size:13px;padding:10px 14px;border-radius:10px;opacity:0;transition:opacity .2s;pointer-events:none;white-space:nowrap;z-index:20}
+  .toast.on{opacity:1}
+
+  /* ③ 검색 */
+  .dim{position:absolute;inset:0;background:rgba(20,24,36,.55);z-index:10;display:none}
+  .dim.on{display:block}
+  .ssheet{position:absolute;left:0;right:0;top:72px;bottom:0;background:#fff;border-radius:20px 20px 0 0;padding:10px 16px 0;display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+  .search{display:flex;align-items:center;gap:8px;height:48px;padding:0 14px;border-radius:12px;background:#F1F3F6}
+  .search input{flex:1;border:none;background:transparent;font-family:inherit;font-size:15px;color:var(--ink);outline:none}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{height:40px;padding:0 14px;border-radius:20px;border:1px solid var(--line2);background:#fff;color:var(--ink);font-size:14px;font-weight:600;display:flex;align-items:center;gap:5px}
+  .chip.night{background:var(--stay-bg);border-color:#C9BDF2;color:var(--stay-ink);font-weight:700}
+  .chip.on{background:var(--night);border-color:var(--night);color:#fff}
+  .chip.on svg{stroke:#fff}
+  .res{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid #EEF0F3}
+  .th{width:64px;height:64px;border-radius:12px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px}
+  .ri{flex:1;display:flex;flex-direction:column;gap:4px;min-width:0}
+  .ri b{font-size:16px}
+  .ri small{font-size:13px;color:var(--sub);display:flex;align-items:center;gap:5px}
+  .ri small .dot{width:8px;height:8px}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .test{font-size:11px;font-weight:600;color:var(--sub);background:#F1F3F6;padding:2px 7px;border-radius:9px}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ① 오늘 코스 -->
+  <section class="screen on" id="s-course" aria-label="오늘 코스">
+    <header class="hd">
+      <div class="hd-t">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1.8 3.2 5.5 5.6 5.5 10.2A5.5 5.5 0 0 1 12 18a5.5 5.5 0 0 1-5.5-5.8C6.5 9.4 8.3 8 9 6c.9 1.6 1.6 2.3 2.4 2.6C11.2 6.4 11.3 4.2 12 2z" fill="#E8590C"/><circle cx="12" cy="13.5" r="2.4" fill="#FFD8A8"/></svg>
+        오늘 코스 <span class="test">테스트</span>
+      </div>
+      <button class="pill dark" data-go="s-map">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2-6-2z"/><path d="M9 4v14M15 6v14"/></svg>
+        지도로 보기
+      </button>
+    </header>
+    <div class="meta"><span>동해역 10:02 도착 · 돌아가는 기차 18:40</span><span>4곳</span></div>
+
+    <div class="list">
+      <article class="card">
+        <div class="ph" style="background:#DCE3D6;color:#4A5A44">[사진 · 논골담길 벽화 골목]<div class="drop" style="background:var(--see)"><span>1</span></div></div>
+        <div class="cb">
+          <div><div class="cm">10:30 · 볼거리 · 1시간</div><div class="ct"><h2>묵호 논골담길</h2></div></div>
+          <div class="row">
+            <button class="btn" data-near="1"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg>근처 더 보기 <span style="color:var(--sub);font-weight:500">4곳</span></button>
+            <button class="btn icon" data-pin aria-label="이 장소 고정" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1D24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6z"/></svg></button>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ph" style="background:#F3DDCC;color:#7A4A2A">[사진 · 북평민속시장 장터]<div class="drop" style="background:var(--food)"><span>2</span></div></div>
+        <div class="cb">
+          <div><div class="cm">12:30 · 먹거리·시장 · 점심</div>
+            <div class="ct"><h2>동해 북평민속시장</h2><span class="badge"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#1A4FB8" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>100×100 선정</span></div></div>
+          <div class="row">
+            <button class="btn" data-near="2"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg>근처 더 보기 <span style="color:var(--sub);font-weight:500">3곳</span></button>
+            <button class="btn icon" data-pin aria-label="이 장소 고정" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1D24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6z"/></svg></button>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ph" style="background:#D3E2F5;color:#2C4A72">[사진 · 추암 촛대바위]<div class="drop" style="background:var(--sea)"><span>3</span></div></div>
+        <div class="cb">
+          <div><div class="cm">14:20 · 바다·자연 · 1시간 30분</div><div class="ct"><h2>추암 촛대바위</h2></div></div>
+          <div class="row">
+            <button class="btn" data-near="3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg>근처 더 보기 <span style="color:var(--sub);font-weight:500">2곳</span></button>
+            <button class="btn icon" data-pin aria-label="이 장소 고정" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1D24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6z"/></svg></button>
+          </div>
+        </div>
+      </article>
+
+      <article class="card">
+        <div class="ph" style="background:#DCE3D6;color:#4A5A44">[사진 · 천곡 황금박쥐동굴]<div class="drop" style="background:var(--see)"><span>4</span></div></div>
+        <div class="cb">
+          <div><div class="cm">16:20 · 볼거리 · 실내 · 1시간</div><div class="ct"><h2>천곡 황금박쥐동굴</h2></div></div>
+          <div class="row">
+            <button class="btn" data-near="4"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg>근처 더 보기 <span style="color:var(--sub);font-weight:500">1곳</span></button>
+            <button class="btn icon" data-pin aria-label="이 장소 고정" aria-pressed="false"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1A1D24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 17v5"/><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3-1-6z"/></svg></button>
+          </div>
+        </div>
+      </article>
+    </div>
+
+    <div class="bottom">
+      <button class="stay" data-go="s-map"><i class="dot" style="background:var(--stay)"></i><span>하루 더 머물면 <b>망상 오토캠핑장</b>에서 저녁 바다까지 볼 수 있어요</span></button>
+      <button class="cta" data-open-search>코스 고치기</button>
+    </div>
+  </section>
+
+  <!-- ② 지도로 보기 -->
+  <section class="screen" id="s-map" aria-label="코스 지도" style="background:#fff">
+    <header class="hd">
+      <div class="hd-t">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c1.8 3.2 5.5 5.6 5.5 10.2A5.5 5.5 0 0 1 12 18a5.5 5.5 0 0 1-5.5-5.8C6.5 9.4 8.3 8 9 6c.9 1.6 1.6 2.3 2.4 2.6C11.2 6.4 11.3 4.2 12 2z" fill="#E8590C"/><circle cx="12" cy="13.5" r="2.4" fill="#FFD8A8"/></svg>
+        코스 지도 <span class="test">테스트</span>
+      </div>
+      <button class="pill" data-go="s-course">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1A1D24" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        목록으로
+      </button>
+    </header>
+
+    <div class="map" id="map">
+      <div class="sea"></div><div class="road"></div>
+      <div style="position:absolute;left:330px;top:230px;font-size:12px;color:#4A6B8F;font-weight:500">동해</div>
+      <div class="mapnote">[카카오맵 자리 · 테스트용 그림]</div>
+      <svg width="390" height="500" viewBox="0 0 390 500" style="position:absolute;left:0;top:0" aria-hidden="true">
+        <polyline points="252,196 214,312 270,404 168,286" fill="none" stroke="#1F2A44" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity=".55"/>
+        <polyline points="168,286 226,92" fill="none" stroke="#5F3DC4" stroke-width="2.5" stroke-dasharray="6 6" stroke-linecap="round" opacity=".7"/>
+      </svg>
+
+      <!-- 근처 추천 점 (data-of = 어느 코스 장소 근처인지) -->
+      <button class="nd" data-of="1" style="left:236px;top:150px" aria-label="근처 추천 장소"></button>
+      <button class="nd" data-of="1" style="left:274px;top:220px" aria-label="근처 추천 장소"></button>
+      <button class="nd" data-of="1" style="left:262px;top:236px" aria-label="근처 추천 장소"></button>
+      <button class="nd" data-of="1" style="left:280px;top:176px" aria-label="근처 추천 장소"></button>
+      <button class="nd" data-of="2" style="left:236px;top:340px" aria-label="근처 추천 장소"></button>
+      <button class="nd" data-of="2" style="left:180px;top:330px" aria-label="근처 추천 장소"></button>
+      <button class="nd" data-of="2" style="left:226px;top:262px" aria-label="근처 추천 장소"></button>
+      <button class="nd" data-of="3" style="left:292px;top:430px" aria-label="근처 추천 장소"></button>
+      <button class="nd" data-of="3" style="left:300px;top:380px" aria-label="근처 추천 장소"></button>
+      <button class="nd" data-of="4" style="left:140px;top:262px" aria-label="근처 추천 장소"></button>
+
+      <button class="pin" data-sel="1" style="left:236px;top:160px" aria-label="1번 묵호 논골담길"><div class="drop" style="background:var(--see)"><span>1</span></div></button>
+      <div class="lbl" style="left:160px;top:168px">논골담길</div>
+      <button class="pin" data-sel="2" style="left:198px;top:276px" aria-label="2번 북평민속시장"><div class="drop" style="background:var(--food)"><span>2</span></div></button>
+      <div class="lbl" style="left:238px;top:284px">북평민속시장</div>
+      <button class="pin" data-sel="3" style="left:254px;top:368px" aria-label="3번 추암 촛대바위"><div class="drop" style="background:var(--sea)"><span>3</span></div></button>
+      <div class="lbl" style="left:182px;top:412px">추암 촛대바위</div>
+      <button class="pin" data-sel="4" style="left:152px;top:250px" aria-label="4번 천곡 황금박쥐동굴"><div class="drop" style="background:var(--see)"><span>4</span></div></button>
+      <div class="lbl" style="left:40px;top:222px">천곡 황금박쥐동굴</div>
+      <button class="pin" data-stay style="left:210px;top:56px" aria-label="1박 제안 망상 오토캠핑장"><div class="drop" style="background:#fff;border:2px dashed var(--stay)"><span style="color:var(--stay)">+</span></div></button>
+      <div class="lbl" style="left:92px;top:62px;background:var(--stay-bg);border:1px solid #C9BDF2;color:var(--stay-ink);box-shadow:none">1박하면 · 망상</div>
+
+      <button class="me" aria-label="내 위치"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A1D24" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg></button>
+    </div>
+
+    <div class="sheet" id="sheet">
+      <button class="grab" id="grab" aria-label="목록 창 올리기/내리기"><i></i></button>
+      <div class="sh-t"><h2>오늘 코스 4곳</h2><span class="cm">이동 합계 52분</span></div>
+      <div class="mini" id="mini">
+        <button class="mc" data-sel="1"><span style="display:flex;align-items:center;gap:6px"><i class="num" style="background:var(--see)">1</i><span class="cm" style="font-size:12px">10:30</span></span><b style="font-size:15px">묵호 논골담길</b></button>
+        <button class="mc" data-sel="2"><span style="display:flex;align-items:center;gap:6px"><i class="num" style="background:var(--food)">2</i><span class="cm" style="font-size:12px">12:30</span></span><b style="font-size:15px">북평민속시장</b><span class="badge sm" style="align-self:flex-start">100×100 선정</span></button>
+        <button class="mc" data-sel="3"><span style="display:flex;align-items:center;gap:6px"><i class="num" style="background:var(--sea)">3</i><span class="cm" style="font-size:12px">14:20</span></span><b style="font-size:15px">추암 촛대바위</b></button>
+        <button class="mc" data-sel="4"><span style="display:flex;align-items:center;gap:6px"><i class="num" style="background:var(--see)">4</i><span class="cm" style="font-size:12px">16:20</span></span><b style="font-size:15px">천곡 황금박쥐동굴</b></button>
+      </div>
+      <div class="legend">
+        <span><i class="dot" style="background:var(--sea)"></i>바다·자연</span>
+        <span><i class="dot" style="background:var(--food)"></i>먹거리·시장</span>
+        <span><i class="dot" style="background:var(--see)"></i>볼거리</span>
+        <span><i class="dot" style="background:var(--stay)"></i>쉼·숙박</span>
+        <span><i class="dot" style="background:var(--near);width:8px;height:8px"></i>근처 추천</span>
+      </div>
+      <div style="padding:0 16px calc(16px + env(safe-area-inset-bottom));margin-top:auto"><button class="cta" data-open-search>코스 고치기</button></div>
+    </div>
+  </section>
+  <div class="toast" id="toast"></div>
+
+  <!-- ③ 어디를 넣을까요? -->
+  <div class="dim" id="dim">
+    <div class="ssheet" role="dialog" aria-modal="true" aria-labelledby="st">
+      <div style="width:40px;height:5px;border-radius:3px;background:var(--line2);align-self:center;flex-shrink:0"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <h2 id="st" style="margin:0;font-size:20px">어디를 넣을까요?</h2>
+        <button id="close" aria-label="닫기" style="width:44px;height:44px;border:none;background:transparent;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#1A1D24" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+      </div>
+      <label class="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#5B6270" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <span class="sr">장소 이름으로 찾기</span>
+        <input type="text" id="q" placeholder="장소 이름으로 찾기">
+      </label>
+      <div class="chips" id="chips">
+        <button class="chip on" data-f="near"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#1A1D24" stroke-width="2.2" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg>내 주변</button>
+        <button class="chip" data-f="sea">바다</button>
+        <button class="chip" data-f="food">먹거리</button>
+        <button class="chip" data-f="indoor">실내</button>
+        <button class="chip night" data-f="night"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#3B2A7A" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>밤에 좋은 곳</button>
+      </div>
+      <div class="cm" id="cap">지금 위치에서 가까운 순 · 거리는 예시</div>
+      <div id="results"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var $ = function(s,el){return (el||document).querySelector(s)};
+  var $$ = function(s,el){return Array.prototype.slice.call((el||document).querySelectorAll(s))};
+
+  function go(id){
+    $$('.screen').forEach(function(s){s.classList.toggle('on', s.id===id)});
+    closeSearch();
+  }
+  $$('[data-go]').forEach(function(b){b.addEventListener('click',function(){go(b.getAttribute('data-go'))})});
+
+  // 고정 버튼 토글
+  $$('[data-pin]').forEach(function(b){b.addEventListener('click',function(){
+    var on = b.classList.toggle('on'); b.setAttribute('aria-pressed', on?'true':'false');
+    toast(on?'고정했어요. 코스를 다시 짜도 그대로 둬요':'고정을 풀었어요');
+  })});
+
+  // 근처 더 보기 → 지도에서 해당 장소 근처 점 강조
+  $$('[data-near]').forEach(function(b){b.addEventListener('click',function(){
+    go('s-map'); select(b.getAttribute('data-near'), true);
+  })});
+
+  function select(n, near){
+    $$('.mc').forEach(function(c){c.classList.toggle('sel', c.getAttribute('data-sel')===n)});
+    $$('.nd').forEach(function(d){d.classList.toggle('show', !!near && d.getAttribute('data-of')===n)});
+    var c = $('.mc[data-sel="'+n+'"]'); if(c && c.scrollIntoView) c.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+    if(near){ var k=$$('.nd[data-of="'+n+'"]').length; toast(n+'번 장소 근처 추천 '+k+'곳을 진하게 표시했어요'); }
+  }
+  $$('[data-sel]').forEach(function(b){b.addEventListener('click',function(){select(b.getAttribute('data-sel'), true)})});
+  $$('.nd').forEach(function(d){d.addEventListener('click',function(){toast('근처 추천 장소 · 실제 서비스에선 이름과 사진이 떠요')})});
+  var stayPin = $('[data-stay]'); if(stayPin) stayPin.addEventListener('click',function(){toast('하루 더 머물면 망상 오토캠핑장 (100×100 선정)')});
+  $('.me').addEventListener('click',function(){toast('테스트 시안이라 내 위치는 표시하지 않아요')});
+
+  // 목록 창 올리기/내리기
+  $('#grab').addEventListener('click',function(){$('#sheet').classList.toggle('up')});
+
+  var tt;
+  function toast(m){var t=$('#toast'); if(!t) return; t.textContent=m; t.classList.add('on'); clearTimeout(tt); tt=setTimeout(function(){t.classList.remove('on')},1800)}
+
+  // 검색 창
+  var PLACES = [
+    {n:'도째비골 스카이밸리', c:'볼거리', col:'var(--see)', d:0.8, bg:'#DCE3D6', fg:'#4A5A44', tags:['near']},
+    {n:'묵호항', c:'바다·자연', col:'var(--sea)', d:1.2, bg:'#D3E2F5', fg:'#2C4A72', tags:['near','sea']},
+    {n:'동해 망상 오토캠핑장', c:'쉼·숙박', col:'var(--stay)', d:2.1, bg:'#E4DDF6', fg:'#3B2A7A', tags:['near','sea','night'], b:true},
+    {n:'동해휴게소', c:'쉼·숙박', col:'var(--stay)', d:3.4, bg:'#E9ECEF', fg:'#4A505C', tags:['near'], b:true},
+    {n:'동해 북평민속시장', c:'먹거리·시장', col:'var(--food)', d:4.6, bg:'#F3DDCC', fg:'#7A4A2A', tags:['food'], b:true},
+    {n:'천곡 황금박쥐동굴', c:'볼거리 · 실내', col:'var(--see)', d:3.9, bg:'#DCE3D6', fg:'#4A5A44', tags:['indoor']},
+    {n:'추암 촛대바위', c:'바다·자연', col:'var(--sea)', d:6.1, bg:'#D3E2F5', fg:'#2C4A72', tags:['sea']}
+  ];
+  var CAP = {near:'지금 위치에서 가까운 순', sea:'바다 · 가까운 순', food:'먹거리 · 가까운 순', indoor:'실내 · 비 오는 날에도 좋아요', night:'밤에 좋은 곳 · 하루 더 머물면'};
+  var filter = 'near';
+
+  function render(){
+    var q = $('#q').value.trim();
+    var list = PLACES.filter(function(p){ return q ? p.n.indexOf(q)>-1 : p.tags.indexOf(filter)>-1 })
+                     .sort(function(a,b){return a.d-b.d});
+    $('#cap').textContent = (q ? '"'+q+'" 검색 결과' : CAP[filter]) + ' · 거리는 예시';
+    var h = list.map(function(p){
+      return '<div class="res"><div class="th" style="background:'+p.bg+';color:'+p.fg+'">[사진]</div>'+
+        '<div class="ri"><b>'+p.n+'</b><small><i class="dot" style="background:'+p.col+'"></i>'+p.c+' · '+p.d+'km</small>'+
+        (p.b?'<span class="badge sm" style="align-self:flex-start">100×100 선정</span>':'')+'</div>'+
+        '<button class="btn" data-add="'+p.n+'">넣기</button></div>';
+    }).join('');
+    $('#results').innerHTML = h || '<p class="cm" style="padding:24px 0;text-align:center">맞는 장소가 없어요</p>';
+    $$('[data-add]').forEach(function(b){b.addEventListener('click',function(){
+      b.textContent='넣었어요'; b.disabled=true; b.style.color='var(--sub)';
+    })});
+  }
+  $$('#chips .chip').forEach(function(c){c.addEventListener('click',function(){
+    filter = c.getAttribute('data-f'); $('#q').value='';
+    $$('#chips .chip').forEach(function(x){x.classList.toggle('on', x===c)});
+    render();
+  })});
+  $('#q').addEventListener('input', render);
+
+  function openSearch(){ $('#dim').classList.add('on'); render(); }
+  function closeSearch(){ $('#dim').classList.remove('on'); }
+  $$('[data-open-search]').forEach(function(b){b.addEventListener('click',openSearch)});
+  $('#close').addEventListener('click',closeSearch);
+  $('#dim').addEventListener('click',function(e){ if(e.target.id==='dim') closeSearch(); });
+})();
+</script>
+</body>
+</html>
