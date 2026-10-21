@@ -285,6 +285,10 @@
     $('outBadges').innerHTML = '<span class="bdg trip' + (n > 1 ? ' on' : '') + '">' + P.tripLabel(n) + '</span>' + (c.backDate !== c.date ? dateBadges(c.backDate, false) : '');
     Array.prototype.forEach.call(document.querySelectorAll('[data-how]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-how') === c.how ? 'true' : 'false'); });
     Array.prototype.forEach.call(document.querySelectorAll('[data-bhow]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-bhow') === c.backHow ? 'true' : 'false'); });
+    // 사용자 관점 단순화: 자가용으로 왔으면 돌아갈 때도 자가용만(기차·버스 숨김) · 대중교통으로 왔으면 자가용은 숨김(기차·버스만)
+    Array.prototype.forEach.call(document.querySelectorAll('#bhowSeg [data-bhow]'), function (b) { b.hidden = c.how === 'car' ? b.getAttribute('data-bhow') !== 'car' : b.getAttribute('data-bhow') === 'car'; });
+    $('bhowSeg').hidden = c.how === 'car'; // 하나만 남으면(자가용) 고를 게 없으니 묶음째 숨기고 글로만 알림
+    var bhowNote = $('bhowNote'); if (bhowNote) { bhowNote.hidden = c.how !== 'car'; bhowNote.textContent = c.how === 'car' ? '자가용으로 다니니 돌아갈 때도 자가용이에요.' : ''; }
     var eff = c.backHow === 'car' && c.noLimit ? 20 * 60 : c.back, body = '';
     if (c.backHow === 'train') {
       body = '<div class="seg" role="group" aria-label="기차 타는 역"><button type="button" class="chip" data-end="mukho" aria-pressed="' + (c.end === 'mukho') + '">묵호역</button><button type="button" class="chip" data-end="donghae" aria-pressed="' + (c.end === 'donghae') + '">동해역</button></div>' + nearestHelp(c);
@@ -339,7 +343,13 @@
   $('s-start').addEventListener('click', function (ev) {
     var b = ev.target.closest('button'); if (!b) return;
     var c = S.cond;
-    if (b.hasAttribute('data-how')) { c.how = b.getAttribute('data-how'); syncBack(c); }
+    if (b.hasAttribute('data-how')) {
+      c.how = b.getAttribute('data-how');
+      // 사용자 관점 단순화(2026-10-21): 자가용을 골랐으면 기차·버스로 돌아갈 수는 없고, 대중교통을 골랐으면 자가용으로 돌아갈 수 없다 — 돌아갈 때 칸도 바로 맞춰 둠(안 맞는 조합은 2단계에서 애초에 안 보이게 함)
+      if (c.how === 'car') { c.backHow = 'car'; c.backHowTouched = false; }
+      else if (c.backHow === 'car') { c.backHow = c.how; c.backHowTouched = false; }
+      syncBack(c);
+    }
     else if (b.hasAttribute('data-bhow')) { c.backHow = b.getAttribute('data-bhow'); c.backHowTouched = true; }
     else if (b.hasAttribute('data-end')) { c.end = b.getAttribute('data-end'); }
     else if (b.hasAttribute('data-hset')) { backEdited(P.toMin(b.getAttribute('data-hset'))); }
@@ -549,7 +559,11 @@
   }
   function applyParsed(r, leadText) {
     var c = S.cond;
-    if (r.how) { c.how = r.how; }
+    if (r.how) {
+      c.how = r.how;
+      if (c.how === 'car') { c.backHow = 'car'; c.backHowTouched = false; } // 2026-10-21: 자가용·대중교통 뒤섞인 조합은 안 보이게 했으니 말로 들어온 값도 바로 맞춤
+      else if (c.backHow === 'car') { c.backHow = c.how; c.backHowTouched = false; }
+    }
     c.end = r.end || 'mukho';
     var order = ['부모님', '아이', '연인', '친구', '혼자'], pick = order.filter(function (n) { return r.companions.indexOf(n) >= 0; })[0];
     if (pick) setComp(c, pick);

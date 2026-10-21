@@ -109,7 +109,8 @@ main{ flex:1; max-width:100%; width:100%; margin:0 auto; }
 .btn.light{ background:#fff; border-color:#fff; color:var(--ink); }
 @media (hover:hover){ .btn:hover{ filter:brightness(.97); } }
 .btn[disabled]{ opacity:.55; cursor:default; }
-.chip{ min-height:52px; padding:8px 18px; border-radius:999px; border:1px solid var(--line); background:var(--paper); color:var(--ink); font-weight:600; }
+.chip{ min-height:52px; padding:8px 18px; border-radius:999px; border:1px solid var(--line); background:var(--paper); color:var(--ink); font-weight:600; display:inline-flex; align-items:center; justify-content:center; gap:6px; }
+.chip .ic{ width:20px; height:20px; flex:none; }
 .chip[aria-pressed="true"]{ background:var(--brand); border-color:var(--brand); color:#fff; }
 .chips,.quick,.row-tools{ display:flex; flex-wrap:wrap; gap:8px; }
 .row-tools{ margin:0 0 8px; }
@@ -1154,6 +1155,8 @@ button.ovn-b{ cursor:pointer; }
 #nightsSeg,#nowBackSeg{ margin:10px 0; }
 #nowBackSeg{ grid-template-columns:repeat(2,minmax(0,1fr)); }
 #nowBackSeg .chip,#nightsSeg .chip{ font-size:.98em; }
+#howSegNow{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:16px; }
+#howSegNow .chip{ padding:8px 4px; font-size:1.05em; }
 /* 꼭 갈 곳: 넣기 목록 재사용 + 고른 순서 숫자 */
 .mv-item{ position:relative; }
 .mv-item.on{ border-color:var(--brand); background:var(--soft); }
