@@ -120,7 +120,7 @@
       <h2 id="hs1" tabindex="-1">언제 와요?</h2>
       <p class="note" id="nowArriveNote" hidden>지금, 오늘부터 코스를 짜 드려요.</p>
       <div class="dt" id="dtArrive">
-        <label class="f"><span>날짜</span><input type="date" id="sDate"></label>
+        <label class="f visually-hidden"><span>날짜</span><input type="date" id="sDate" tabindex="-1" aria-hidden="true"></label>
         <div class="f tf"><span class="tf-l" id="sTimeLb">도착 시각</span><input type="time" id="sTime" class="t-src" tabindex="-1" aria-hidden="true">
           <div class="tmw" id="twS" role="group" aria-labelledby="sTimeLb">
             <div class="tmw-ap" role="radiogroup" aria-label="오전 오후"><button type="button" class="tmw-b" role="radio" aria-checked="true" data-ap="am">오전</button><button type="button" class="tmw-b" role="radio" aria-checked="false" data-ap="pm">오후</button></div>
@@ -129,11 +129,7 @@
           </div>
         </div>
       </div>
-      <div class="seg3" id="nightsSeg" role="group" aria-label="며칠 묵어요" hidden>
-        <button type="button" class="chip" data-nights="0" aria-pressed="true">당일치기</button>
-        <button type="button" class="chip" data-nights="1" aria-pressed="false">1박 2일</button>
-        <button type="button" class="chip" data-nights="2" aria-pressed="false">2박 3일</button>
-      </div>
+      <div class="cal" id="calBox" role="group" aria-label="오는 날 · 가는 날 고르기(숙박 앱처럼 두 번 눌러요)" hidden></div>
       <p class="note warnline" id="dateMsg" role="alert" hidden></p>
       <p class="badges" id="inBadges"></p>
       <p class="crowd-line" id="crowdLine" hidden></p>

@@ -404,6 +404,17 @@
     }
     // 먼 이동(12분 넘는 구간)은 넘는 분마다 조금씩 감점 — 가까운 곳으로도 채울 수 있으면 먼 권역은 시간이 넉넉할 때만 들어가게
     function farPen(min) { return min > 12 ? (min - 12) * FAR_K : 0; }
+    // 한 번 떠난 권역으로 다시 돌아가는 것(묵호→망상→묵호→천곡→묵호 식으로 왔다갔다)을 막는 감점. 새 권역으로 처음 가는 것(묵호→천곡→삼화처럼 한 방향으로 나아가는 것)은
+    // 공짜 — 하루에 먼 권역 여러 곳을 들르는 코스 자체는 그대로 둔다. 다만 "꼭 갈 곳"으로 고정했거나 남는 시간이 넉넉해 값이 충분히 크면 다시 가는 것도 여전히 가능하다
+    // (막는 게 아니라 "갔던 곳으로 괜히 되돌아가지 말고 이어서 가깝게" 쏠리게 하는 부드러운 규칙).
+    var REGION_RETURN_K = 21;
+    function regionPen(seq, region) {
+      if (!region || FAR_REGIONS.indexOf(region) < 0) return 0; // 묵호·천곡처럼 가까운 권역으로 돌아가는 것(숙소·야시장 등)은 자연스러우니 그대로
+      var last = null, seen = {};
+      for (var i = 0; i < seq.length; i++) { var r = seq[i].place && seq[i].place.region; if (r) { seen[r] = true; last = r; } }
+      if (region === last || !seen[region]) return 0; // 바로 앞과 같은 권역, 또는 처음 가는 먼 권역이면 그대로
+      return REGION_RETURN_K; // 갔다가 떠난 먼 권역(망상·대진 / 추암·북평 / 삼화)으로 되돌아가는 것만 감점
+    }
     // 가지치기: 남은 자리를 가장 값 큰 안 간 곳으로 채워도 지금까지의 최고 점수를 못 넘으면 더 안 파고든다(점수 식의 위쪽 한계)
     function bound(seq, t, used, score) {
       var r = maxStops - seq.length, sum = 0;
@@ -435,7 +446,7 @@
         if (leave > p.open[1] || leave > deadline) continue;
         var vp = vals[p.id] * gk(p);
         // 보고 싶은 곳을 먼저(기차가 늦어져도 좋은 곳은 이미 본 상태): 값 x 남은 시간 비례 가산
-        var inc = vp - delay * 0.25 - wait * 0.05 + Math.max(0, vp) * (deadline - leave) * 0.006 - farPen(l.min) + crowdBonus(p.id, startVisit);
+        var inc = vp - delay * 0.25 - wait * 0.05 + Math.max(0, vp) * (deadline - leave) * 0.006 - farPen(l.min) - regionPen(seq, p.region) + crowdBonus(p.id, startVisit);
         opts.push({ p: p, l: l, arr: arr, wait: wait, startVisit: startVisit, delay: delay, leave: leave, inc: inc - l.min * 0.03 + tourBonus(l) });
       }
       opts.sort(function (x, y) { return y.inc - x.inc; });
