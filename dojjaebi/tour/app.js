@@ -139,14 +139,14 @@
   function autoSay(text) { if (!S.muteAuto) say(text, null); }
 
   /* ---------- 화면 전환 ---------- */
-  var SCREENS = ['s-start', 's-input', 's-course', 's-map', 's-report', 's-stay', 's-card', 's-watch'];
+  var SCREENS = ['s-start', 's-input', 's-prep', 's-course', 's-map', 's-report', 's-stay', 's-card', 's-watch'];
   var TAB_SCREENS = ['s-course', 's-map', 's-report', 's-stay', 's-card'];
   function show(id) {
     closeStory(true); closeSheet(true); ttClose(true); closeImage(); hideSnack();
     SCREENS.forEach(function (s) { $(s).hidden = (s !== id); });
     S.screen = id;
     stopSpeak();
-    var ttl = { 's-start': '여행 준비', 's-input': '여행 준비', 's-course': '오늘 코스', 's-map': '코스 지도', 's-report': '현장 제보', 's-stay': '동네', 's-card': '기록', 's-watch': '시청 화면' }[id] || '';
+    var ttl = { 's-start': '여행 준비', 's-input': '여행 준비', 's-prep': '여행 준비', 's-course': '오늘 코스', 's-map': '코스 지도', 's-report': '현장 제보', 's-stay': '동네', 's-card': '기록', 's-watch': '시청 화면' }[id] || '';
     if ($('scrTitle')) $('scrTitle').textContent = ttl;
     if ($('toMapTop')) $('toMapTop').hidden = !(id === 's-course' && S.plan);
     var inTab = !!S.plan && TAB_SCREENS.indexOf(id) >= 0;
@@ -162,6 +162,7 @@
     if (id === 's-stay') renderTownTab();
     if (id === 's-course') ovKakaoEnsure();
     if (id === 's-watch') renderWatch();
+    if (id === 's-prep') renderPrep();
   }
   document.addEventListener('click', function (ev) {
     var g = ev.target.closest('[data-go]'); if (g) { show(g.getAttribute('data-go')); }
@@ -205,17 +206,31 @@
   }
   function freshCond() {
     var s0 = startDefaults();
-    var c = { how: 'train', arrive: s0.arrive, back: 18 * 60, backDate: s0.date, backHow: 'train', backTouched: false, backHowTouched: false, backDateTouched: false, noLimit: false, end: 'mukho', companions: ['친구'], knee: false, interests: [], rain: false, food: false, foodWord: '', count: null, date: s0.date };
+    var c = { how: 'train', arrive: s0.arrive, back: 18 * 60, backDate: s0.date, backHow: 'train', backTouched: false, backHowTouched: false, backDateTouched: false, backDateExplicit: false, noLimit: false, end: 'mukho', companions: ['친구'], knee: false, interests: [], rain: false, food: false, foodWord: '', count: null, date: s0.date, branch: null, tripNights: null, must: [] };
     c.back = defaultBack(c);
     return c;
   }
-  /* 오는 날·이동수단이 바뀌면 가는 날·시각·이동수단 기본값을 따라 맞춘다(사용자가 직접 고친 것은 그대로). 가는 날은 오는 날 ~ +2일 안으로 */
+  /* 오는 날·이동수단이 바뀌면 가는 날·시각·이동수단 기본값을 따라 맞춘다(사용자가 직접 고친 것은 그대로). 가는 날은 오는 날 ~ +2일 안으로.
+     tripNights(2026-10-21, 6차안 "동해에 올 예정이에요"): 직접 날짜를 고치지 않았으면 며칠 묵는지(0·1·2)에 맞춰 가는 날을 자동으로 맞춘다 */
   function syncBack(c) {
-    if (!c.backDateTouched || !c.backDate) c.backDate = c.date;
+    if (c.tripNights != null && !c.backDateExplicit) c.backDate = P.addDays(c.date, c.tripNights) || c.date;
+    else if (!c.backDateTouched || !c.backDate) c.backDate = c.date;
     if (c.backDate < c.date) c.backDate = c.date;
     var mx = P.addDays(c.date, 2); if (mx && c.backDate > mx) c.backDate = mx;
     if (!c.backHowTouched) c.backHow = c.how;
     if (!c.backTouched) c.back = defaultBack(c);
+  }
+  function nowMinutes() { var d = new Date(); return d.getHours() * 60 + d.getMinutes(); }
+  /* 두 버튼 시작(2026-10-21 6차안): 지금 동해에 있어요 → 오늘·지금 시각부터. 동해에 올 예정이에요 → 다음 정시(기존 기본값) */
+  function startBranch(kind) {
+    var c = S.cond;
+    c.branch = kind;
+    if (kind === 'now') { c.date = todayIso(); c.arrive = nowMinutes(); c.backDateTouched = false; c.backDateExplicit = false; c.tripNights = null; syncBack(c); }
+    else { var s0 = startDefaults(); if (!c.date || c.date < todayIso()) { c.date = s0.date; c.arrive = s0.arrive; } syncBack(c); }
+    S.startNote = null;
+    loadTrains();
+    renderStart();
+    setStep(1);
   }
   function nDays(c) { return P.dayCount(c.date, c.backDate); }
   function compOf(c) { return c.companions[0] || ''; }
@@ -248,6 +263,14 @@
   }
   function renderStart() {
     var c = S.cond;
+    /* 두 버튼 시작(6차안): branch==='now' 는 날짜·시각을 숨기고(오늘·지금), branch==='later' 는 며칠 묵는지 칩을 보인다 */
+    if ($('dtArrive')) $('dtArrive').hidden = c.branch === 'now';
+    if ($('nowArriveNote')) $('nowArriveNote').hidden = c.branch !== 'now';
+    if ($('nightsSeg')) {
+      $('nightsSeg').hidden = c.branch === 'now';
+      Array.prototype.forEach.call($('nightsSeg').querySelectorAll('[data-nights]'), function (b) { b.setAttribute('aria-pressed', String((c.tripNights || 0) === +b.getAttribute('data-nights'))); });
+    }
+    if ($('nowBackSeg')) $('nowBackSeg').hidden = c.branch !== 'now';
     $('sDate').value = c.date || todayIso(); $('sDate').min = todayIso(); $('sTime').value = toTimeValue(c.arrive);
     var dmsg = $('dateMsg'); if (dmsg && !dmsg.hidden && !pastDate(c)) { dmsg.hidden = true; dmsg.textContent = ''; }
     $('bDate').value = c.backDate; $('bDate').min = c.date; $('bDate').max = P.addDays(c.date, 2) || '';
@@ -319,6 +342,13 @@
     else if (b.hasAttribute('data-end')) { c.end = b.getAttribute('data-end'); }
     else if (b.hasAttribute('data-hset')) { backEdited(P.toMin(b.getAttribute('data-hset'))); }
     else if (b.hasAttribute('data-cdate')) { c.date = b.getAttribute('data-cdate'); syncBack(c); } // 더 한산한 날로 바꾸기
+    else if (b.hasAttribute('data-nights')) { c.tripNights = +b.getAttribute('data-nights'); c.backDateExplicit = false; syncBack(c); }
+    else if (b.hasAttribute('data-nowback')) {
+      var nb = b.getAttribute('data-nowback');
+      c.backHow = c.how; c.backHowTouched = true;
+      if (nb === 'stay1') { c.backDate = P.addDays(c.date, 1); c.backDateTouched = true; c.backDateExplicit = true; backEdited(10 * 60); }
+      else { c.backDate = c.date; c.backDateTouched = true; c.backDateExplicit = true; backEdited(nb === 'pm' ? 15 * 60 : nb === 'eve' ? 19 * 60 : 18 * 60); }
+    }
     else if (b.hasAttribute('data-nolimit')) { c.noLimit = !c.noLimit; }
     else if (b.hasAttribute('data-comp')) { var n = b.getAttribute('data-comp'); setComp(c, compOf(c) === n ? '' : n); }
     else if (b.hasAttribute('data-knee')) { c.knee = !c.knee; }
@@ -334,7 +364,7 @@
     var t = ev.target, c = S.cond;
     if (t.id === 'sDate') { c.date = t.value || todayIso(); syncBack(c); }
     else if (t.id === 'sTime') { if (t.value) { c.arrive = P.toMin(t.value); syncBack(c); } }
-    else if (t.id === 'bDate') { c.backDate = t.value || c.date; c.backDateTouched = c.backDate !== c.date; syncBack(c); }
+    else if (t.id === 'bDate') { c.backDate = t.value || c.date; c.backDateTouched = c.backDate !== c.date; c.backDateExplicit = true; c.tripNights = null; syncBack(c); }
     else if (t.id === 'bTime') { if (t.value) backEdited(P.toMin(t.value)); }
     else return;
     loadTrains();
@@ -398,8 +428,10 @@
     opt = opt || {};
     S.step = n;
     $('s-start').setAttribute('data-step', String(n));
-    for (var i = 0; i <= 3; i++) $('st' + i).hidden = (i !== n);
+    for (var i = 0; i <= 5; i++) $('st' + i).hidden = (i !== n);
     var m = $('stepMsg'); if (m) { m.hidden = true; m.textContent = ''; }
+    if (n === 4) renderMustList();
+    if (n === 5) renderConfirm();
     setHdr();
     var pane = $('st' + n);
     pane.classList.remove('enter'); void pane.offsetWidth; pane.classList.add('enter'); // 살짝 밀려 들어옴 (움직임 줄이기 설정이면 CSS 에서 끔)
@@ -421,10 +453,49 @@
     var m = $('stepMsg'); m.textContent = '시각을 한 번만 다시 골라 주세요. 도착 시각보다 뒤여야 코스를 짤 수 있어요.'; m.hidden = false; if (m.scrollIntoView) m.scrollIntoView({ block: 'center' });
     return true;
   }
-  $('goStart').addEventListener('click', function () { setStep(1); });
+  $('goNow').addEventListener('click', function () { startBranch('now'); });
+  $('goLater').addEventListener('click', function () { startBranch('later'); });
   $('stNext1').addEventListener('click', function () { if (pastBlock()) return; setStep(2); });
   $('stNext2').addEventListener('click', function () { if (stepBlock()) { $('bTime').focus(); return; } setStep(3); });
-  [1, 2, 3].forEach(function (n) { $('stBack' + n).addEventListener('click', function () { setStep(n - 1); }); });
+  $('stNext3').addEventListener('click', function () { setStep(4); });
+  $('stNext4').addEventListener('click', function () { setStep(5); });
+  [1, 2, 3, 4, 5].forEach(function (n) { $('stBack' + n).addEventListener('click', function () { setStep(n - 1); }); });
+  /* ---------- 4단계: 꼭 갈 곳 (선택, 최대 3곳) — 장소 자료 전체에서 고름(코스가 아직 없어도 됨) ---------- */
+  var MV = { f: 'all' };
+  function mvChipsUi() { Array.prototype.forEach.call(document.querySelectorAll('#mvChips [data-mvf]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-mvf') === MV.f ? 'true' : 'false'); }); }
+  function renderMustList() {
+    var q = ($('mvQ').value || '').trim(), fn = SH_F[MV.f] || SH_F.all;
+    var list = D.places.filter(function (p) { return fn(p) && (!q || (p.name || '').indexOf(q) >= 0 || (p.short || '').indexOf(q) >= 0); });
+    var must = S.cond.must || (S.cond.must = []);
+    $('mvHint').textContent = must.length ? ('고른 곳 ' + must.length + '/3곳') : '최대 3곳까지 고를 수 있어요.';
+    $('mvList').innerHTML = list.length ? list.map(function (p) {
+      var idx = must.indexOf(p.id), on = idx >= 0;
+      return '<li><button type="button" class="sh-item mv-item' + (on ? ' on' : '') + '" data-mvpick="' + p.id + '" aria-pressed="' + on + '"><span class="sh-top"><b>' + esc(p.name) + '</b>' + (on ? '<span class="mv-n">' + (idx + 1) + '</span>' : '') + '</span><span class="sh-meta">' + pickHtml(p, 'sh-t') + '<span class="sh-t">#' + esc(p.region || '') + '</span><span class="sh-t">' + (p.indoor ? '실내' : '야외') + '</span></span></button></li>';
+    }).join('') : '<li class="sh-none">찾는 곳이 없어요. 다른 낱말로 찾아 보세요.</li>';
+  }
+  $('mvQ').addEventListener('input', renderMustList);
+  $('mvChips').addEventListener('click', function (ev) { var b = ev.target.closest('[data-mvf]'); if (!b) return; MV.f = b.getAttribute('data-mvf'); mvChipsUi(); renderMustList(); });
+  $('mvList').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-mvpick]'); if (!b) return;
+    var id = b.getAttribute('data-mvpick'), must = S.cond.must || (S.cond.must = []), idx = must.indexOf(id);
+    if (idx >= 0) must.splice(idx, 1);
+    else { if (must.length >= 3) { flash('꼭 갈 곳은 최대 3곳까지 골라요.'); return; } must.push(id); }
+    renderMustList();
+  });
+  /* ---------- 5단계: 확인 — 고른 내용을 줄로 보여 주고, 「고치기」로 그 단계로 바로 간다 ---------- */
+  function mustNames() { return (S.cond.must || []).map(function (id) { return PLACE[id] ? (PLACE[id].short || PLACE[id].name) : id; }); }
+  function editRow(label, value, step) { return '<li class="confirm-row"><span class="cf-k">' + esc(label) + '</span><span class="cf-v">' + value + '</span><button type="button" class="linkbtn" data-editstep="' + step + '">고치기</button></li>'; }
+  function renderConfirm() {
+    var c = S.cond;
+    var whenTxt = esc(P.dateLabel(c.date) + ' ' + toTimeValue(c.arrive) + ' 도착 (' + HOW_NAME[c.how] + ')' + (c.branch === 'now' ? ' · 지금' : ''));
+    var effBack = c.backHow === 'car' && c.noLimit ? 20 * 60 : c.back;
+    var backTxt = esc((c.backDate !== c.date ? P.dateLabel(c.backDate) + ' ' : '') + toTimeValue(effBack) + (c.backHow === 'car' && c.noLimit ? '까지' : ' 출발') + ' (' + HOW_NAME[c.backHow] + ')' + (nDays(c) > 1 ? ' · ' + P.tripLabel(nDays(c)) : ''));
+    var compTxt = esc(compOf(c) ? compOf(c) + ' 함께' : '혼자');
+    var mv = mustNames(), multiMust = mv.length && nDays(c) > 1;
+    var mvTxt = mv.length ? (esc(mv.join(', ')) + (multiMust ? ' <span class="warnline">(1박 이상은 아직 반영 못 해요)</span>' : '')) : '없음 (도째비가 알맞게 골라요)';
+    $('confirmList').innerHTML = editRow('올 때', whenTxt, 1) + editRow('돌아갈 때', backTxt, 2) + editRow('누구와', compTxt, 3) + editRow('꼭 갈 곳', mvTxt, 4);
+  }
+  document.addEventListener('click', function (ev) { var b = ev.target.closest('[data-editstep]'); if (!b) return; setStep(+b.getAttribute('data-editstep'), { focus: false }); });
   /* 인사 화면: 대표 사진 여러 장이 천천히 바뀐다(공공누리 제1유형만 — 칸에 꽉 채워 잘라 쓰므로). 4.5초마다 · 점 · 1/6 · 좌우로 밀기 · 손대는 동안·탭이 가려지면 멈춤 · 움직임 줄이기면 자동으로 안 넘김 */
   var HERO_IDS = ['skyvalley', 'suibyeon', 'mangsang', 'gamchusa', 'byeoryu', 'mukhoport'], HERO_MS = 4500;
   var HS = { list: [], i: 0, timer: null, touch: false, built: false };
@@ -616,7 +687,11 @@
     if (d.why === '운행 기간이 끝남' || !nx) return '시티투어버스는 ' + P.dateLabel(CT.period.to) + '까지만 운행해요';
     return '시티투어버스는 토·일·공휴일만 다녀요 (다음 운행: ' + P.dateLabel(nx) + ')';
   }
-  $('makeCourse').addEventListener('click', function () { if (stepBlock()) { setStep(2, { focus: false }); stepBlock(); return; } makeCourse(false); });
+  $('makeCourse').addEventListener('click', function () {
+    if (stepBlock()) { setStep(2, { focus: false }); stepBlock(); return; }
+    var future = S.cond.branch !== 'now' && S.cond.date > todayIso(); // 올 예정 + 앞날 날짜 → 먼저 "여행 준비"(D-day) 화면
+    makeCourse(false, false, future ? 's-prep' : 's-course');
+  });
 
   /* ---------- 코스 만들기 ---------- */
   /* 돌아갈 시각(분): 기차·버스 = 출발, 자가용 = 주차장에 돌아올 시각(정하지 않으면 20:00). 막차 보기 = 기차는 그날 마지막 기차, 버스·자가용은 21:00 */
@@ -649,7 +724,7 @@
   function isCouple() { return S.cond.companions.indexOf('연인') >= 0; }
   function planOpts(over) {
     var multi = isMulti();
-    var o = { now: S.simNow, train: effTrain(S.mode), how: S.cond.how, backHow: S.cond.backHow, start: startId(), end: endId(), backDate: S.cond.backDate, stay: multi ? stayInfo() : undefined, sunrise: multi && !S.cond.rain && !isKid() && !isSlow() && (isCouple() || S.cond.companions.indexOf('친구') >= 0 || S.cond.companions.indexOf('혼자') >= 0 || !S.cond.companions.length), kid: isKid(), couple: isCouple(), slow: isSlow(), avoidStairs: isSlow() || isKid(), soft: isSlow(), food: !!S.cond.food, foodWord: S.cond.foodWord || '', rain: S.cond.rain, interests: S.cond.interests, fx: S.fx, crowdFn: S.crowd ? crowdFn : null, mode: S.mode, fixed: S.fixed, date: S.cond.date, tour: !!CT, tourPrefer: !!S.tourLoop };
+    var o = { now: S.simNow, train: effTrain(S.mode), how: S.cond.how, backHow: S.cond.backHow, start: startId(), end: endId(), backDate: S.cond.backDate, stay: multi ? stayInfo() : undefined, sunrise: multi && !S.cond.rain && !isKid() && !isSlow() && (isCouple() || S.cond.companions.indexOf('친구') >= 0 || S.cond.companions.indexOf('혼자') >= 0 || !S.cond.companions.length), kid: isKid(), couple: isCouple(), slow: isSlow(), avoidStairs: isSlow() || isKid(), soft: isSlow(), food: !!S.cond.food, foodWord: S.cond.foodWord || '', rain: S.cond.rain, interests: S.cond.interests, fx: S.fx, crowdFn: S.crowd ? crowdFn : null, mode: S.mode, fixed: S.fixed, date: S.cond.date, tour: !!CT, tourPrefer: !!S.tourLoop, must: multi ? [] : (S.cond.must || []).slice() }; // 꼭 갈 곳(o.must)은 하루 코스에만: planDays 는 날마다 같은 o 를 쓰므로 여러 날이면 날마다 강제돼 버린다
     if (over) for (var k in over) o[k] = over[k];
     if (over && over.mode) o.train = effTrain(over.mode);
     if (multi) { o.fixed = []; o.mode = 'normal'; o.now = S.cond.arrive; }
@@ -722,7 +797,7 @@
     return prev;
   }
   function today() { var d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); }
-  function makeCourse(fromDemo, quiet) {
+  function makeCourse(fromDemo, quiet, toScreen) {
     if (!fromDemo) S.tourLoop = false;
     S.simNow = S.cond.arrive; lsSet(K_SIM, String(S.simNow)); S.startNote = null; S.tr = S.tr; // 도착 시각이 출발 시각
     S.mode = 'normal'; S.fixed = []; S.banner = null; $('banner').hidden = true;
@@ -731,10 +806,46 @@
     replan({ noHighlight: true });
     edRestore(); // 같은 조건으로 전에 고쳐 둔 코스가 있으면 그대로 불러온다
     logEvent('plan', { mode: 'normal' });
-    show('s-course');
+    show(toScreen || 's-course');
     var pl = S.plan;
-    if (!quiet && placeStops(pl.stops).length) autoSay(pl.startStation.name + '에서 출발해서 ' + placeStops(pl.stops).length + '곳을 이야기와 함께 돌아요. 첫 번째 장은 ' + placeStops(pl.stops)[0].place.name + '이에요. ' + hhmm(pl.back.arrive) + '에 ' + pl.endStation.name + '에 도착해요.');
+    if (!quiet && toScreen !== 's-prep' && placeStops(pl.stops).length) autoSay(pl.startStation.name + '에서 출발해서 ' + placeStops(pl.stops).length + '곳을 이야기와 함께 돌아요. 첫 번째 장은 ' + placeStops(pl.stops)[0].place.name + '이에요. ' + hhmm(pl.back.arrive) + '에 ' + pl.endStation.name + '에 도착해요.');
   }
+
+  /* ---------- 여행 준비(D-day, 6차안): 올 예정 + 앞날 날짜일 때 코스 화면 전에 보여 준다. 코스는 이미 만들어 둔 S.plan 에서 미리 보기만 뽑는다 ---------- */
+  function factRow(label, state, text) {
+    var tag = state === 'ok' ? '확정' : state === 'guess' ? '예측' : '아직 몰라요';
+    return '<li class="fact-row"><span class="fact-k">' + esc(label) + '</span><span class="fact-tag f-' + state + '">' + tag + '</span><span class="fact-v">' + esc(text) + '</span></li>';
+  }
+  function prepPreviewHtml(pl) {
+    if (!pl) return '';
+    var days = pl.multi ? pl.days : [{ n: 1, date: pl.date || S.cond.date, plan: pl }];
+    return days.slice(0, 2).map(function (d) {
+      var stops = placeStops((d.plan || pl).stops || []);
+      return '<div class="prep-day"><b>' + d.n + '일차 · ' + esc(P.dateLabel(d.date)) + '</b><ol>' + (stops.length ? stops.map(function (s) { return '<li>' + esc(s.place.short || s.place.name) + '</li>'; }).join('') : '<li class="quiet">갈 곳을 찾지 못했어요</li>') + '</ol></div>';
+    }).join('');
+  }
+  var PREP_TODO = [{ k: 'ticket', t: '기차표·버스표 예매' }, { k: 'stay', t: '숙소 예약' }, { k: 'wear', t: '날씨에 맞는 옷 준비' }];
+  function renderPrep() {
+    var c = S.cond, d = P.dayCount(todayIso(), c.date) - 1;
+    $('prepDday').textContent = d <= 0 ? '오늘!' : 'D-' + d;
+    $('prepWhen').textContent = P.dateLabel(c.date) + (c.backDate !== c.date ? ' ~ ' + P.dateLabel(c.backDate) : '') + (compOf(c) ? ' · ' + compOf(c) + ' 함께' : '');
+    var mk = marketPlace(), onMarket = mk && P.lastDigitDay(c.date, marketDigits());
+    var rows = '';
+    rows += (c.how === 'train' || c.backHow === 'train') ? factRow('기차표', realTrains(c) ? 'ok' : 'none', realTrains(c) ? '코레일 시간표를 확인했어요' : '아직 예매 전이에요 · 가까워지면 시간표가 나와요') : factRow('이동', 'ok', HOW_NAME[c.how] + '으로 와요');
+    if (mk) rows += factRow('장날', onMarket ? 'ok' : 'none', onMarket ? mk.short + ' 장날이에요' : mk.short + ' 장날이 아니에요 (3·8일)');
+    rows += factRow('행사', 'none', '아직 확인된 행사가 없어요');
+    rows += factRow('붐빔 예측', S.crowd ? 'guess' : 'none', S.crowd ? '한국관광공사 예측이 코스에 반영됐어요' : '예측 자료는 날짜가 가까워지면 나와요');
+    rows += factRow('날씨', S.wx ? 'guess' : 'none', S.wx ? '기상청 예보가 나와 있어요' : '아직 예보 범위 밖이에요 (보통 10일 전부터)');
+    $('prepFacts').innerHTML = rows;
+    $('prepTodo').innerHTML = PREP_TODO.map(function (x) {
+      var on = lsGet('tour.prep.' + x.k) === '1';
+      return '<li><label class="todo-row"><input type="checkbox" data-todo="' + x.k + '"' + (on ? ' checked' : '') + '> ' + esc(x.t) + '</label></li>';
+    }).join('');
+    $('prepPreview').innerHTML = prepPreviewHtml(S.plan);
+  }
+  $('prepTodo').addEventListener('change', function (ev) { var t = ev.target.closest('[data-todo]'); if (!t) return; lsSet('tour.prep.' + t.getAttribute('data-todo'), t.checked ? '1' : '0'); });
+  $('prepGoCourse').addEventListener('click', function () { show('s-course'); });
+  $('prepNotify').addEventListener('click', function () { flash('여행 전날 알려 드릴게요 (시연 — 실제 알림은 아직 연결하지 않았어요).'); });
 
   /* ---------- 코스 화면 ---------- */
   var ART = window.TourArt;

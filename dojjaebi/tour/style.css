@@ -1137,3 +1137,40 @@ button.ovn-b{ cursor:pointer; }
   .cbar-edit{ flex:1 1 0; width:auto; min-height:48px; }
   .cbs-l{ display:none; } .cbs-s{ display:inline; }
 }
+
+/* ---------- 2026-10-21 6차안: 두 버튼 시작 · 꼭 갈 곳 · 확인 · 여행 준비(D-day) ---------- */
+#dtArrive[hidden]{ display:none !important; } /* #s-start .dt{ display:flex } 가 [hidden] 보다 더 세게 먹혀서 따로 눌러 둠 */
+.seg2.branch-cta{ display:flex; flex-direction:column; gap:10px; }
+.seg2.branch-cta .btn{ width:100%; min-height:56px; }
+.seg2.branch-cta .ghost2{ background:var(--paper); border:2px solid var(--brand); color:var(--brand); }
+#nightsSeg,#nowBackSeg{ margin:10px 0; }
+#nowBackSeg{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+#nowBackSeg .chip,#nightsSeg .chip{ font-size:.98em; }
+/* 꼭 갈 곳: 넣기 목록 재사용 + 고른 순서 숫자 */
+.mv-item{ position:relative; }
+.mv-item.on{ border-color:var(--brand); background:var(--soft); }
+.mv-n{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%; background:var(--brand); color:#fff; font-size:.8em; font-weight:800; margin-left:8px; }
+/* 확인 화면 */
+.confirm-list{ list-style:none; margin:14px 0 0; padding:0; display:grid; gap:10px; }
+.confirm-row{ display:flex; align-items:baseline; gap:10px; padding:12px 14px; border:1px solid var(--line); border-radius:14px; background:var(--paper); }
+.cf-k{ flex:none; width:64px; color:var(--muted); font-weight:700; font-size:.92em; }
+.cf-v{ flex:1; min-width:0; font-weight:700; }
+.confirm-row .linkbtn{ flex:none; min-height:44px; padding:0 4px; font-size:.92em; }
+/* 여행 준비(D-day) */
+.prep-hero{ text-align:center; padding-top:20px; }
+.prep-dday{ font-size:2.2em; font-weight:900; color:var(--brand); margin:0; }
+.fact-list,.todo-list{ list-style:none; margin:10px 0 0; padding:0; display:grid; gap:8px; }
+.fact-row{ display:flex; align-items:center; gap:10px; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:var(--paper); }
+.fact-k{ flex:none; width:70px; font-weight:700; }
+.fact-tag{ flex:none; font-size:.8em; font-weight:800; padding:2px 8px; border-radius:999px; background:var(--soft); color:var(--muted); }
+.fact-tag.f-ok{ background:#237032; color:#fff; }
+.fact-tag.f-guess{ background:#c2410c; color:#fff; }
+.fact-v{ flex:1; min-width:0; color:var(--muted); font-size:.92em; }
+.todo-row{ display:flex; align-items:center; gap:10px; min-height:44px; padding:6px 4px; }
+.todo-row input{ width:26px; height:26px; flex:none; }
+.prep-grid{ display:grid; gap:12px; margin-top:8px; }
+.prep-day{ border:1px solid var(--line); border-radius:14px; padding:10px 14px; }
+.prep-day ol{ margin:6px 0 0; padding-left:1.3em; }
+@media (max-width:359px){
+  .cf-k,.fact-k{ width:52px; font-size:.88em; }
+}
