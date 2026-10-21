@@ -550,7 +550,7 @@
   $('stNext5').addEventListener('click', function () { setStep(6); });
   [1, 2, 3, 4, 5, 6].forEach(function (n) { $('stBack' + n).addEventListener('click', function () { setStep(n - 1); }); });
   /* ---------- 5단계: 숙소 예약 여부 + 인원수 (2026-10-21, 사용자 요청: "누구랑 와서 어디서 잘지도 추천해 주기 편하지 않니") ---------- */
-  function stayUi() { Array.prototype.forEach.call(document.querySelectorAll('#chipStay [data-stay]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-stay') === S.cond.stayBooked ? 'true' : 'false'); }); $('stayNote').hidden = S.cond.stayBooked !== 'booked'; }
+  function stayUi() { Array.prototype.forEach.call(document.querySelectorAll('#chipStay [data-stay]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-stay') === S.cond.stayBooked ? 'true' : 'false'); }); $('stayNote').hidden = S.cond.stayBooked !== 'none'; /* 2026-10-22(Fable 리뷰): 이 글은 "숙소 자리를 추천해 드려요" 라는 내용 — 아직 안 잡았을 때(none)만 맞는 말이라 조건이 거꾸로였음 */ }
   function renderStayUi() { stayUi(); $('countN').textContent = (S.cond.count || 1) + '명'; }
   $('chipStay').addEventListener('click', function (ev) { var b = ev.target.closest('[data-stay]'); if (!b) return; S.cond.stayBooked = b.getAttribute('data-stay'); stayUi(); });
   $('countMinus').addEventListener('click', function () { S.cond.count = Math.max(1, (S.cond.count || 1) - 1); $('countN').textContent = S.cond.count + '명'; });
@@ -587,15 +587,27 @@
     if (idx >= 0) must.splice(idx, 1); else must.push(id); // 2026-10-22: 3곳 제한 없앰 — 원하는 만큼
     renderMustList();
   });
-  /* 2026-10-22: planner(D.places 만 앎)에 넘기기 전에 'food:' 로 고른 식당·카페를 가장 가까운 볼거리 id 로 바꾼다 — 그 식당이 코스에 들어가는 게 아니라, 그 근처를 지나도록 동선만 짜 주는 것(사용자: "카페동해를 고르면 그 근처 묵호등대로 안내하는 로직") */
+  /* 2026-10-22: planner(D.places 만 앎)에 넘기기 전에 'food:' 로 고른 식당·카페를 가장 가까운 볼거리 id 로 바꾼다 — 그 식당이 코스에 들어가는 게 아니라, 그 근처를 지나도록 동선만 짜 주는 것(사용자: "카페동해를 고르면 그 근처 묵호등대로 안내하는 로직")
+   * 2026-10-22(Fable 리뷰 반영): 그냥 가장 가까운 곳 하나만 보면 장날에만 여는 곳(dayRule)·쉬는 요일(closedDow)에 걸려 그날 못 가는 곳을 억지로 끼워 넣을 수 있다.
+   * 가까운 곳 5곳까지 보고, 그중 그날 가도 되는 곳을 고른다(다 막혀 있으면 그냥 가장 가까운 곳으로 어쩔 수 없이 되돌아감 — planner.js 가 뒤에서 또 한 번 거르거나 infeasible 로 처리). */
+  function dayOkFor(p) {
+    var dinfo = (P && P.dateInfo) ? P.dateInfo(S.cond.date) : null;
+    if (p.dayRule && p.dayRule.lastDigit) { if (!dinfo || p.dayRule.lastDigit.indexOf(dinfo.d % 10) < 0) return false; }
+    if (p.closedDow && dinfo && p.closedDow.indexOf(dinfo.dow) >= 0) return false;
+    return true;
+  }
   function resolveMust(must) {
     var out = [], seen = {};
     (must || []).forEach(function (id) {
       var key = mustFoodKey(id), pid = id;
       if (key) {
         var x = TW.list('eat').filter(function (e) { return e.key === key; })[0];
-        pid = (x && x.lat && x.lng && FU) ? (FU.nearestN(D.places, x.lat, x.lng, 1, null)[0] || {}).item : null;
-        pid = pid ? pid.id : null;
+        pid = null;
+        if (x && x.lat && x.lng && FU) {
+          var cands = FU.nearestN(D.places, x.lat, x.lng, 5, null) || [];
+          var ok = cands.filter(function (c) { return c && c.item && dayOkFor(c.item); })[0];
+          pid = (ok || cands[0]) ? (ok || cands[0]).item.id : null;
+        }
       }
       if (pid && !seen[pid]) { seen[pid] = 1; out.push(pid); }
     });
@@ -892,7 +904,25 @@
     if (multi) { o.fixed = []; o.mode = 'normal'; o.now = S.cond.arrive; }
     return o;
   }
-  function buildPlan(over) { var o = planOpts(over); return isMulti() ? P.planDays(D, o) : P.plan(D, o); }
+  /* 2026-10-22(Fable 리뷰 반영): '꼭 갈 곳'을 너무 많이 고르면 하루 안에 다 못 돌아 코스가 아예 비어 버리고,
+   * "돌아갈 시간까지 여유가 적어요"(시간이 모자란 것처럼 보이는) 안내만 나가던 문제를 고친다.
+   * 안 들어가면 뒤에서부터 하나씩 빼고 다시 짜 보고, 그래도 안 되면 또 뺀다 — 뭘 뺐는지는 S.mustDropped 에 남겨 코스 화면에 알려 준다. */
+  function buildPlan(over) {
+    var o = planOpts(over);
+    S.mustDropped = [];
+    if (isMulti()) return P.planDays(D, o);
+    var result = P.plan(D, o);
+    if (o.must && o.must.length) {
+      var left = o.must.slice();
+      while (!result.feasible && left.length) {
+        S.mustDropped.push(left.pop());
+        var o2 = {}; for (var k in o) o2[k] = o[k];
+        o2.must = left;
+        result = P.plan(D, o2);
+      }
+    }
+    return result;
+  }
   /* 제보는 코스를 자동으로 바꾸지 않는다: 코스 계산에 들어가는 것은 사람이 [코스 다시 짜기]로 받아들인(S.applied) 알림의 제보뿐 */
   function recomputeFx() { S.fx = P.effectsFromReports(REP.acceptedReports(S.reports, S.applied, S.simNow), S.simNow, true); }
   /* ---------- 관광지 집중률 예측 (한국관광공사, 하루 한 값 · 실시간 아님) ----------
@@ -965,7 +995,7 @@
     S.mode = 'normal'; S.fixed = []; S.banner = null; $('banner').hidden = true;
     S.plan = null; S.ed = null; S.editing = false; S.dayTab = 0; S.stayPick = null; S.stayAuto = false; S.openFold = {};
     S.applied = {}; S.dismissed = {}; S.notified = {}; S.raMore = false; S.demoNear = false; S.mapSeen = false; S.mapLay = { course: true, eat: false, cafe: false, lodge: false, spot: false }; S.mapFocus = null; // 새 코스: 제보 알림 선택·지도 층을 처음 상태로
-    if (isMulti()) { var rs = recommendStay(); if (rs) { S.stayPick = rs; S.stayAuto = true; } } // 올 예정 + 여러 날: 동선 보고 숙소 권역을 스스로 추천(동네 탭에서 직접 바꾸면 그 값을 따름)
+    if (isMulti() && S.cond.stayBooked !== 'booked') { var rs = recommendStay(); if (rs) { S.stayPick = rs; S.stayAuto = true; } } // 올 예정 + 여러 날: 동선 보고 숙소 권역을 스스로 추천(동네 탭에서 직접 바꾸면 그 값을 따름) — 2026-10-22(Fable 리뷰): 벌써 숙소를 잡았다고 했으면 엉뚱한 곳을 "추천"이라고 덮어 보여주지 않음
     replan({ noHighlight: true });
     edRestore(); // 같은 조건으로 전에 고쳐 둔 코스가 있으면 그대로 불러온다
     logEvent('plan', { mode: 'normal' });
@@ -1646,6 +1676,7 @@
     $('rainBtn').setAttribute('aria-pressed', S.cond.rain ? 'true' : 'false');
     $('simTime').value = toTimeValue(S.simNow); $('simDate').value = S.cond.date || todayIso();
     var html = '', E = !!(S.editing && S.ed);
+    if (!pl.multi && S.mustDropped && S.mustDropped.length) html += '<li class="post empty">꼭 갈 곳 중 ' + S.mustDropped.length + '곳은 시간 안에 다 못 넣어서 뺐어요: ' + S.mustDropped.map(function (id) { return esc(PLACE[id] ? (PLACE[id].short || PLACE[id].name) : id); }).join(', ') + '</li>';
     NUMS = {}; var nn = 0; (pl.multi ? pl.days.map(function (d) { return d.plan; }) : [pl]).forEach(function (q) { q.stops.forEach(function (s) { if (!isSlot(s)) NUMS[s.id] = ++nn; }); });
     if (pl.multi) {
       var gi = 0; // 번호는 여행 전체에서 이어서(그림의 번호와 같게), 아래에는 고른 날(S.dayTab)만 보여 준다
@@ -1662,7 +1693,7 @@
       var t = pl.tomorrow, n = pl.stops.length;
       html += chapterHtml({ id: t.place.id, place: t.place }, n, { num: nn + 1, when: hhmm(t.arrive) + ' 도착 · 일출 ' + hhmm(t.sunrise), move: hhmm(t.depart) + ' ' + pl.endStation.name + ' 출발 · ' + (t.moveText || '택시 약 ' + t.legMin + '분(어림)') });
     }
-    if (!placeStops(pl.stops).length) html = '<li class="post empty">돌아갈 시간까지 여유가 적어요. 곧바로 ' + esc(st) + '으로 가세요.</li>' + (E && !pl.multi ? edAddHtml(0, 0, 0) : '');
+    if (!placeStops(pl.stops).length) html = (S.mustDropped && S.mustDropped.length ? '<li class="post empty">꼭 갈 곳을 다 넣기엔 시간이 모자라요. 몇 곳을 줄여서 다시 골라 보세요(지금은 다 빼고 바로 ' + esc(st) + '으로 가는 길만 남았어요).</li>' : '<li class="post empty">돌아갈 시간까지 여유가 적어요. 곧바로 ' + esc(st) + '으로 가세요.</li>') + (E && !pl.multi ? edAddHtml(0, 0, 0) : '');
     $('timeline').innerHTML = html;
     renderDayTabs(); ovRender();
     var fl;
@@ -2376,7 +2407,7 @@
         (sel.addr ? '<p class="poi-a">' + esc(sel.addr) + '</p>' : '') + (sel.prec ? '<p class="poi-a"><small>' + (sel.prec === 'k' ? '이름으로 찾은 위치' : '주소로 찾은 대략 위치(건물 기준)') + '</small></p>' : '') + (sel.tel ? '<p class="poi-a"><a href="tel:' + esc(sel.tel.replace(/[^0-9]/g, '')) + '">' + esc(sel.tel) + '</a></p>' : '') +
         '<a class="btn poi-go" href="' + esc(TW.kakaoSearch(sel.name)) + '" target="_blank" rel="noopener">카카오맵에서 보기</a><p class="poi-s">출처: 공공데이터포털 · 한국관광공사 · 영업 여부는 방문 전 확인 · 별점·광고 없음</p>';
     } else { card.hidden = true; card.innerHTML = ''; }
-    var ps = $('poiSrc'); ps.hidden = !lay.eat; ps.textContent = lay.eat ? '식당: ' + ((TW.src && TW.src.eats) || '') + ' · 숫자 동그라미는 그 둘레 곳 수 · 눌러서 확대' : '';
+    var ps = $('poiSrc'); ps.hidden = !(lay.eat || lay.cafe); ps.textContent = (lay.eat || lay.cafe) ? (lay.eat && lay.cafe ? '식당·카페: ' : lay.cafe ? '카페: ' : '식당: ') + ((TW.src && TW.src.eats) || '') + ' · 숫자 동그라미는 그 둘레 곳 수 · 눌러서 확대' : '';
     var lst = $('poiList'), vis = layPoi() ? visiblePois(null, null).sort(function (x, y) { return x.m - y.m; }).slice(0, 6) : [], haveC = courseIds();
     lst.hidden = !vis.length;
     lst.innerHTML = vis.length ? '<p class="poi-lh"><b>' + (S.mapFocus ? (S.mapFocus.name || '여기') + ' 가까운 곳' : '가까운 곳') + '</b> <small>' + POI_KINDS.filter(function (k) { return lay[k]; }).map(function (k) { return POI_NAME[k]; }).join(' · ') + ' ' + buildPois().filter(function (p) { return lay[p.kind] && notInCourse(p, haveC); }).length + '곳 중</small></p><ul>' + vis.map(function (p) {

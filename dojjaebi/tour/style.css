@@ -994,6 +994,7 @@ button.ovn-b{ cursor:pointer; }
 .kpoi{ width:44px; height:44px; padding:0; border:0; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; }
 .kpoi i{ display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.35); }
 .kpoi.eat i,.poi-ic.eat{ background:#b35c00; }
+.kpoi.cafe i,.poi-ic.cafe{ background:#0d8a6b; }
 .kpoi.lodge i,.poi-ic.lodge{ background:#5f3dc4; }
 .kpoi.on i{ width:30px; height:30px; box-shadow:0 0 0 3px rgba(91,73,224,.45),0 2px 6px rgba(0,0,0,.35); }
 .kpoi svg{ width:14px; height:14px; }
@@ -1038,7 +1039,7 @@ button.ovn-b{ cursor:pointer; }
 /* 지도 식당·숙소 묶음(클러스터): 멀리서는 숫자 동그라미, 가까이서만 낱개 */
 .kclu{ min-width:44px; min-height:44px; padding:0; border:0; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; touch-action:manipulation; }
 .kclu i{ display:flex; align-items:center; justify-content:center; min-width:36px; height:36px; padding:0 6px; border-radius:18px; border:3px solid #fff; box-shadow:0 1px 5px rgba(0,0,0,.4); color:#fff; font-style:normal; font-weight:800; font-size:14px; line-height:1; font-variant-numeric:tabular-nums; }
-.kclu.eat i{ background:#b35c00; } .kclu.lodge i{ background:#5f3dc4; }
+.kclu.eat i{ background:#b35c00; } .kclu.cafe i{ background:#0d8a6b; } .kclu.lodge i{ background:#5f3dc4; }
 .kclu.big i{ min-width:46px; height:46px; border-radius:23px; font-size:15px; }
 .poi-src{ margin:6px 0 0; font-size:.78em; color:var(--muted); }
 
