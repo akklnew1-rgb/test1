@@ -95,7 +95,7 @@
       </div>
       <div class="intro-alt" role="group" aria-label="다른 방법으로 시작하기">
         <button type="button" class="ibtn" id="goVoice"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span>말로 하기</span></button>
-        <label class="ibtn" for="ticketFile"><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg><span>기차표 사진으로</span></label>
+        <label class="ibtn" for="ticketFile"><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg><span>승차권 사진으로</span></label>
         <input type="file" id="ticketFile" accept="image/*" class="visually-hidden">
       </div>
     </div>
@@ -113,10 +113,13 @@
 
   <!-- 1. 올 때 -->
   <div class="st st-n" id="st1" data-st="1" hidden>
-    <div class="st-bar"><button type="button" class="st-back" id="stBack1" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="5" aria-valuenow="1"><i></i></div><span class="st-count" aria-hidden="true">1/5</span></div>
-    <div class="st-art" aria-hidden="true"><svg viewBox="0 0 400 76" preserveAspectRatio="xMidYMid slice" focusable="false"><defs><linearGradient id="gA1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9e5ff"/><stop offset="1" stop-color="#f4fbff"/></linearGradient></defs><rect width="400" height="76" fill="url(#gA1)"/><circle cx="330" cy="26" r="15" fill="#ffe27a"/><path d="M0 52q25-8 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0V76H0z" fill="#b9dcff"/><path d="M0 60q25-7 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0V76H0z" fill="#9ccaf7"/><path d="M0 47h400" stroke="#6b5ce0" stroke-width="2" opacity=".35" stroke-dasharray="6 6"/><g transform="translate(70 22)"><rect width="150" height="24" rx="10" fill="#fff" stroke="#5b49e0" stroke-width="2.5"/><rect x="0" y="10" width="150" height="6" fill="#c8f08a"/><rect x="14" y="5" width="16" height="9" rx="3" fill="#a9c8ff"/><rect x="38" y="5" width="16" height="9" rx="3" fill="#a9c8ff"/><rect x="62" y="5" width="16" height="9" rx="3" fill="#a9c8ff"/><rect x="86" y="5" width="16" height="9" rx="3" fill="#a9c8ff"/><rect x="110" y="5" width="16" height="9" rx="3" fill="#a9c8ff"/><circle cx="30" cy="27" r="4" fill="#5b49e0"/><circle cx="120" cy="27" r="4" fill="#5b49e0"/></g></svg></div>
+    <div class="st-bar"><button type="button" class="st-back" id="stBack1" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="6" aria-valuenow="1"><i></i></div><span class="st-count" aria-hidden="true">1/6</span></div>
+    <div class="st-art st-art-photo">
+      <img src="사진캐시/2774728.jpg" alt="묵호항수변공원에서 바라본 동해 노을" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+      <span class="st-art-credit">묵호항수변공원 · 노을 — 사진: 한국관광공사 · 공공누리 제1유형</span>
+    </div>
     <div class="st-body q-in" id="qIn">
-      <p class="st-tag">올 때</p>
+      <p class="st-tag">방문일정</p>
       <h2 id="hs1" tabindex="-1">언제 와요?</h2>
       <p class="note" id="nowArriveNote" hidden>지금, 오늘부터 코스를 짜 드려요.</p>
       <div class="dt" id="dtArrive">
@@ -136,12 +139,12 @@
       <button type="button" class="chip crowd-q" id="crowdQuiet" hidden></button>
       <div class="seg2" id="howSegNow" role="group" aria-label="동해에서 이용할 교통수단" hidden>
         <button type="button" class="chip" data-how="train" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-bus"/></svg><span>대중교통 이용</span></button>
-        <button type="button" class="chip" data-how="car" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-car"/></svg><span>자차 이용</span></button>
+        <button type="button" class="chip" data-how="car" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-car"/></svg><span>자차 이용(렌트 포함)</span></button>
       </div>
       <div class="seg3" id="howSeg" role="group" aria-label="올 때 이동수단">
         <button type="button" class="chip" data-how="train" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-train"/></svg><span>기차</span></button>
         <button type="button" class="chip" data-how="bus" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-bus"/></svg><span>버스</span></button>
-        <button type="button" class="chip" data-how="car" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-car"/></svg><span>자가용</span></button>
+        <button type="button" class="chip" data-how="car" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-car"/></svg><span>자가용(렌트 포함)</span></button>
       </div>
       <p class="note" id="inNote"></p>
     </div>
@@ -150,7 +153,7 @@
 
   <!-- 2. 돌아갈 때 -->
   <div class="st st-n" id="st2" data-st="2" hidden>
-    <div class="st-bar"><button type="button" class="st-back" id="stBack2" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="5" aria-valuenow="2"><i></i></div><span class="st-count" aria-hidden="true">2/5</span></div>
+    <div class="st-bar"><button type="button" class="st-back" id="stBack2" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="6" aria-valuenow="2"><i></i></div><span class="st-count" aria-hidden="true">2/6</span></div>
     <div class="st-art" aria-hidden="true"><svg viewBox="0 0 400 76" preserveAspectRatio="xMidYMid slice" focusable="false"><defs><linearGradient id="gA2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c9"/><stop offset=".55" stop-color="#e9e5ff"/><stop offset="1" stop-color="#eaf6ff"/></linearGradient></defs><rect width="400" height="76" fill="url(#gA2)"/><circle cx="96" cy="40" r="26" fill="#ffe27a" opacity=".9"/><circle cx="96" cy="40" r="16" fill="#ffd24a"/><path d="M0 56q25-8 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0V76H0z" fill="#b9dcff"/><path d="M0 64q25-7 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0V76H0z" fill="#9ccaf7"/><g transform="translate(268 10)"><path d="M14 0h12l4 10H10z" fill="#5b49e0"/><rect x="11" y="10" width="18" height="38" fill="#fff" stroke="#5b49e0" stroke-width="2.5"/><rect x="11" y="20" width="18" height="7" fill="#c8f08a"/><rect x="11" y="33" width="18" height="7" fill="#c8f08a"/><rect x="7" y="46" width="26" height="6" rx="2" fill="#5b49e0"/><path d="M20 0V-6" stroke="#5b49e0" stroke-width="2.5"/><path d="M0 4l10 3M40 4l-10 3" stroke="#ffd24a" stroke-width="3" stroke-linecap="round"/></g></svg></div>
     <div class="st-body q-out" id="qOut">
       <p class="st-tag">돌아가는 날</p>
@@ -175,7 +178,7 @@
       <div class="seg3" id="bhowSeg" role="group" aria-label="돌아갈 때 이동수단">
         <button type="button" class="chip" data-bhow="train" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-train"/></svg><span>기차</span></button>
         <button type="button" class="chip" data-bhow="bus" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-bus"/></svg><span>버스</span></button>
-        <button type="button" class="chip" data-bhow="car" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-car"/></svg><span>자가용</span></button>
+        <button type="button" class="chip" data-bhow="car" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-car"/></svg><span>자가용(렌트 포함)</span></button>
       </div>
       <p class="note" id="bhowNote" hidden></p>
       <div id="outBody" class="howbody"></div>
@@ -186,7 +189,7 @@
 
   <!-- 3. 누구와 -->
   <div class="st st-n" id="st3" data-st="3" hidden>
-    <div class="st-bar"><button type="button" class="st-back" id="stBack3" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="5" aria-valuenow="3"><i></i></div><span class="st-count" aria-hidden="true">3/5</span></div>
+    <div class="st-bar"><button type="button" class="st-back" id="stBack3" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="6" aria-valuenow="3"><i></i></div><span class="st-count" aria-hidden="true">3/6</span></div>
     <div class="st-art" aria-hidden="true"><svg viewBox="0 0 400 76" preserveAspectRatio="xMidYMid slice" focusable="false"><defs><linearGradient id="gA3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ece8ff"/><stop offset="1" stop-color="#f3fff0"/></linearGradient></defs><rect width="400" height="76" fill="url(#gA3)"/><path d="M0 60q40-16 80 0t80 0 80 0 80 0 80 0V76H0z" fill="#d9f4c1"/><path d="M0 68q40-12 80 0t80 0 80 0 80 0 80 0V76H0z" fill="#c8f08a"/><g fill="#5b49e0"><circle cx="150" cy="30" r="9"/><rect x="141" y="39" width="18" height="22" rx="8"/></g><g fill="#8f82f2"><circle cx="190" cy="34" r="8"/><rect x="182" y="42" width="16" height="19" rx="7"/></g><g fill="#c8f08a" stroke="#5b49e0" stroke-width="2"><circle cx="232" cy="38" r="7"/><rect x="225" y="45" width="14" height="16" rx="6"/></g><path d="M290 18c0-6 8-6 8 0 0-6 8-6 8 0 0 6-8 10-8 12-0-2-8-6-8-12z" fill="#ff8fb1"/><path d="M96 20l3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1z" fill="#ffd24a"/></svg></div>
     <div class="st-body q-who">
       <p class="st-tag">누구와</p>
@@ -203,14 +206,18 @@
 
   <!-- 4. 꼭 갈 곳 (선택, 최대 3곳) -->
   <div class="st st-n" id="st4" data-st="4" hidden>
-    <div class="st-bar"><button type="button" class="st-back" id="stBack4" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="5" aria-valuenow="4"><i></i></div><span class="st-count" aria-hidden="true">4/5</span></div>
+    <div class="st-bar"><button type="button" class="st-back" id="stBack4" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="6" aria-valuenow="4"><i></i></div><span class="st-count" aria-hidden="true">4/6</span></div>
     <div class="st-body q-must" id="qMust">
       <p class="st-tag">꼭 갈 곳 (선택)</p>
       <h2 id="hs4" tabindex="-1">꼭 가고 싶은 곳이 있어요?</h2>
-      <p class="note">최대 3곳까지 골라요. 안 골라도 괜찮아요 — 도째비가 알맞게 짜 드려요.</p>
+      <p class="note">원하는 만큼 골라요. 안 골라도 괜찮아요 — 도째비가 알맞게 짜 드려요. 식당·카페는 코스에 직접 넣진 않지만, 그 근처로 동선을 짜 드려요.</p>
+      <div class="sh-chips" id="mvCat" role="group" aria-label="무엇을 고를까요">
+        <button type="button" class="chip" data-mvcat="place" aria-pressed="true">볼거리</button>
+        <button type="button" class="chip" data-mvcat="eat" aria-pressed="false">맛집</button>
+        <button type="button" class="chip" data-mvcat="cafe" aria-pressed="false">카페</button>
+      </div>
       <label class="f" for="mvQ"><span class="visually-hidden">이름으로 찾기</span><input type="search" id="mvQ" placeholder="이름으로 찾기 (예: 추암, 시장)" autocomplete="off"></label>
       <div class="sh-chips" id="mvChips">
-        <button type="button" class="chip" data-mvf="all" aria-pressed="true">전체</button>
         <button type="button" class="chip" data-mvf="sea" aria-pressed="false">바다</button>
         <button type="button" class="chip" data-mvf="indoor" aria-pressed="false">실내</button>
         <button type="button" class="chip" data-mvf="eve" aria-pressed="false">노을·저녁</button>
@@ -221,12 +228,34 @@
     <div class="st-foot"><button type="button" class="btn primary cta" id="stNext4">다음</button></div>
   </div>
 
-  <!-- 5. 확인 -->
+  <!-- 5. 숙소 + 인원수 -->
   <div class="st st-n" id="st5" data-st="5" hidden>
-    <div class="st-bar"><button type="button" class="st-back" id="stBack5" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="5" aria-valuenow="5"><i></i></div><span class="st-count" aria-hidden="true">5/5</span></div>
+    <div class="st-bar"><button type="button" class="st-back" id="stBack5" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="6" aria-valuenow="5"><i></i></div><span class="st-count" aria-hidden="true">5/6</span></div>
+    <div class="st-body q-stay" id="qStay">
+      <p class="st-tag">숙소</p>
+      <h2 id="hs5" tabindex="-1">숙소는 벌써 잡았어요?</h2>
+      <div class="chips" id="chipStay" role="group" aria-label="숙소 예약 여부">
+        <button type="button" class="chip" data-stay="booked" aria-pressed="false">예, 잡았어요</button>
+        <button type="button" class="chip" data-stay="none" aria-pressed="false">아직이에요</button>
+      </div>
+      <p class="note" id="stayNote" hidden>잘 됐어요 — 동선을 보고 숙소 자리를 알맞게 추천해 드려요. 「동네」 탭에서 둘러보고 바꿀 수 있어요.</p>
+      <p class="st-tag" style="margin-top:22px">인원수</p>
+      <h2 id="hsCount" tabindex="-1" style="font-size:1.25em">몇 명이 가요?</h2>
+      <div class="qty" role="group" aria-label="인원수">
+        <button type="button" class="qty-btn" id="countMinus" aria-label="한 명 줄이기">−</button>
+        <span class="qty-n" id="countN" aria-live="polite">1명</span>
+        <button type="button" class="qty-btn" id="countPlus" aria-label="한 명 늘리기">+</button>
+      </div>
+    </div>
+    <div class="st-foot"><button type="button" class="btn primary cta" id="stNext5">다음</button></div>
+  </div>
+
+  <!-- 6. 확인 -->
+  <div class="st st-n" id="st6" data-st="6" hidden>
+    <div class="st-bar"><button type="button" class="st-back" id="stBack6" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="6" aria-valuenow="6"><i></i></div><span class="st-count" aria-hidden="true">6/6</span></div>
     <div class="st-body q-confirm" id="qConfirm">
       <p class="st-tag">확인</p>
-      <h2 id="hs5" tabindex="-1">이렇게 짜 드릴까요?</h2>
+      <h2 id="hs6" tabindex="-1">이렇게 짜 드릴까요?</h2>
       <ul class="confirm-list" id="confirmList"></ul>
     </div>
     <div class="st-foot"><button type="button" class="btn primary cta" id="makeCourse">도째비, 코스 짜 줘</button></div>
@@ -378,7 +407,7 @@
 <!-- 2b. 지도 -->
 <section id="s-map" class="screen" hidden aria-labelledby="h-map">
   <h2 id="h-map">오늘 걷는 길</h2>
-  <div class="facbar laybar" role="group" aria-label="지도에 보기"><span class="fb-l">지도 보기</span><button type="button" class="chip" id="layCourse" aria-pressed="true">코스</button><button type="button" class="chip" id="layEat" aria-pressed="false">식당</button><button type="button" class="chip" id="layLodge" aria-pressed="false">숙소</button><button type="button" class="chip" id="laySpot" aria-pressed="false">볼거리</button></div>
+  <div class="facbar laybar" role="group" aria-label="지도에 보기"><span class="fb-l">지도 보기</span><button type="button" class="chip" id="layCourse" aria-pressed="true">코스</button><button type="button" class="chip" id="layEat" aria-pressed="false">식당</button><button type="button" class="chip" id="layCafe" aria-pressed="false">카페</button><button type="button" class="chip" id="layLodge" aria-pressed="false">숙소</button><button type="button" class="chip" id="laySpot" aria-pressed="false">볼거리</button></div>
   <div class="facbar" role="group" aria-label="지도에 같이 보기"><span class="fb-l">같이 보기</span><button type="button" class="chip" id="facWc" aria-pressed="false">화장실</button><button type="button" class="chip" id="facInfo" aria-pressed="false">관광안내소</button></div>
   <div class="mapbox">
     <div id="map" aria-label="코스 지도"></div>
@@ -446,6 +475,7 @@
   <h2 id="h-stay">동네 식당 · 숙소</h2>
   <div class="seg town-seg" id="townSeg" role="group" aria-label="보기 고르기">
     <button type="button" class="chip" data-tk="eat" aria-pressed="true">식당</button>
+    <button type="button" class="chip" data-tk="cafe" aria-pressed="false">카페</button>
     <button type="button" class="chip" data-tk="lodge" aria-pressed="false">숙소</button>
     <button type="button" class="chip" data-tk="tour" aria-pressed="false">시티투어</button>
   </div>
@@ -453,6 +483,7 @@
   <div id="townBox">
     <label class="visually-hidden" for="townQ">이름으로 찾기</label>
     <input type="text" id="townQ" placeholder="이름·종류로 찾기 (예: 물회, 칼국수)" autocomplete="off" enterkeyhint="search">
+    <button type="button" class="chip" id="townNear" aria-pressed="false">가까운 순으로</button>
     <div class="chips town-chips" id="townChips" role="group" aria-label="동네 고르기"></div>
     <p class="note" id="townCount" aria-live="polite"></p>
     <p class="note warnline" id="townMsg" role="status" aria-live="polite" hidden></p>

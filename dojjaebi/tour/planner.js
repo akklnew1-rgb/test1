@@ -578,7 +578,11 @@
       var base = {}; for (var k in o) base[k] = o[k];
       base.date = date; base.fixed = []; base.max = last ? undefined : 8; base.avoid = avoid.slice(); base.mode = 'normal';
       if (i > 0) { base.startStation = stay; base.start = undefined; base.now = DAY2_START; }
+      // 2026-10-21: 자가용으로 오고 갈 때(carBoth) 첫날 아침·마지막 날 저녁까지 "묵호수변공원 주차장"(한 곳 고정)으로 맞춰져 있었음 —
+      // 숙소가 망상·천곡 등 다른 권역으로 추천·선택돼도 차는 묵호 쪽 공영 주차장이 아니라 숙소 쪽에 있는 게 자연스러우니, 첫날 시작·마지막 날 도착도 숙소 자리로 맞춤(차 없이 오면 기존대로 역·터미널)
+      if (i === 0 && carBoth) { base.startStation = stay; base.start = undefined; }
       if (!last) { base.endStation = stay; base.end = undefined; base.train = DAY_END; base.buffer = 0; base.backHow = carBoth ? 'car' : 'bus'; }
+      else if (carBoth) { base.endStation = stay; base.end = undefined; }
       if (i === 0) { base.mode = 'late'; if (wantSun) base.avoid = base.avoid.concat(chuamCluster.map(function (p) { return p.id; })); }
       var sun = null, brk = null, pl = null;
       if (i === 1 && wantSun && !sunDone) { // 둘째 날 새벽 추암 일출 + 아침 한 끼

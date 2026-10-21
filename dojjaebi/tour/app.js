@@ -171,7 +171,7 @@
   $('toMapTop').addEventListener('click', function () { $('tabMap').click(); }); // 위 막대 「지도로 보기」 = 아래 메뉴 「지도」와 같음
   /* 아래 메뉴 */
   $('tabHome').addEventListener('click', function () { show(S.plan ? 's-course' : 's-start'); });
-  $('tabMap').addEventListener('click', function () { S.mapFocus = null; if (!S.mapSeen) { S.mapSeen = true; S.mapLay = { course: true, eat: false, lodge: false, spot: false }; } show('s-map'); }); // 지도 탭을 처음 열 때는 코스만 (식당·숙소 층은 끈 채)
+  $('tabMap').addEventListener('click', function () { S.mapFocus = null; if (!S.mapSeen) { S.mapSeen = true; S.mapLay = { course: true, eat: false, cafe: false, lodge: false, spot: false }; } show('s-map'); }); // 지도 탭을 처음 열 때는 코스만 (식당·카페·숙소 층은 끈 채)
   $('toStay').addEventListener('click', function () { show('s-stay'); });
   $('toCard').addEventListener('click', function () { renderCard(); show('s-card'); });
 
@@ -206,7 +206,8 @@
   }
   function freshCond() {
     var s0 = startDefaults();
-    var c = { how: 'train', arrive: s0.arrive, back: 18 * 60, backDate: s0.date, backHow: 'train', backTouched: false, backHowTouched: false, backDateTouched: false, backDateExplicit: false, noLimit: false, end: 'mukho', companions: ['친구'], knee: false, interests: [], rain: false, food: false, foodWord: '', count: null, date: s0.date, branch: null, tripNights: null, must: [] };
+    // 2026-10-21: companions 기본값을 ['친구']가 아니라 []로 — "친구"가 미리 눌려 있던 것을 없애고 아무것도 안 고른 채 시작
+    var c = { how: 'train', arrive: s0.arrive, back: 18 * 60, backDate: s0.date, backHow: 'train', backTouched: false, backHowTouched: false, backDateTouched: false, backDateExplicit: false, noLimit: false, end: 'mukho', companions: [], knee: false, interests: [], rain: false, food: false, foodWord: '', count: null, stayBooked: null, date: s0.date, branch: null, tripNights: null, must: [] };
     c.back = defaultBack(c);
     return c;
   }
@@ -514,10 +515,11 @@
     opt = opt || {};
     S.step = n;
     $('s-start').setAttribute('data-step', String(n));
-    for (var i = 0; i <= 5; i++) $('st' + i).hidden = (i !== n);
+    for (var i = 0; i <= 6; i++) $('st' + i).hidden = (i !== n);
     var m = $('stepMsg'); if (m) { m.hidden = true; m.textContent = ''; }
     if (n === 4) renderMustList();
-    if (n === 5) renderConfirm();
+    if (n === 5) renderStayUi();
+    if (n === 6) renderConfirm();
     setHdr();
     var pane = $('st' + n);
     pane.classList.remove('enter'); void pane.offsetWidth; pane.classList.add('enter'); // 살짝 밀려 들어옴 (움직임 줄이기 설정이면 CSS 에서 끔)
@@ -545,31 +547,68 @@
   $('stNext2').addEventListener('click', function () { if (stepBlock()) { $('bTime').focus(); return; } setStep(3); });
   $('stNext3').addEventListener('click', function () { setStep(4); });
   $('stNext4').addEventListener('click', function () { setStep(5); });
-  [1, 2, 3, 4, 5].forEach(function (n) { $('stBack' + n).addEventListener('click', function () { setStep(n - 1); }); });
+  $('stNext5').addEventListener('click', function () { setStep(6); });
+  [1, 2, 3, 4, 5, 6].forEach(function (n) { $('stBack' + n).addEventListener('click', function () { setStep(n - 1); }); });
+  /* ---------- 5단계: 숙소 예약 여부 + 인원수 (2026-10-21, 사용자 요청: "누구랑 와서 어디서 잘지도 추천해 주기 편하지 않니") ---------- */
+  function stayUi() { Array.prototype.forEach.call(document.querySelectorAll('#chipStay [data-stay]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-stay') === S.cond.stayBooked ? 'true' : 'false'); }); $('stayNote').hidden = S.cond.stayBooked !== 'booked'; }
+  function renderStayUi() { stayUi(); $('countN').textContent = (S.cond.count || 1) + '명'; }
+  $('chipStay').addEventListener('click', function (ev) { var b = ev.target.closest('[data-stay]'); if (!b) return; S.cond.stayBooked = b.getAttribute('data-stay'); stayUi(); });
+  $('countMinus').addEventListener('click', function () { S.cond.count = Math.max(1, (S.cond.count || 1) - 1); $('countN').textContent = S.cond.count + '명'; });
+  $('countPlus').addEventListener('click', function () { S.cond.count = Math.min(10, (S.cond.count || 1) + 1); $('countN').textContent = S.cond.count + '명'; });
   /* ---------- 4단계: 꼭 갈 곳 (선택, 최대 3곳) — 장소 자료 전체에서 고름(코스가 아직 없어도 됨) ---------- */
-  var MV = { f: 'all' };
+  var MV = { f: null, cat: 'place' }; // 2026-10-21: "전체" 칩을 없애고 기본으로 아무 것도 안 눌린 채 시작(눌러도 괜찮지만 미리 눌려 있지 않게) — SH_F[null]은 SH_F.all로 자동 대체됨
+  // 2026-10-22: "여행의 본질이 보고 먹고 놀고" — 꼭 갈 곳에 식당·카페도 고를 수 있게(MV.cat), 3곳 제한도 없앰.
+  // 식당·카페는 코스 안에 실제 들르는 장소로 넣지 않는다(끼니는 시간 슬롯 방식 그대로) — 대신 planner 로 넘기기 전에 가장 가까운 볼거리로 바꿔서, 그 근처를 지나가게 동선만 짠다(resolveMust 참고).
   function mvChipsUi() { Array.prototype.forEach.call(document.querySelectorAll('#mvChips [data-mvf]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-mvf') === MV.f ? 'true' : 'false'); }); }
+  function mvCatUi() {
+    Array.prototype.forEach.call(document.querySelectorAll('#mvCat [data-mvcat]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-mvcat') === MV.cat ? 'true' : 'false'); });
+    $('mvChips').hidden = MV.cat !== 'place'; // 바다·실내·노을 칩은 볼거리를 고를 때만
+  }
+  function mustFoodKey(id) { return id.indexOf('food:') === 0 ? id.slice(5) : null; }
   function renderMustList() {
-    var q = ($('mvQ').value || '').trim(), fn = SH_F[MV.f] || SH_F.all;
-    var list = D.places.filter(function (p) { return fn(p) && (!q || (p.name || '').indexOf(q) >= 0 || (p.short || '').indexOf(q) >= 0); });
-    var must = S.cond.must || (S.cond.must = []);
-    $('mvHint').textContent = must.length ? ('고른 곳 ' + must.length + '/3곳') : '최대 3곳까지 고를 수 있어요.';
-    $('mvList').innerHTML = list.length ? list.map(function (p) {
-      var idx = must.indexOf(p.id), on = idx >= 0;
-      return '<li><button type="button" class="sh-item mv-item' + (on ? ' on' : '') + '" data-mvpick="' + p.id + '" aria-pressed="' + on + '"><span class="sh-top"><b>' + esc(p.name) + '</b>' + (on ? '<span class="mv-n">' + (idx + 1) + '</span>' : '') + '</span><span class="sh-meta">' + pickHtml(p, 'sh-t') + '<span class="sh-t">#' + esc(p.region || '') + '</span><span class="sh-t">' + (p.indoor ? '실내' : '야외') + '</span></span></button></li>';
-    }).join('') : '<li class="sh-none">찾는 곳이 없어요. 다른 낱말로 찾아 보세요.</li>';
+    var q = ($('mvQ').value || '').trim(), must = S.cond.must || (S.cond.must = []);
+    var list, isFood = MV.cat === 'eat' || MV.cat === 'cafe';
+    if (isFood) list = kindList(MV.cat, q);
+    else { var fn = SH_F[MV.f] || SH_F.all; list = D.places.filter(function (p) { return fn(p) && (!q || (p.name || '').indexOf(q) >= 0 || (p.short || '').indexOf(q) >= 0); }); }
+    $('mvHint').textContent = must.length ? ('고른 곳 ' + must.length + '곳') : '원하는 만큼 골라요.';
+    $('mvList').innerHTML = !list.length ? '<li class="sh-none">찾는 곳이 없어요. 다른 낱말로 찾아 보세요.</li>' : list.slice(0, 60).map(function (p) {
+      var id = isFood ? ('food:' + p.key) : p.id, idx = must.indexOf(id), on = idx >= 0;
+      var meta = isFood ? ('<span class="sh-t">' + esc(p.type) + '</span><span class="sh-t">#' + esc(p.area) + '</span>')
+        : (pickHtml(p, 'sh-t') + '<span class="sh-t">#' + esc(p.region || '') + '</span><span class="sh-t">' + (p.indoor ? '실내' : '야외') + '</span>');
+      return '<li><button type="button" class="sh-item mv-item' + (on ? ' on' : '') + '" data-mvpick="' + esc(id) + '" aria-pressed="' + on + '"><span class="sh-top"><b>' + esc(p.name) + '</b>' + (on ? '<span class="mv-n">' + (idx + 1) + '</span>' : '') + '</span><span class="sh-meta">' + meta + '</span></button></li>';
+    }).join('');
   }
   $('mvQ').addEventListener('input', renderMustList);
+  $('mvCat').addEventListener('click', function (ev) { var b = ev.target.closest('[data-mvcat]'); if (!b) return; MV.cat = b.getAttribute('data-mvcat'); mvCatUi(); renderMustList(); });
   $('mvChips').addEventListener('click', function (ev) { var b = ev.target.closest('[data-mvf]'); if (!b) return; MV.f = b.getAttribute('data-mvf'); mvChipsUi(); renderMustList(); });
   $('mvList').addEventListener('click', function (ev) {
     var b = ev.target.closest('[data-mvpick]'); if (!b) return;
     var id = b.getAttribute('data-mvpick'), must = S.cond.must || (S.cond.must = []), idx = must.indexOf(id);
-    if (idx >= 0) must.splice(idx, 1);
-    else { if (must.length >= 3) { flash('꼭 갈 곳은 최대 3곳까지 골라요.'); return; } must.push(id); }
+    if (idx >= 0) must.splice(idx, 1); else must.push(id); // 2026-10-22: 3곳 제한 없앰 — 원하는 만큼
     renderMustList();
   });
+  /* 2026-10-22: planner(D.places 만 앎)에 넘기기 전에 'food:' 로 고른 식당·카페를 가장 가까운 볼거리 id 로 바꾼다 — 그 식당이 코스에 들어가는 게 아니라, 그 근처를 지나도록 동선만 짜 주는 것(사용자: "카페동해를 고르면 그 근처 묵호등대로 안내하는 로직") */
+  function resolveMust(must) {
+    var out = [], seen = {};
+    (must || []).forEach(function (id) {
+      var key = mustFoodKey(id), pid = id;
+      if (key) {
+        var x = TW.list('eat').filter(function (e) { return e.key === key; })[0];
+        pid = (x && x.lat && x.lng && FU) ? (FU.nearestN(D.places, x.lat, x.lng, 1, null)[0] || {}).item : null;
+        pid = pid ? pid.id : null;
+      }
+      if (pid && !seen[pid]) { seen[pid] = 1; out.push(pid); }
+    });
+    return out;
+  }
   /* ---------- 5단계: 확인 — 고른 내용을 줄로 보여 주고, 「고치기」로 그 단계로 바로 간다 ---------- */
-  function mustNames() { return (S.cond.must || []).map(function (id) { return PLACE[id] ? (PLACE[id].short || PLACE[id].name) : id; }); }
+  function mustNames() {
+    return (S.cond.must || []).map(function (id) {
+      var key = mustFoodKey(id);
+      if (key) { var x = TW.list('eat').filter(function (e) { return e.key === key; })[0]; return x ? x.name : id; }
+      return PLACE[id] ? (PLACE[id].short || PLACE[id].name) : id;
+    });
+  }
   function editRow(label, value, step) { return '<li class="confirm-row"><span class="cf-k">' + esc(label) + '</span><span class="cf-v">' + value + '</span><button type="button" class="linkbtn" data-editstep="' + step + '">고치기</button></li>'; }
   function renderConfirm() {
     var c = S.cond;
@@ -579,7 +618,8 @@
     var compTxt = esc(compOf(c) && compOf(c) !== '혼자' ? compNames(c) + ' 함께' : '혼자');
     var mv = mustNames(), multiMust = mv.length && nDays(c) > 1;
     var mvTxt = mv.length ? (esc(mv.join(', ')) + (multiMust ? ' <span class="warnline">(1박 이상은 아직 반영 못 해요)</span>' : '')) : '없음 (도째비가 알맞게 골라요)';
-    $('confirmList').innerHTML = editRow('올 때', whenTxt, 1) + editRow('돌아갈 때', backTxt, 2) + editRow('누구와', compTxt, 3) + editRow('꼭 갈 곳', mvTxt, 4);
+    var stayTxt = (c.stayBooked === 'booked' ? '벌써 잡았어요' : c.stayBooked === 'none' ? '아직이에요 (도째비가 추천해요)' : '안 물어봤어요') + ' · ' + (c.count || 1) + '명';
+    $('confirmList').innerHTML = editRow('올 때', whenTxt, 1) + editRow('돌아갈 때', backTxt, 2) + editRow('누구와', compTxt, 3) + editRow('꼭 갈 곳', mvTxt, 4) + editRow('숙소·인원', stayTxt, 5);
   }
   document.addEventListener('click', function (ev) { var b = ev.target.closest('[data-editstep]'); if (!b) return; setStep(+b.getAttribute('data-editstep'), { focus: false }); });
   /* 인사 화면: 대표 사진 여러 장이 천천히 바뀐다(공공누리 제1유형만 — 칸에 꽉 채워 잘라 쓰므로). 4.5초마다 · 점 · 1/6 · 좌우로 밀기 · 손대는 동안·탭이 가려지면 멈춤 · 움직임 줄이기면 자동으로 안 넘김 */
@@ -666,7 +706,7 @@
     var f = ev.target.files && ev.target.files[0]; if (!f) return;
     var r = AI.aiParseTicket(f);
     r.how = 'train';
-    applyParsed(r, '기차표 사진에서 읽은 내용이에요 (시연: 사진을 읽은 것처럼 보여 드려요).');
+    applyParsed(r, '승차권 사진에서 읽은 내용이에요 (시연: 사진을 읽은 것처럼 보여 드려요).');
     ev.target.value = '';
   });
   $('goVoice').addEventListener('click', function () { $('reqText').value = ''; show('s-input'); initMic(); });
@@ -846,7 +886,7 @@
   function isCouple() { return S.cond.companions.indexOf('연인') >= 0; }
   function planOpts(over) {
     var multi = isMulti();
-    var o = { now: S.simNow, train: effTrain(S.mode), how: S.cond.how, backHow: S.cond.backHow, start: startId(), end: endId(), backDate: S.cond.backDate, stay: multi ? stayInfo() : undefined, sunrise: multi && !S.cond.rain && !isKid() && !isSlow() && (isCouple() || S.cond.companions.indexOf('친구') >= 0 || S.cond.companions.indexOf('혼자') >= 0 || !S.cond.companions.length), kid: isKid(), couple: isCouple(), slow: isSlow(), avoidStairs: isSlow() || isKid(), soft: isSlow(), food: !!S.cond.food, foodWord: S.cond.foodWord || '', rain: S.cond.rain, interests: S.cond.interests, fx: S.fx, crowdFn: S.crowd ? crowdFn : null, mode: S.mode, fixed: S.fixed, date: S.cond.date, tour: !!CT, tourPrefer: !!S.tourLoop, must: multi ? [] : (S.cond.must || []).slice() }; // 꼭 갈 곳(o.must)은 하루 코스에만: planDays 는 날마다 같은 o 를 쓰므로 여러 날이면 날마다 강제돼 버린다
+    var o = { now: S.simNow, train: effTrain(S.mode), how: S.cond.how, backHow: S.cond.backHow, start: startId(), end: endId(), backDate: S.cond.backDate, stay: multi ? stayInfo() : undefined, sunrise: multi && !S.cond.rain && !isKid() && !isSlow() && (isCouple() || S.cond.companions.indexOf('친구') >= 0 || S.cond.companions.indexOf('혼자') >= 0 || !S.cond.companions.length), kid: isKid(), couple: isCouple(), slow: isSlow(), avoidStairs: isSlow() || isKid(), soft: isSlow(), food: !!S.cond.food, foodWord: S.cond.foodWord || '', rain: S.cond.rain, interests: S.cond.interests, fx: S.fx, crowdFn: S.crowd ? crowdFn : null, mode: S.mode, fixed: S.fixed, date: S.cond.date, tour: !!CT, tourPrefer: !!S.tourLoop, must: multi ? [] : resolveMust(S.cond.must) }; // 꼭 갈 곳(o.must)은 하루 코스에만: planDays 는 날마다 같은 o 를 쓰므로 여러 날이면 날마다 강제돼 버린다 · 2026-10-22: resolveMust 가 'food:' 선택을 가장 가까운 볼거리 id 로 바꿔 줌
     if (over) for (var k in over) o[k] = over[k];
     if (over && over.mode) o.train = effTrain(over.mode);
     if (multi) { o.fixed = []; o.mode = 'normal'; o.now = S.cond.arrive; }
@@ -924,7 +964,7 @@
     S.simNow = S.cond.arrive; lsSet(K_SIM, String(S.simNow)); S.startNote = null; S.tr = S.tr; // 도착 시각이 출발 시각
     S.mode = 'normal'; S.fixed = []; S.banner = null; $('banner').hidden = true;
     S.plan = null; S.ed = null; S.editing = false; S.dayTab = 0; S.stayPick = null; S.stayAuto = false; S.openFold = {};
-    S.applied = {}; S.dismissed = {}; S.notified = {}; S.raMore = false; S.demoNear = false; S.mapSeen = false; S.mapLay = { course: true, eat: false, lodge: false, spot: false }; S.mapFocus = null; // 새 코스: 제보 알림 선택·지도 층을 처음 상태로
+    S.applied = {}; S.dismissed = {}; S.notified = {}; S.raMore = false; S.demoNear = false; S.mapSeen = false; S.mapLay = { course: true, eat: false, cafe: false, lodge: false, spot: false }; S.mapFocus = null; // 새 코스: 제보 알림 선택·지도 층을 처음 상태로
     if (isMulti()) { var rs = recommendStay(); if (rs) { S.stayPick = rs; S.stayAuto = true; } } // 올 예정 + 여러 날: 동선 보고 숙소 권역을 스스로 추천(동네 탭에서 직접 바꾸면 그 값을 따름)
     replan({ noHighlight: true });
     edRestore(); // 같은 조건으로 전에 고쳐 둔 코스가 있으면 그대로 불러온다
@@ -2229,7 +2269,10 @@
   }
   /* ---------- 지도에 식당·숙소 보기 (2026-10-18) — 코스에는 식당을 넣지 않고, 지도에서 위치를 보고 직접 고른다 ----------
      자료: 동네 탭 자료(좌표 있는 곳) + 관광공사 음식점 + 공공데이터 식당·숙박(편의 자료). 별점·후기·광고 없음. 같은 곳은 하나로 합친다. */
-  S.mapLay = { course: true, eat: false, lodge: false, spot: false }; S.mapFocus = null; S.poiSel = null;
+  /* 2026-10-21: "식당이랑 카페 분리" — 자료에 업태가 "카페"로 또렷이 적힌 곳은 4곳뿐이라(1,669곳 중), 이름에 카페·커피 낱말이 있는 곳도 같이 카페로 봄(44곳 안팎). 완벽하진 않지만 업태만 쓰는 것보다 실제에 가까움 */
+  var CAFE_RE = /카페|까페|커피|coffee|cafe/i;
+  function isCafe(x) { return CAFE_RE.test(x.name || '') || CAFE_RE.test(x.type || ''); }
+  S.mapLay = { course: true, eat: false, cafe: false, lodge: false, spot: false }; S.mapFocus = null; S.poiSel = null;
   var POIS = null;
   function buildPois() {
     if (POIS) return POIS;
@@ -2237,11 +2280,12 @@
     function norm(s) { return String(s || '').replace(/\s+/g, '').toLowerCase(); }
     function add(kind, name, type, addr, lat, lng, tel, prec) {
       if (!name || !lat || !lng) return;
+      if (kind === 'eat' && isCafe({ name: name, type: type })) kind = 'cafe'; // 카페는 식당과 다른 색·아이콘으로
       var nk = kind + '|' + norm(name);
       if (seen[nk]) return;
       for (var i = 0; i < out.length; i++) { var o = out[i]; if (o.kind === kind && o.name.slice(0, 2) === String(name).slice(0, 2) && Math.abs(o.lat - lat) < 0.0004 && Math.abs(o.lng - lng) < 0.0005) return; } // 40m 안 같은 이름 앞머리 = 같은 집
       seen[nk] = 1;
-      out.push({ id: kind.charAt(0) + out.length, kind: kind, name: name, type: type || (kind === 'eat' ? '식당' : '숙박'), addr: String(addr || '').replace(/^강원(특별자치)?도\s*동해시\s*/, ''), lat: lat, lng: lng, tel: tel || '', prec: prec || '' });
+      out.push({ id: kind.charAt(0) + out.length, kind: kind, name: name, type: type || (kind === 'eat' ? '식당' : kind === 'cafe' ? '카페' : '숙박'), addr: String(addr || '').replace(/^강원(특별자치)?도\s*동해시\s*/, ''), lat: lat, lng: lng, tel: tel || '', prec: prec || '' });
     }
     (TW && TW.list ? TW.list('eat') : []).forEach(function (x) { if (TW.hasPos(x)) add('eat', x.name, x.type, x.addr, x.lat, x.lng, '', x.prec); });
     (D.eateries || []).forEach(function (e) { add('eat', e.name, '음식점', e.addr, e.lat, e.lng); });
@@ -2251,9 +2295,9 @@
     D.places.forEach(function (q) { out.push({ id: 's_' + q.id, kind: 'spot', pid: q.id, name: q.name, type: (q.region ? q.region + ' · ' : '') + (q.indoor ? '실내' : '야외'), addr: String(q.addr || '').replace(/^강원(특별자치)?도\s*동해시\s*/, ''), lat: q.lat, lng: q.lng, tel: '', prec: '' }); }); // 볼거리(코스 밖인 곳만 보여 줌 — 아래 notInCourse)
     POIS = out; return out;
   }
-  var POI_ICON = { eat: '<path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2.5 1.5-3.5 5-3.5 8H17"/>', lodge: '<path d="M3 19V6M3 14h18v5M21 14v-2.5A2.5 2.5 0 0 0 18.5 9H11v5"/><circle cx="7" cy="11" r="1.6"/>', spot: '<path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>' };
-  var POI_KINDS = ['eat', 'lodge', 'spot'], POI_NAME = { eat: '식당', lodge: '숙소', spot: '볼거리' }, POI_COLOR = { eat: '#b35c00', lodge: '#5f3dc4', spot: '#5f6672' };
-  function layPoi() { var l = S.mapLay; return !!(l.eat || l.lodge || l.spot); }
+  var POI_ICON = { eat: '<path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2.5 1.5-3.5 5-3.5 8H17"/>', cafe: '<path d="M4 9h14v3a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9z"/><path d="M18 10h1.5a2 2 0 0 1 0 4H18"/><path d="M6 3.5c.5 1-.5 1.5 0 2.5M10 3.5c.5 1-.5 1.5 0 2.5"/>', lodge: '<path d="M3 19V6M3 14h18v5M21 14v-2.5A2.5 2.5 0 0 0 18.5 9H11v5"/><circle cx="7" cy="11" r="1.6"/>', spot: '<path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>' };
+  var POI_KINDS = ['eat', 'cafe', 'lodge', 'spot'], POI_NAME = { eat: '식당', cafe: '카페', lodge: '숙소', spot: '볼거리' }, POI_COLOR = { eat: '#b35c00', cafe: '#0d8a6b', lodge: '#5f3dc4', spot: '#5f6672' };
+  function layPoi() { var l = S.mapLay; return !!(l.eat || l.cafe || l.lodge || l.spot); }
   function notInCourse(p, have) { return p.kind !== 'spot' || !have[p.pid]; }
   function poiSvg(kind) { return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + POI_ICON[kind] + '</svg>'; }
   function mapCenterPt() { // 보는 중심: 눌러서 정한 자리 → 코스 점들의 가운데 → 묵호역
@@ -2313,7 +2357,10 @@
   }
   function renderPoiUi() {
     var lay = S.mapLay;
-    $('layCourse').setAttribute('aria-pressed', lay.course ? 'true' : 'false'); $('layEat').setAttribute('aria-pressed', lay.eat ? 'true' : 'false'); $('layLodge').setAttribute('aria-pressed', lay.lodge ? 'true' : 'false'); $('laySpot').setAttribute('aria-pressed', lay.spot ? 'true' : 'false');
+    // 2026-10-21: 숙소를 벌써 잡았다고 한 사람에겐 "숙소" 지도 보기 칩이 필요 없음 — 숨기고, 켜져 있었으면 끈다
+    var bookedHide = S.cond.stayBooked === 'booked'; if (bookedHide && lay.lodge) lay.lodge = false;
+    $('layLodge').hidden = bookedHide;
+    $('layCourse').setAttribute('aria-pressed', lay.course ? 'true' : 'false'); $('layEat').setAttribute('aria-pressed', lay.eat ? 'true' : 'false'); $('layCafe').setAttribute('aria-pressed', lay.cafe ? 'true' : 'false'); $('layLodge').setAttribute('aria-pressed', lay.lodge ? 'true' : 'false'); $('laySpot').setAttribute('aria-pressed', lay.spot ? 'true' : 'false');
     var card = $('poiCard'), sel = S.poiSel ? buildPois().filter(function (q) { return q.id === S.poiSel; })[0] : null;
     if (sel && !(lay[sel.kind] && notInCourse(sel, courseIds()))) { sel = null; S.poiSel = null; }
     if (sel && sel.kind === 'spot') {
@@ -2338,12 +2385,13 @@
   }
   function layToggle(k) {
     var lay = S.mapLay; lay[k] = !lay[k];
-    if (!lay.course && !lay.eat && !lay.lodge && !lay.spot) lay.course = true; // 다 끄면 빈 지도가 되니 코스를 다시 켠다
-    if (k !== 'course' && !lay.eat && !lay.lodge && !lay.spot) S.poiSel = null;
+    if (!lay.course && !lay.eat && !lay.cafe && !lay.lodge && !lay.spot) lay.course = true; // 다 끄면 빈 지도가 되니 코스를 다시 켠다
+    if (k !== 'course' && !lay.eat && !lay.cafe && !lay.lodge && !lay.spot) S.poiSel = null;
     renderPoiUi(); drawMap(true);
   }
   $('layCourse').addEventListener('click', function () { layToggle('course'); });
   $('layEat').addEventListener('click', function () { layToggle('eat'); });
+  $('layCafe').addEventListener('click', function () { layToggle('cafe'); });
   $('layLodge').addEventListener('click', function () { layToggle('lodge'); });
   $('laySpot').addEventListener('click', function () { layToggle('spot'); });
   $('s-map').addEventListener('click', function (ev) {
@@ -3329,10 +3377,23 @@
     else if (ev.key === K_LOG && S.screen === 's-watch') renderWatch();
   });
 
-  /* ---------- 동네 탭 (2026-10-17) — 동해시 공공데이터 식당 1,669곳(깨진 글자 1줄 제외) · 숙박업소 19곳을 동네별로 둘러본다 ----------
+  /* ---------- 동네 탭 (2026-10-17, 2026-10-22 숙소 241곳으로 보강) — 동해시 공공데이터 식당 1,669곳(깨진 글자 1줄 제외) · 숙박업소 241곳(좌표 있는 19곳 + 주소만 있는 222곳)을 동네별로 둘러본다 ----------
      계산(동네 묶음 · 찾기 · 30개씩)은 town.js, 자료는 town.data.js(동네수집.mjs). 가게 정보는 이름·업태·주소뿐(메뉴·좌표·별점 없음) → 카카오맵 찾기 링크로 넘긴다(키 없음).
      '코스에 넣기'는 숙소(좌표가 있는 곳, 여러 날 여행의 밤 숙소)만. 식당은 코스에 넣지 않고 '지도에서 보기'(지도 탭 식당 층)로 위치만 본다(2026-10-18). 마감(기차 15분 전 등)을 넘기면 코스를 바꾸지 않고 이유를 말한다. */
-  var TN = { kind: 'eat', area: '', q: '', pages: 1 }, townT = null;
+  var TN = { kind: 'eat', area: '', q: '', pages: 1, near: null }, townT = null;
+  /* 2026-10-21: "식당이랑 카페는 분류해서" — TW.list('eat') 를 카페 이름·업태 기준으로 다시 나눈다(식당 탭은 카페를 빼고, 카페 탭은 그것만) */
+  function kindList(k, q) {
+    if (k === 'lodge') return TW.query('lodge', '', q);
+    var base = TW.query('eat', '', q);
+    return base.filter(function (x) { return isCafe(x) === (k === 'cafe'); });
+  }
+  /* "거리순 혹은 목적지 부근 가까운 순" — 위치 정보가 있으면 가까운 순, 없으면 이름순(그대로) */
+  function applyNear(list) {
+    if (!TN.near) { list.forEach(function (x) { x._m = null; }); return list; } // 꺼져 있으면 예전 거리 글자가 남지 않게 지움
+    var withPos = list.filter(function (x) { return x.lat && x.lng; }), without = list.filter(function (x) { return !(x.lat && x.lng); });
+    withPos = (FU ? FU.nearestN(withPos, TN.near.lat, TN.near.lng, withPos.length, null) : withPos.map(function (x) { return { item: x, m: 0 }; })).map(function (r) { r.item._m = r.m; return r.item; });
+    return withPos.concat(without);
+  }
   function townAddState(x) {
     if (x.kind !== 'lodge') return { ok: false, why: '' }; // 식당은 코스에 넣지 않아요 — 지도 탭에서 위치를 봐요
     if (!S.plan) return { ok: false, why: '코스를 먼저 짜면 넣을 수 있어요' };
@@ -3348,27 +3409,36 @@
     renderTown();
   }
   function renderTown() {
-    var k = TN.kind, all = TW.query(k, '', TN.q), list = TN.area ? all.filter(function (x) { return x.area === TN.area; }) : all, shown = TW.page(list, TN.pages), cnt = {};
+    var k = TN.kind, all = kindList(k, TN.q), list = TN.area ? all.filter(function (x) { return x.area === TN.area; }) : all, cnt = {};
     all.forEach(function (x) { cnt[x.area] = (cnt[x.area] || 0) + 1; });
+    list = applyNear(list);
+    var shown = TW.page(list, TN.pages);
     $('townChips').innerHTML = '<button type="button" class="chip" data-area="" aria-pressed="' + (!TN.area) + '">전체 ' + all.length + '</button>' +
-      TW.areas(k).filter(function (a) { return cnt[a.area]; }).map(function (a) { return '<button type="button" class="chip" data-area="' + esc(a.area) + '" aria-pressed="' + (TN.area === a.area) + '">' + esc(a.area) + ' ' + cnt[a.area] + '</button>'; }).join('');
-    $('townCount').textContent = (TN.area || '동해시 전체') + (TN.q ? ' · “' + TN.q + '”' : '') + ' ' + list.length + '곳' + (list.length > shown.length ? ' 중 ' + shown.length + '곳 보여요' : '') + (list.length ? '' : ' — 찾는 곳이 없어요. 다른 낱말로 찾아 보세요.');
+      TW.areas(k === 'cafe' ? 'eat' : k).filter(function (a) { return cnt[a.area]; }).map(function (a) { return '<button type="button" class="chip" data-area="' + esc(a.area) + '" aria-pressed="' + (TN.area === a.area) + '">' + esc(a.area) + ' ' + cnt[a.area] + '</button>'; }).join('');
+    $('townCount').textContent = (TN.area || '동해시 전체') + (TN.q ? ' · “' + TN.q + '”' : '') + ' ' + list.length + '곳' + (list.length > shown.length ? ' 중 ' + shown.length + '곳 보여요' : '') + (list.length ? '' : ' — 찾는 곳이 없어요. 다른 낱말로 찾아 보세요.') + (TN.near ? ' · 가까운 순' : '');
     $('townList').innerHTML = shown.map(function (x) {
       var st = townAddState(x), lod = x.kind === 'lodge', noPos = !TW.hasPos(x);
-      return '<li class="tw" data-key="' + x.key + '"><div class="tw-main"><b class="tw-n">' + esc(x.name) + '</b><span class="tw-t">' + esc(x.type) + '</span></div>' +
+      return '<li class="tw" data-key="' + x.key + '"><div class="tw-main"><b class="tw-n">' + esc(x.name) + '</b><span class="tw-t">' + esc(x.type) + (x._m != null ? ' · ' + (FU ? FU.round10(x._m) : Math.round(x._m)) + 'm' : '') + '</span></div>' +
         '<p class="tw-a">' + esc(x.area === TW.OTHER ? x.dong : x.area + ' · ' + x.dong) + ' · ' + esc(x.addr) + (x.tel ? ' · <a href="tel:' + esc(x.tel.replace(/[^0-9]/g, '')) + '">' + esc(x.tel) + '</a>' : '') + '</p>' +
         '<div class="tw-btns"><a class="btn tw-map" href="' + esc(TW.kakaoSearch(x.name)) + '" target="_blank" rel="noopener">카카오맵에서 보기</a>' +
         (!lod ? (noPos ? '' : '<button type="button" class="btn tw-onmap" data-onmap="' + x.key + '">지도에서 보기</button>') : (noPos ? '<span class="tw-nopos">위치 정보 없음</span>' : '<button type="button" class="btn tw-add" data-add="' + x.key + '"' + (st.ok ? '' : ' disabled aria-disabled="true"') + '>코스에 넣기</button>')) + '</div>' +
         (lod ? (st.ok ? '<p class="tw-why">밤에 묵는 곳으로 정해요</p>' : (noPos ? '' : '<p class="tw-why">' + esc(st.why) + '</p>')) : '') + '</li>';
     }).join('');
     var more = $('townMore'); more.hidden = list.length <= shown.length; more.textContent = '더 보기 (' + (list.length - shown.length) + '곳 남음)';
-    $('townSrc').textContent = '출처: ' + ((TW.src && TW.src[k === 'eat' ? 'eats' : 'lodging']) || '') + ' · 가게 소개·메뉴·별점은 자료에 없어요 · 영업 여부와 예약은 직접 확인 · 광고 없음';
+    $('townSrc').textContent = '출처: ' + ((TW.src && TW.src[k === 'lodge' ? 'lodging' : 'eats']) || '') + (k === 'cafe' ? ' · 업태가 "카페"로 적힌 곳 + 이름에 카페·커피가 들어간 곳(완벽하진 않아요)' : '') + ' · 가게 소개·메뉴·별점은 자료에 없어요 · 영업 여부와 예약은 직접 확인 · 광고 없음';
   }
   $('townSeg').addEventListener('click', function (ev) {
     var b = ev.target.closest('[data-tk]'); if (!b) return;
     TN.kind = b.getAttribute('data-tk'); TN.area = ''; TN.pages = 1; $('townQ').value = TN.q = ''; townSay(''); renderTownTab();
   });
   $('townChips').addEventListener('click', function (ev) { var b = ev.target.closest('[data-area]'); if (!b) return; TN.area = b.getAttribute('data-area'); TN.pages = 1; renderTown(); });
+  /* 2026-10-21: "가나다 순보다는 거리순, 혹은 목적지 부근 가까운 순" — 위치를 이미 쓰고 있으면 바로, 아니면 제보 화면과 같은 위치 동의 창을 띄움 */
+  $('townNear').addEventListener('click', function () {
+    if (TN.near) { TN.near = null; $('townNear').setAttribute('aria-pressed', 'false'); TN.pages = 1; renderTown(); return; }
+    var fix = curFix();
+    if (fix) { TN.near = fix; $('townNear').setAttribute('aria-pressed', 'true'); TN.pages = 1; renderTown(); return; }
+    openLoc(function () { var f = curFix(); if (f) { TN.near = f; $('townNear').setAttribute('aria-pressed', 'true'); TN.pages = 1; renderTown(); } });
+  });
   $('townQ').addEventListener('input', function () { clearTimeout(townT); var v = this.value; townT = setTimeout(function () { TN.q = v.trim(); TN.pages = 1; renderTown(); }, 160); });
   $('townMore').addEventListener('click', function () { TN.pages++; renderTown(); });
   $('townList').addEventListener('click', function (ev) {
