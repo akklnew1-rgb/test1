@@ -346,6 +346,8 @@
     if ($('calBox')) { $('calBox').hidden = c.branch === 'now'; if (c.branch !== 'now') renderCal(); }
     if ($('calBackTimeWrap')) $('calBackTimeWrap').hidden = c.branch === 'now'; // 2026-10-22: 달력과 같이 보이고 같이 숨음(지금 branch 는 날짜 자체를 안 물으니 떠날 시각도 여기선 안 물음, 2단계에서 물음)
     if ($('nowBackSeg')) $('nowBackSeg').hidden = c.branch !== 'now';
+    if ($('nowBackTimeWrap')) $('nowBackTimeWrap').hidden = c.branch !== 'now'; // 2026-10-22: "지금" 흐름의 떠날 시각 직접 입력
+    if ($('nowTicketWrap')) $('nowTicketWrap').hidden = c.branch !== 'now'; // 2026-10-22: "지금" 흐름의 승차권 사진 단추
     if ($('howSeg')) $('howSeg').hidden = c.branch === 'now'; // 지금 branch 는 "올 때 이동수단"(기차·버스·자가용) 대신 "동해에서 이용할 교통수단"을 물음
     if ($('howSegNow')) $('howSegNow').hidden = c.branch !== 'now';
     if ($('hs1')) $('hs1').textContent = c.branch === 'now' ? '어서 오세요!' : '언제 와요?'; // 2026-10-22: "지금 동해에 있어요"로 들어오면 이미 도착한 건데 "언제 와요?"라고 묻던 것을 고침
@@ -354,6 +356,7 @@
     $('bDate').value = c.backDate; $('bDate').min = c.date; $('bDate').max = P.addDays(c.date, 2) || '';
     $('bTime').value = toTimeValue(c.back); $('bTime').disabled = c.backHow === 'car' && c.noLimit;
     if ($('calBTimeLb')) $('calBTimeLb').textContent = (c.backHow === 'car' ? '언제까지 머무세요? (대략)' : '떠날 시각(대략)');
+    if ($('nowBTimeLb')) $('nowBTimeLb').textContent = (c.backHow === 'car' ? '언제까지 머무세요? (대략)' : '떠날 시각(대략)');
     twSync('sTime'); twSync('bTime');
     $('inBadges').innerHTML = dateBadges(c.date, true);
     renderCrowdLine(c);
@@ -433,10 +436,10 @@
     else if (b.hasAttribute('data-cal')) { calTap(b.getAttribute('data-cal')); }
     else if (b.hasAttribute('data-calnav')) { S.calView = calShiftMonth(S.calView || calMonthOf(c.date || todayIso()), +b.getAttribute('data-calnav')); }
     else if (b.hasAttribute('data-nowback')) {
+      // 2026-10-22: "하루 자고 가요"(stay1) 칩은 당일치기 흐름과 안 맞아 빼고, 대신 twNowB(정확한 시·분)로 직접 적게 함
       var nb = b.getAttribute('data-nowback');
       c.backHow = c.how; c.backHowTouched = true;
-      if (nb === 'stay1') { c.backDate = P.addDays(c.date, 1); c.backDateTouched = true; c.backDateExplicit = true; backEdited(10 * 60); }
-      else { c.backDate = c.date; c.backDateTouched = true; c.backDateExplicit = true; backEdited(nb === 'pm' ? 15 * 60 : nb === 'eve' ? 19 * 60 : 18 * 60); }
+      c.backDate = c.date; c.backDateTouched = true; c.backDateExplicit = true; backEdited(nb === 'pm' ? 15 * 60 : nb === 'eve' ? 19 * 60 : 18 * 60);
     }
     else if (b.hasAttribute('data-nolimit')) { c.noLimit = !c.noLimit; }
     else if (b.hasAttribute('data-comp')) { toggleComp(c, b.getAttribute('data-comp')); }
@@ -510,7 +513,7 @@
       Array.prototype.forEach.call(st.btns, function (b) { b.disabled = dis; });
     });
   }
-  twInit('twS', 'sTime'); twInit('twB', 'bTime'); twInit('twCalB', 'bTime'); /* 2026-10-22: 1단계 달력 밑 "떠날 시각(대략)" — 2단계 #bTime 과 같은 값을 공유 */
+  twInit('twS', 'sTime'); twInit('twB', 'bTime'); twInit('twCalB', 'bTime'); twInit('twNowB', 'bTime'); /* 2026-10-22: 1단계 달력 밑 "떠날 시각(대략)" · 2단계 "지금" 흐름의 떠날 시각 — 모두 같은 #bTime 값을 공유 */
 
   /* ---------- 시작 화면 단계 (S.step: 0 인사 · 1 올 때 · 2 돌아갈 때 · 3 누구와) — 한 화면에 한 가지씩 ---------- */
   function backEarly(c) { var eff = c.backHow === 'car' && c.noLimit ? 22 * 60 : c.back; return c.backDate === c.date && eff < c.arrive; }
@@ -733,13 +736,15 @@
     loadTrains();
     show('s-start');
   }
-  $('ticketFile').addEventListener('change', function (ev) {
+  function handleTicketFile(ev) {
     var f = ev.target.files && ev.target.files[0]; if (!f) return;
     var r = AI.aiParseTicket(f);
     r.how = 'train';
     applyParsed(r, '승차권 사진에서 읽은 내용이에요 (시연: 사진을 읽은 것처럼 보여 드려요).');
     ev.target.value = '';
-  });
+  }
+  $('ticketFile').addEventListener('change', handleTicketFile);
+  if ($('ticketFile2')) $('ticketFile2').addEventListener('change', handleTicketFile); // 2026-10-22: 2단계("지금" 흐름)에서도 같은 승차권 사진 기능을 쓸 수 있게
   $('goVoice').addEventListener('click', function () { $('reqText').value = ''; show('s-input'); initMic(); });
   $('inputNext').addEventListener('click', function () {
     var r = AI.aiParseRequest($('reqText').value, S.cond.arrive, todayIso());

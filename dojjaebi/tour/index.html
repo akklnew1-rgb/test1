@@ -179,8 +179,22 @@
       <div class="seg3" id="nowBackSeg" role="group" aria-label="빨리 고르기" hidden>
         <button type="button" class="chip" data-nowback="pm">오늘 오후</button>
         <button type="button" class="chip" data-nowback="eve">오늘 저녁</button>
-        <button type="button" class="chip" data-nowback="stay1">하루 자고 가요</button>
         <button type="button" class="chip" data-nowback="unknown">아직 몰라요</button>
+      </div>
+      <!-- 2026-10-22(사용자 요청): "당일치기에 하루 자고 가요는 빼고, 그냥 갈 시간 넣는 걸로" — 칩 4개 중 "하루 자고 가요"(1박)는 당일치기 흐름과 안 맞아 빼고, 대신 정확한 시·분을 바로 적을 수 있게 함(1단계 달력 밑 twCalB 와 같은 모양). .dt 는 2단 grid 라 시간칸만 넣음(폰 좁은 화면에서 옆에 단추를 더 붙이면 좁아져서 아래 줄로 따로 뺌) -->
+      <div class="dt" id="nowBackTimeWrap" hidden>
+        <div class="f tf"><span class="tf-l" id="nowBTimeLb">떠날 시각(대략)</span>
+          <div class="tmw" id="twNowB" role="group" aria-labelledby="nowBTimeLb">
+            <div class="tmw-ap" role="radiogroup" aria-label="오전 오후"><button type="button" class="tmw-b" role="radio" aria-checked="false" data-ap="am">오전</button><button type="button" class="tmw-b" role="radio" aria-checked="true" data-ap="pm">오후</button></div>
+            <input class="tmw-h" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="next" aria-label="시" placeholder="시"><span class="tmw-u" aria-hidden="true">시</span>
+            <input class="tmw-m" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="done" aria-label="분" placeholder="분"><span class="tmw-u" aria-hidden="true">분</span>
+          </div>
+        </div>
+      </div>
+      <!-- 2026-10-22(사용자 요청): "승차권 사진 올리는 걸로" — 인사 화면에 이미 있던 승차권 사진 기능(AI.aiParseTicket)을 여기서도 쓸 수 있게 단추만 추가(같은 동작 재사용, id 만 다름). 위 시간칸과 같이 숨고 보임 -->
+      <div class="now-ticket" id="nowTicketWrap" hidden>
+        <label class="ibtn" for="ticketFile2"><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg><span>승차권 사진으로 넣기</span></label>
+        <input type="file" id="ticketFile2" accept="image/*" class="visually-hidden">
       </div>
       <!-- 2026-10-22: 가는 날짜·시각은 이제 1단계 달력에서 이미 정함(지금 branch 는 빠른 칩으로) — 여기서 또 묻지 않고, 값만 안 보이게 들고 있음(코드 쪽이 그대로 읽고 씀) -->
       <input type="date" id="bDate" class="t-src" tabindex="-1" aria-hidden="true">

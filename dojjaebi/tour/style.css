@@ -1171,6 +1171,8 @@ button.ovn-b{ cursor:pointer; }
 /* ---------- 2026-10-21 6차안: 두 버튼 시작 · 꼭 갈 곳 · 확인 · 여행 준비(D-day) ---------- */
 #dtArrive[hidden]{ display:none !important; } /* #s-start .dt{ display:flex } 가 [hidden] 보다 더 세게 먹혀서 따로 눌러 둠 */
 #calBackTimeWrap[hidden]{ display:none !important; } /* 2026-10-22: 같은 특이도 버그(.dt 가 [hidden] 보다 세게 먹음) — 새로 추가한 "떠날 시각(대략)" 묶음도 똑같이 눌러 둠 */
+#nowBackTimeWrap[hidden]{ display:none !important; } /* 2026-10-22: 2단계 "지금" 흐름에 새로 넣은 떠날 시각 입력도 같은 특이도 버그라 눌러 둠 */
+.now-ticket{ margin-top:10px; } /* 2026-10-22: 2단계 승차권 사진 단추 — display 를 따로 안 정해서 [hidden] 전역 규칙(20번째 줄)이 그대로 먹음, 특이도 눌러 둘 필요 없음 */
 .seg2.branch-cta{ display:flex; flex-direction:column; gap:10px; }
 .seg2.branch-cta .btn{ width:100%; min-height:56px; }
 .seg2.branch-cta .ghost2{ background:var(--paper); border:2px solid var(--brand); color:var(--brand); }
