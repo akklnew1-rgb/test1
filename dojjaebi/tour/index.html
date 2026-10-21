@@ -1,0 +1,560 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<meta name="color-scheme" content="light">
+<title>도째비 길동무</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<a class="skip" href="#app">본문으로 건너뛰기</a>
+
+<!-- 아이콘 모음 (선 그림) -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></symbol>
+    <symbol id="i-map" viewBox="0 0 24 24"><path d="M9 4 3 6v14l6-2 6 2 6-2V4l-6 2zM9 4v14M15 6v14"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></symbol>
+    <symbol id="i-mark" viewBox="0 0 24 24"><path d="M6 3h12v18l-6-4-6 4z"/></symbol>
+    <symbol id="i-heart" viewBox="0 0 24 24"><path d="M12 21s-8-5.2-8-11a4.6 4.6 0 0 1 8-3 4.6 4.6 0 0 1 8 3c0 5.8-8 11-8 11z"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1.1-4.7A8 8 0 1 1 21 12z"/></symbol>
+    <symbol id="i-sound" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></symbol>
+    <symbol id="i-mute" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9zM17 9l5 6M22 9l-5 6"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M7 4.5v15l12-7.5z"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M8 5v14M16 5v14"/></symbol>
+    <symbol id="i-stop" viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 22s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M5 5l14 14M19 5L5 19"/></symbol>
+    <symbol id="i-eye" viewBox="0 0 24 24"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></symbol>
+    <symbol id="i-text" viewBox="0 0 24 24"><text x="10" y="18" text-anchor="middle" font-size="17" font-weight="800" fill="currentColor" stroke="none" font-family="Pretendard,Malgun Gothic,sans-serif">가</text><path d="M19 4v6M16 7h6" stroke-width="2"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.6"/></symbol>
+    <symbol id="i-mic" viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></symbol>
+    <symbol id="i-pencil" viewBox="0 0 24 24"><path d="M4 20l1-4L16.5 4.5a2 2 0 0 1 3 3L8 19z"/></symbol>
+    <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 3v12M7 8l5-5 5 5M5 14v6h14v-6"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 20h14"/></symbol>
+    <symbol id="i-train" viewBox="0 0 24 24"><rect x="5" y="3" width="14" height="15" rx="3"/><path d="M5 11h14M8 21l2-3M16 21l-2-3"/><circle cx="9" cy="14.5" r=".6"/><circle cx="15" cy="14.5" r=".6"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.6M12 18.9v2.6M2.5 12h2.6M18.9 12h2.6M5.3 5.3l1.8 1.8M16.9 16.9l1.8 1.8M5.3 18.7l1.8-1.8M16.9 7.1l1.8-1.8"/></symbol>
+    <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 17.9 8.6 4.7 4.7 0 0 1 17.5 18z"/></symbol>
+    <symbol id="i-rain" viewBox="0 0 24 24"><path d="M7 15a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 17.9 5.6 4.7 4.7 0 0 1 17.5 15zM8 18.5l-1 2.5M12.5 18.5l-1 2.5M17 18.5l-1 2.5"/></symbol>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="i-flame" viewBox="0 0 40 48"><path d="M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z"/></symbol>
+  </defs>
+</svg>
+
+<header class="top" id="top">
+  <button type="button" class="brand" id="homeBtn" aria-label="처음 화면으로">
+    <svg class="flame" viewBox="0 0 40 48" aria-hidden="true"><path d="M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z" fill="#17c1b2"/><path d="M13 9 9 2l8 4zM27 9l4-7-8 4z" fill="#f0a830"/><circle cx="15" cy="30" r="2.2" fill="#0b2a38"/><circle cx="25" cy="30" r="2.2" fill="#0b2a38"/><path d="M16 37q4 3.5 8 0" stroke="#0b2a38" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+    <span class="wordmark">도째비 길동무</span>
+  </button>
+  <div class="top-tools">
+    <a class="ib" href="index.html#watch" target="_blank" rel="noopener" aria-label="시청 화면 (새 창으로 열기)" title="시청 화면"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></a>
+    <button type="button" class="ib" id="muteBtn" aria-label="자동 음성 끄기" title="자동 음성 끄기" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-sound"/></svg></button>
+    <button type="button" class="ib" id="bigBtn" aria-label="글씨 크게 키우기" title="글씨 크게" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-text"/></svg></button>
+  </div>
+  <div id="banner" class="banner" role="status" aria-live="polite" hidden></div>
+</header>
+
+<main id="app" tabindex="-1">
+
+<!-- 1. 시작: 한 번에 한 가지씩 — 0 인사 · 1 올 때 · 2 돌아갈 때 · 3 누구와 (S.step) -->
+<section id="s-start" class="screen" data-step="0" aria-labelledby="h-start">
+
+  <!-- 0. 인사: 큰 사진 + 한 줄 약속 + 시작 단추 -->
+  <div class="st st-0" id="st0" data-st="0">
+    <div class="hero" id="hero" role="group" aria-roledescription="슬라이드" aria-label="동해 대표 풍경 사진">
+      <div class="hero-slides" id="heroSlides"></div>
+      <div class="hero-shade" aria-hidden="true"></div>
+      <div id="wx" class="wx" role="status" aria-live="polite" data-state="loading">
+        <div class="wx-row"><span class="wx-ic" id="wxIc" aria-hidden="true"></span><div class="wx-t"><b id="wxMain">동해 날씨를 보는 중…</b><span id="wxSub"></span></div></div>
+        <p class="wx-hint" id="wxHint"></p>
+        <p class="wx-src" id="wxSrc"></p>
+      </div>
+      <div class="hero-txt">
+        <h1 id="h-start" tabindex="-1">기차 시간은 맞추고,<br>동해는 넉넉하게.</h1>
+        <p class="hero-sub">도째비가 돌아갈 기차 15분 전까지 코스를 짜 드려요</p>
+      </div>
+      <p class="hero-meta" id="heroMeta"><b id="heroName"></b><span class="hero-credit" id="heroCredit"></span></p>
+      <div class="hero-ctl"><div class="hero-dots" id="heroDots" role="group" aria-label="사진 고르기"></div><span class="hero-count" id="heroCount" aria-hidden="true"></span></div>
+    </div>
+    <div class="intro-card">
+      <button type="button" class="btn primary cta" id="goStart">코스 짜기 시작</button>
+      <p class="quiet small">
+        <button type="button" class="linkbtn" id="goVoice">말로 하기</button><label class="linkbtn" for="ticketFile">기차표 사진으로</label><input type="file" id="ticketFile" accept="image/*" class="visually-hidden">
+      </p>
+    </div>
+    <section class="ex" aria-labelledby="exH">
+      <h2 id="exH">예시 코스</h2>
+      <div class="ex-row">
+        <button type="button" class="ex-card" id="runDemo" data-ph="mukhoport" aria-label="기본 예시 — 오후 1시 도착, 부모님과 반나절"><span class="ex-img"></span><b>오후 1시 도착<br>부모님과 반나절</b></button>
+        <button type="button" class="ex-card" id="runDemoMeal" data-ph="gamchusa" aria-label="점심·저녁 포함 예시 — 낮 12시 도착, 점심 시간 포함"><span class="ex-img"></span><b>점심·저녁 포함<br>예시</b></button>
+        <button type="button" class="ex-card" id="runDemoDay" data-ph="byeoryu" aria-label="하루 꽉 채운 예시 — 장날 낀 하루"><span class="ex-img"></span><b>장날 낀<br>하루 꽉 채워</b></button>
+        <button type="button" class="ex-card" id="runDemoTour" data-ph="suibyeon" aria-label="시티투어버스로 돌기 예시"><span class="ex-img"></span><b>시티투어버스로<br>한 바퀴</b></button>
+        <button type="button" class="ex-card" id="runDemo1bak" data-ph="mangsang" aria-label="1박 2일 예시 — 연인과 천천히"><span class="ex-img"></span><b>토·일 1박 2일<br>연인과 천천히</b></button>
+      </div>
+    </section>
+  </div>
+
+  <!-- 1. 올 때 -->
+  <div class="st st-n" id="st1" data-st="1" hidden>
+    <div class="st-bar"><button type="button" class="st-back" id="stBack1" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="3" aria-valuenow="1"><i></i></div><span class="st-count" aria-hidden="true">1/3</span></div>
+    <div class="st-art" aria-hidden="true"><svg viewBox="0 0 400 76" preserveAspectRatio="xMidYMid slice" focusable="false"><defs><linearGradient id="gA1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9e5ff"/><stop offset="1" stop-color="#f4fbff"/></linearGradient></defs><rect width="400" height="76" fill="url(#gA1)"/><circle cx="330" cy="26" r="15" fill="#ffe27a"/><path d="M0 52q25-8 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0V76H0z" fill="#b9dcff"/><path d="M0 60q25-7 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0V76H0z" fill="#9ccaf7"/><path d="M0 47h400" stroke="#6b5ce0" stroke-width="2" opacity=".35" stroke-dasharray="6 6"/><g transform="translate(70 22)"><rect width="150" height="24" rx="10" fill="#fff" stroke="#5b49e0" stroke-width="2.5"/><rect x="0" y="10" width="150" height="6" fill="#c8f08a"/><rect x="14" y="5" width="16" height="9" rx="3" fill="#a9c8ff"/><rect x="38" y="5" width="16" height="9" rx="3" fill="#a9c8ff"/><rect x="62" y="5" width="16" height="9" rx="3" fill="#a9c8ff"/><rect x="86" y="5" width="16" height="9" rx="3" fill="#a9c8ff"/><rect x="110" y="5" width="16" height="9" rx="3" fill="#a9c8ff"/><circle cx="30" cy="27" r="4" fill="#5b49e0"/><circle cx="120" cy="27" r="4" fill="#5b49e0"/></g></svg></div>
+    <div class="st-body q-in" id="qIn">
+      <p class="st-tag">올 때</p>
+      <h2 id="hs1" tabindex="-1">언제 와요?</h2>
+      <div class="dt">
+        <label class="f"><span>날짜</span><input type="date" id="sDate"></label>
+        <div class="f tf"><span class="tf-l" id="sTimeLb">도착 시각</span><input type="time" id="sTime" class="t-src" tabindex="-1" aria-hidden="true">
+          <div class="tmw" id="twS" role="group" aria-labelledby="sTimeLb">
+            <div class="tmw-ap" role="radiogroup" aria-label="오전 오후"><button type="button" class="tmw-b" role="radio" aria-checked="true" data-ap="am">오전</button><button type="button" class="tmw-b" role="radio" aria-checked="false" data-ap="pm">오후</button></div>
+            <input class="tmw-h" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="next" aria-label="시" placeholder="시"><span class="tmw-u" aria-hidden="true">시</span>
+            <input class="tmw-m" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="done" aria-label="분" placeholder="분"><span class="tmw-u" aria-hidden="true">분</span>
+          </div>
+        </div>
+      </div>
+      <p class="note warnline" id="dateMsg" role="alert" hidden></p>
+      <p class="badges" id="inBadges"></p>
+      <p class="crowd-line" id="crowdLine" hidden></p>
+      <button type="button" class="chip crowd-q" id="crowdQuiet" hidden></button>
+      <div class="seg3" id="howSeg" role="group" aria-label="올 때 이동수단">
+        <button type="button" class="chip" data-how="train" aria-pressed="true">기차</button>
+        <button type="button" class="chip" data-how="bus" aria-pressed="false">버스</button>
+        <button type="button" class="chip" data-how="car" aria-pressed="false">자가용</button>
+      </div>
+      <p class="note" id="inNote"></p>
+    </div>
+    <div class="st-foot"><button type="button" class="btn primary cta" id="stNext1">다음</button></div>
+  </div>
+
+  <!-- 2. 돌아갈 때 -->
+  <div class="st st-n" id="st2" data-st="2" hidden>
+    <div class="st-bar"><button type="button" class="st-back" id="stBack2" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="3" aria-valuenow="2"><i></i></div><span class="st-count" aria-hidden="true">2/3</span></div>
+    <div class="st-art" aria-hidden="true"><svg viewBox="0 0 400 76" preserveAspectRatio="xMidYMid slice" focusable="false"><defs><linearGradient id="gA2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c9"/><stop offset=".55" stop-color="#e9e5ff"/><stop offset="1" stop-color="#eaf6ff"/></linearGradient></defs><rect width="400" height="76" fill="url(#gA2)"/><circle cx="96" cy="40" r="26" fill="#ffe27a" opacity=".9"/><circle cx="96" cy="40" r="16" fill="#ffd24a"/><path d="M0 56q25-8 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0V76H0z" fill="#b9dcff"/><path d="M0 64q25-7 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0V76H0z" fill="#9ccaf7"/><g transform="translate(268 10)"><path d="M14 0h12l4 10H10z" fill="#5b49e0"/><rect x="11" y="10" width="18" height="38" fill="#fff" stroke="#5b49e0" stroke-width="2.5"/><rect x="11" y="20" width="18" height="7" fill="#c8f08a"/><rect x="11" y="33" width="18" height="7" fill="#c8f08a"/><rect x="7" y="46" width="26" height="6" rx="2" fill="#5b49e0"/><path d="M20 0V-6" stroke="#5b49e0" stroke-width="2.5"/><path d="M0 4l10 3M40 4l-10 3" stroke="#ffd24a" stroke-width="3" stroke-linecap="round"/></g></svg></div>
+    <div class="st-body q-out" id="qOut">
+      <p class="st-tag">돌아가는 날</p>
+      <h2 id="hs2" tabindex="-1">언제까지 동해에 있을 수 있어요?</h2>
+      <div class="dt">
+        <label class="f"><span>날짜</span><input type="date" id="bDate"></label>
+        <div class="f tf"><span class="tf-l" id="bTimeLb">출발 시각</span><input type="time" id="bTime" class="t-src" tabindex="-1" aria-hidden="true">
+          <div class="tmw" id="twB" role="group" aria-labelledby="bTimeLb">
+            <div class="tmw-ap" role="radiogroup" aria-label="오전 오후"><button type="button" class="tmw-b" role="radio" aria-checked="false" data-ap="am">오전</button><button type="button" class="tmw-b" role="radio" aria-checked="true" data-ap="pm">오후</button></div>
+            <input class="tmw-h" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="next" aria-label="시" placeholder="시"><span class="tmw-u" aria-hidden="true">시</span>
+            <input class="tmw-m" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="done" aria-label="분" placeholder="분"><span class="tmw-u" aria-hidden="true">분</span>
+          </div>
+        </div>
+      </div>
+      <p class="badges" id="outBadges"></p>
+      <div class="seg3" id="bhowSeg" role="group" aria-label="돌아갈 때 이동수단">
+        <button type="button" class="chip" data-bhow="train" aria-pressed="true">기차</button>
+        <button type="button" class="chip" data-bhow="bus" aria-pressed="false">버스</button>
+        <button type="button" class="chip" data-bhow="car" aria-pressed="false">자가용</button>
+      </div>
+      <div id="outBody" class="howbody"></div>
+      <p class="note warnline" id="stepMsg" role="status" hidden></p>
+    </div>
+    <div class="st-foot"><button type="button" class="btn primary cta" id="stNext2">다음</button></div>
+  </div>
+
+  <!-- 3. 누구와 -->
+  <div class="st st-n" id="st3" data-st="3" hidden>
+    <div class="st-bar"><button type="button" class="st-back" id="stBack3" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="3" aria-valuenow="3"><i></i></div><span class="st-count" aria-hidden="true">3/3</span></div>
+    <div class="st-art" aria-hidden="true"><svg viewBox="0 0 400 76" preserveAspectRatio="xMidYMid slice" focusable="false"><defs><linearGradient id="gA3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ece8ff"/><stop offset="1" stop-color="#f3fff0"/></linearGradient></defs><rect width="400" height="76" fill="url(#gA3)"/><path d="M0 60q40-16 80 0t80 0 80 0 80 0 80 0V76H0z" fill="#d9f4c1"/><path d="M0 68q40-12 80 0t80 0 80 0 80 0 80 0V76H0z" fill="#c8f08a"/><g fill="#5b49e0"><circle cx="150" cy="30" r="9"/><rect x="141" y="39" width="18" height="22" rx="8"/></g><g fill="#8f82f2"><circle cx="190" cy="34" r="8"/><rect x="182" y="42" width="16" height="19" rx="7"/></g><g fill="#c8f08a" stroke="#5b49e0" stroke-width="2"><circle cx="232" cy="38" r="7"/><rect x="225" y="45" width="14" height="16" rx="6"/></g><path d="M290 18c0-6 8-6 8 0 0-6 8-6 8 0 0 6-8 10-8 12-0-2-8-6-8-12z" fill="#ff8fb1"/><path d="M96 20l3 7 7 1-5 5 1 7-6-4-6 4 1-7-5-5 7-1z" fill="#ffd24a"/></svg></div>
+    <div class="st-body q-who">
+      <p class="st-tag">누구와</p>
+      <h2 id="hs3" tabindex="-1">누구와 함께?</h2>
+      <p class="note" id="startNote" hidden></p>
+      <div class="chips comp" id="chipComp" role="group" aria-label="함께 가는 사람"></div>
+      <details class="more" id="moreBox">
+        <summary>더 고르기 (선택)</summary>
+        <div class="chips" id="chipMore"></div>
+      </details>
+    </div>
+    <div class="st-foot"><button type="button" class="btn primary cta" id="makeCourse">도째비, 코스 짜 줘</button></div>
+  </div>
+</section>
+
+<!-- 1b. 말·글 입력 -->
+<section id="s-input" class="screen" hidden aria-labelledby="h-input">
+  <h2 id="h-input">어떻게 다니고 싶어요?</h2>
+  <p class="lead">돌아갈 기차 시간과 함께 가는 사람, 불편한 점을 적어 주세요.</p>
+  <label for="reqText" class="visually-hidden">여행 이야기</label>
+  <textarea id="reqText" rows="4" placeholder="예) 6시 10분 기차, 친구랑 가요. 사진 찍고 싶어요."></textarea>
+  <button type="button" class="btn mic" id="micBtn" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span id="micTxt">말하기</span></button>
+  <p class="note" id="micNote" hidden>이 폰에서는 말하기를 쓸 수 없어요. 글로 적어 주세요.</p>
+  <p class="note" id="micErr" hidden></p>
+  <div class="actions">
+    <button type="button" class="btn primary" id="inputNext">이대로 보기</button>
+    <button type="button" class="btn ghost" data-go="s-start">뒤로</button>
+  </div>
+</section>
+
+<!-- 2. 홈: 이야기 줄 + 코스 피드 -->
+<section id="s-course" class="screen" hidden aria-labelledby="h-course">
+  <h2 id="h-course" class="visually-hidden">오늘의 이야기 코스</h2>
+  <p class="visually-hidden" id="courseLead"></p>
+
+  <!-- 근처 여행자 제보 알림: 코스는 자동으로 바뀌지 않고, 눌러야만 다시 짠다 -->
+  <div class="repal pad-in" id="repAlerts" aria-live="polite" hidden></div>
+
+  <!-- 여러 날 여행: 날짜 고르기는 지도 위에(지도와 아래 일정이 모두 고른 날을 따른다) -->
+  <div class="daytabs" id="dayTabs" role="group" aria-label="날짜별 일정" hidden></div>
+
+  <!-- 코스 한 그림: 번호 붙은 장 · 날짜별 색 선 · 미리 보기 -->
+  <section class="ov pad-in" id="ov" aria-label="코스 전체 그림">
+    <div class="ov-box" id="ovBox">
+      <div class="ov-static" id="ovStatic"></div>
+      <div class="ov-kakao" id="ovKakao" hidden></div>
+      <button type="button" class="ov-reset" id="ovReset" hidden>전체 보기</button>
+    </div>
+    <div class="ov-foot">
+      <button type="button" class="ov-all" id="ovAll" aria-pressed="false" hidden>전체 일정 보기</button>
+      <div class="ov-legend" id="ovLegend" aria-label="날짜별 선 색"></div>
+      <span class="ov-credit" id="ovCredit"></span>
+    </div>
+    <div class="ov-row" id="ovCtl">
+      <div class="ov-main">
+        <button type="button" class="btn primary ov-b ov-play" id="ovPlay"><svg class="ic" aria-hidden="true"><use href="#i-play"/></svg><span>여행 미리 보기</span></button>
+        <button type="button" class="btn ov-b ov-pause" id="ovPause" hidden aria-label="멈추기"><svg class="ic" aria-hidden="true"><use href="#i-pause"/></svg><span>멈춤</span></button>
+        <button type="button" class="btn ov-b ov-end" id="ovEnd" hidden aria-label="미리 보기 끝내기"><svg class="ic" aria-hidden="true"><use href="#i-stop"/></svg><span>끝</span></button>
+      </div>
+      <div class="ov-side">
+        <button type="button" class="btn ov-b" id="ovSave" aria-label="코스 그림 저장"><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg><span>저장</span></button>
+        <button type="button" class="btn ov-b" id="ovView" hidden aria-label="코스 그림 보기"><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg><span>그림</span></button>
+        <button type="button" class="btn ov-b" id="ovShare" aria-label="코스 공유"><svg class="ic" aria-hidden="true"><use href="#i-share"/></svg><span>공유</span></button>
+      </div>
+    </div>
+    <p class="ov-chip" id="ovChip" hidden></p>
+    <button type="button" class="btn ov-next" id="ovNext" hidden><svg class="ic" aria-hidden="true"><use href="#i-play"/></svg><span>다음 날 미리 보기</span></button>
+    <div class="ov-note" id="ovNote" hidden></div>
+  </section>
+
+  <div class="row-tools pad quiet-row">
+    <button type="button" class="chip livebtn" id="liveBtn" data-live="auto">여행 길안내</button>
+    <button type="button" class="chip editbtn" id="editBtn" aria-pressed="false">코스 고치기</button>
+    <button type="button" class="chip" id="rainBtn" aria-pressed="false">날씨가 안 좋아요</button>
+  </div>
+  <div class="edwarn pad-in" id="edWarn" aria-live="polite" hidden></div>
+  <div class="cnote pad-in" id="courseNote" hidden></div>
+  <div class="strip pad-in" id="fxStrip" hidden></div>
+  <div class="pad-in" id="tourRsv" hidden></div>
+
+  <div class="edpanel pad-in" id="edPanel" hidden>
+    <p class="ed-lead">고칠 곳의 단추를 누르세요. 바꿀 때마다 도착 시각을 다시 계산해요. 순서는 직접 정한 대로 둬요.</p>
+    <details class="nl" id="stayDet">
+      <summary>더 머물면? (막차 · 하룻밤)</summary>
+      <p class="nl-help">돌아가는 기차를 바꾸면 코스가 이렇게 달라져요.</p>
+      <div id="stayOpts"></div>
+    </details>
+    <div class="ed-hist" role="group" aria-label="되돌리기">
+      <button type="button" class="eb" id="edUndo" disabled><span aria-hidden="true">↶</span> 되돌리기</button>
+      <button type="button" class="eb" id="edRedo" disabled><span aria-hidden="true">↷</span> 다시하기</button>
+      <button type="button" class="eb" id="edReset" disabled>처음 코스로</button>
+    </div>
+    <button type="button" class="eb wide" id="edReplan">나머지 다시 짜기 (📌 고정은 그대로)</button>
+    <details class="nl" id="nlBox">
+      <summary>도째비에게 말로 부탁하기 <span class="simchip">시연</span></summary>
+      <label class="nl-l" for="nlText">부탁할 말</label>
+      <div class="nl-row">
+        <input type="text" id="nlText" placeholder="예) 무릉계곡 빼줘" autocomplete="off" enterkeyhint="send">
+        <button type="button" class="eb" id="nlMic" aria-label="말로 부탁하기"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span id="nlMicTxt">말하기</span></button>
+      </div>
+      <button type="button" class="btn primary" id="nlGo">부탁하기</button>
+      <p class="nl-help">이렇게 말해 보세요: "무릉계곡 빼줘" · "점심 빼줘" · "점심 넣어줘" · "바다 하나 더" · "실내로" · "더 천천히" · "등대 먼저" · "시간 늘려줘"</p>
+      <div class="nl-res" id="nlResult" aria-live="polite" hidden></div>
+    </details>
+  </div>
+
+  <ol class="feed" id="timeline"></ol>
+  <p class="final" id="finalLine"></p>
+  <p class="crowd-src pad-in" id="crowdSrc" hidden></p>
+
+  <details class="demoset pad-in">
+    <summary>시연 설정</summary>
+    <div class="demobody">
+      <label class="field">시연 시각 (실제 시계가 아니에요)
+        <span class="inline"><input type="time" id="simTime"><button type="button" class="btn" id="simApply">적용</button></span>
+      </label>
+      <label class="field">여행 날짜 (장날·쉬는 요일을 따져요)
+        <span class="inline"><input type="date" id="simDate"><button type="button" class="btn" id="simDateApply">적용</button></span>
+      </label>
+      <p class="note">제보는 코스를 자동으로 바꾸지 않아요. 서로 다른 기기 2대가 60분 안에 같은 곳을 알리면 근처 여행자에게 알림이 가고, 다시 짤지는 본인이 골라요. 알림은 마지막 제보 60분 뒤(시연 시계 기준) 사라져요.</p>
+      <div class="actions tight">
+        <a class="btn" href="index.html#report" target="_blank" rel="noopener">다른 창에서 제보 보내기</a>
+        <button type="button" class="btn ghost" id="resetAll">제보·기록 지우기</button>
+      </div>
+    </div>
+  </details>
+</section>
+
+<!-- 2b. 지도 -->
+<section id="s-map" class="screen" hidden aria-labelledby="h-map">
+  <h2 id="h-map">오늘 걷는 길</h2>
+  <div class="facbar laybar" role="group" aria-label="지도에 보기"><span class="fb-l">지도 보기</span><button type="button" class="chip" id="layCourse" aria-pressed="true">코스</button><button type="button" class="chip" id="layEat" aria-pressed="false">식당</button><button type="button" class="chip" id="layLodge" aria-pressed="false">숙소</button><button type="button" class="chip" id="laySpot" aria-pressed="false">볼거리</button></div>
+  <div class="facbar" role="group" aria-label="지도에 같이 보기"><span class="fb-l">같이 보기</span><button type="button" class="chip" id="facWc" aria-pressed="false">화장실</button><button type="button" class="chip" id="facInfo" aria-pressed="false">관광안내소</button></div>
+  <div class="mapbox">
+    <div id="map" aria-label="코스 지도"></div>
+    <div id="mapFallback" class="mapfb" hidden></div>
+    <p class="note" id="mapNote">지도 © Kakao · 선: 카카오 길찾기 기준 (보라 = 걷기, 주황 = 버스, 진한 파랑 = 시티투어버스(정류장을 직선으로 이음), 분홍 = 택시·자가용, 점선 = 어림 직선) · 작은 동그라미: 주황 포크 = 식당, 보라 침대 = 숙소, 초록 별 = 코스에 없는 볼거리 (위 「식당」「숙소」「볼거리」를 눌러 보기)</p>
+  </div>
+  <div id="poiCard" class="poicard" hidden aria-live="polite"></div>
+  <div id="poiList" class="poilist" hidden aria-live="polite"></div>
+  <p id="poiSrc" class="poi-src" hidden></p>
+  <div id="facList" class="faclist" hidden aria-live="polite"></div>
+  <ol class="maplist" id="mapList"></ol>
+</section>
+
+<!-- 3. 현장 제보 -->
+<section id="s-report" class="screen" hidden aria-labelledby="h-report">
+  <h2 id="h-report">현장 제보</h2>
+  <p class="lead" id="repLead">본 것을 알려 주면 근처 여행자에게 알림으로 가요. 다시 짤지는 본인이 골라요.</p>
+  <div class="group" id="repLocBox">
+    <h3>1. 지금 그곳 근처인가요?</h3>
+    <p class="note" id="repLocMsg" role="status" aria-live="polite">제보는 그 장소 200m 안에서만 남길 수 있어요. 위치는 근처인지 확인만 하고 저장·전송하지 않아요.</p>
+    <div class="actions tight">
+      <button type="button" class="btn" id="repLocBtn">내 위치로 근처 확인</button>
+      <button type="button" class="btn demo" id="repDemoNear">근처라고 치고 제보(시연)</button>
+    </div>
+  </div>
+  <div class="group">
+    <h3>2. 무엇을 알려 줄래요?</h3>
+    <div class="types" role="radiogroup" aria-label="제보 종류">
+      <button type="button" class="type" role="radio" aria-checked="false" data-type="crowd"><b>붐빔</b><span>줄이 길어요</span></button>
+      <button type="button" class="type" role="radio" aria-checked="false" data-type="closed"><b>휴무</b><span>문을 닫았어요</span></button>
+      <button type="button" class="type" role="radio" aria-checked="false" data-type="view"><b>좋은 풍경</b><span>보기 좋아요</span></button>
+      <button type="button" class="type more" role="radio" aria-checked="false" data-type="new" hidden><b>새 볼거리</b><span>새로 생겼어요</span></button>
+    </div>
+    <button type="button" class="linkbtn" id="moreTypes">더보기</button>
+  </div>
+  <div class="group presets">
+    <h3>한 번에 보내기 (시연 · 근처라고 치고)</h3>
+    <p class="note" id="presetNote" hidden></p>
+    <div class="chips" id="repPresets">
+      <button type="button" class="chip" data-preset="도째비골 줄 20분">도째비골 줄 20분</button>
+      <button type="button" class="chip" id="presetNext" hidden>다음 장소 줄 20분</button>
+    </div>
+  </div>
+  <div class="group">
+    <label class="field">3. 어디인가요? <small class="rep-sub" id="repPlaceSub"></small>
+      <select id="repPlace"></select>
+    </label>
+    <label class="field">한 줄로 적어 주세요 (선택)
+      <input type="text" id="repText" placeholder="예) 도째비골 줄 20분">
+    </label>
+    <label class="field">사진 (선택)
+      <input type="file" id="repPhoto" accept="image/*">
+    </label>
+    <img id="repPreview" alt="" hidden>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn primary" id="sendReport">제보 보내기</button>
+    <button type="button" class="btn ghost" id="repBack">돌아가기</button>
+  </div>
+  <div class="panel" id="repResult" hidden></div>
+</section>
+
+<!-- 4. 동네 (식당 · 숙소 · 더 머물면) -->
+<section id="s-stay" class="screen" hidden aria-labelledby="h-stay">
+  <h2 id="h-stay">동네 식당 · 숙소</h2>
+  <div class="seg town-seg" id="townSeg" role="group" aria-label="보기 고르기">
+    <button type="button" class="chip" data-tk="eat" aria-pressed="true">식당</button>
+    <button type="button" class="chip" data-tk="lodge" aria-pressed="false">숙소</button>
+    <button type="button" class="chip" data-tk="tour" aria-pressed="false">시티투어</button>
+  </div>
+  <div id="tourBox" class="tourbox" hidden></div>
+  <div id="townBox">
+    <label class="visually-hidden" for="townQ">이름으로 찾기</label>
+    <input type="text" id="townQ" placeholder="이름·종류로 찾기 (예: 물회, 칼국수)" autocomplete="off" enterkeyhint="search">
+    <div class="chips town-chips" id="townChips" role="group" aria-label="동네 고르기"></div>
+    <p class="note" id="townCount" aria-live="polite"></p>
+    <p class="note warnline" id="townMsg" role="status" aria-live="polite" hidden></p>
+    <ul class="town-list" id="townList"></ul>
+    <button type="button" class="btn town-more" id="townMore" hidden>더 보기</button>
+    <p class="note" id="townSrc"></p>
+  </div>
+</section>
+
+<!-- 5. 나의 동해 이야기 -->
+<section id="s-card" class="screen" hidden aria-labelledby="h-card">
+  <h2 id="h-card" class="visually-hidden">나의 동해 이야기</h2>
+  <div class="recap" id="cardBody"></div>
+  <div class="share-row">
+    <button type="button" class="btn" id="cardSave"><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg>저장</button>
+    <button type="button" class="btn primary" id="cardShare"><svg class="ic" aria-hidden="true"><use href="#i-share"/></svg>공유</button>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn" id="cardSpeak">도째비 한마디 듣기</button>
+    <button type="button" class="btn ghost" data-go="s-course">코스로 돌아가기</button>
+    <button type="button" class="btn ghost" id="cardNew">새로 시작</button>
+  </div>
+</section>
+
+<!-- 6. 시청 화면 -->
+<section id="s-watch" class="screen" hidden aria-labelledby="h-watch">
+  <h2 id="h-watch">시청 화면 · 오늘의 현장 기록</h2>
+  <p class="note">이 시연 기기에 쌓인 기록이에요. 본선에서는 모든 이용자의 기록이 모여요. 위치 정보(좌표)는 어디에도 남기지 않아요.</p>
+  <div id="watchBody"></div>
+  <div class="actions">
+    <button type="button" class="btn" id="watchBack">여행 화면으로</button>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <p><span class="sim">시연 모드 — 본선에서는 인공지능이 직접 판단</span></p>
+  <p>열차 시간은 <b>코레일 시간표(국토교통부 TAGO)</b>예요. 못 받으면 <b>예시 시간표</b>로 알려요. 날씨는 <b>기상청</b> 초단기실황이에요. 장소 좌표·운영시간·가게 정보는 <b>한국관광공사 관광정보</b>(없는 곳은 대략값, 확인 필요)예요. 사진은 한국관광공사 제공(공공누리 제1·제3유형), 없으면 일러스트 그림이에요.</p>
+</footer>
+
+<nav class="tabs" id="tabs" aria-label="아래 메뉴" hidden>
+  <button type="button" class="tab" id="tabHome" data-tab="s-course"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>홈</span></button>
+  <button type="button" class="tab" id="tabMap" data-tab="s-map"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg><span>지도</span></button>
+  <button type="button" class="tab plus" id="toReport" data-tab="s-report" aria-label="현장 제보 남기기"><span class="pbtn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span><span>제보</span></button>
+  <button type="button" class="tab" id="toStay" data-tab="s-stay" aria-label="동네 (식당과 숙소)"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg><span>동네</span></button>
+  <button type="button" class="tab" id="toCard" data-tab="s-card"><svg class="ic" aria-hidden="true"><use href="#i-mark"/></svg><span>기록</span></button>
+</nav>
+
+<!-- 이야기 보기(전체 화면) -->
+<div id="story" class="sv" role="dialog" aria-modal="true" aria-label="이야기 보기" hidden>
+  <div class="sv-art" id="svArt">
+    <div class="sv-bars" id="svBars" aria-hidden="true"></div>
+    <div class="sv-top">
+      <div class="sv-who"><span class="sv-av" id="svAv"></span><div><b id="svName"></b><span id="svSub"></span></div></div>
+      <button type="button" class="ib light" id="svClose" aria-label="닫기" title="닫기"><svg class="ic" aria-hidden="true"><use href="#i-close"/></svg></button>
+    </div>
+    <button type="button" class="sv-zone prev" id="svPrev" aria-label="이전 이야기"></button>
+    <button type="button" class="sv-zone next" id="svNext" aria-label="다음 이야기"></button>
+  </div>
+  <div class="sv-body">
+    <h3 id="svTitle"></h3>
+    <p id="svText"></p>
+    <p class="src" id="svSrc"></p>
+    <button type="button" class="btn light" id="svListen">이야기 듣기</button>
+  </div>
+</div>
+
+<!-- 장소 넣기(아래에서 올라오는 창) -->
+<div id="addSheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle" hidden>
+  <div class="sh-back" data-sh="close"></div>
+  <div class="sh-card" id="shCard" tabindex="-1">
+    <div class="sh-head"><h3 id="shTitle">어디를 넣을까요?</h3><button type="button" class="eb" data-sh="close" aria-label="장소 넣기 창 닫기"><span aria-hidden="true">✕</span> 닫기</button></div>
+    <p class="sh-where" id="shWhere"></p>
+    <label class="visually-hidden" for="shQ">장소 이름으로 찾기</label>
+    <input type="text" id="shQ" placeholder="이름으로 찾기 (예: 등대, 해변, 시장)" autocomplete="off" enterkeyhint="search">
+    <div class="sh-chips" id="shChips" role="group" aria-label="골라 보기"><button type="button" class="chip" data-shf="all" aria-pressed="true">전체</button><button type="button" class="chip" data-shf="sea" aria-pressed="false">바다</button><button type="button" class="chip" data-shf="indoor" aria-pressed="false">실내</button><button type="button" class="chip" data-shf="eve" aria-pressed="false">노을·저녁</button></div>
+    <p class="note" id="shHint"></p>
+    <ul class="sh-list" id="shList"></ul>
+  </div>
+</div>
+
+<!-- 시티투어 시간표(코스의 시티투어 줄에서 열림) -->
+<div id="ttSheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="ttT" hidden>
+  <div class="sh-back" data-tt="close"></div>
+  <div class="sh-card" id="ttCard" tabindex="-1">
+    <div class="sh-head"><h3 id="ttT">시티투어 시간표</h3><button type="button" class="eb" data-tt="close" aria-label="시간표 창 닫기"><span aria-hidden="true">✕</span> 닫기</button></div>
+    <div id="ttBody"></div>
+  </div>
+</div>
+
+<!-- 그림 보기(저장이 막힌 곳에서 길게 눌러 저장) -->
+<div id="imgView" class="sheet" role="dialog" aria-modal="true" aria-labelledby="ivT" hidden>
+  <div class="sh-back" data-iv="close"></div>
+  <div class="sh-card" id="ivCard" tabindex="-1">
+    <div class="sh-head"><h3 id="ivT">코스 그림</h3><button type="button" class="eb" data-iv="close" aria-label="그림 창 닫기"><span aria-hidden="true">✕</span> 닫기</button></div>
+    <img id="ivImg" alt="코스 전체 그림" class="iv-img">
+    <p class="note" id="ivHint">그림을 길게 눌러 저장하세요.</p>
+  </div>
+</div>
+
+<!-- 제보: 근처인지 확인하기 전에 먼저 알려 주는 창 -->
+<div id="repLoc" class="sheet" role="dialog" aria-modal="true" aria-labelledby="repLocT" hidden>
+  <div class="sh-back" data-rloc="close"></div>
+  <div class="sh-card" id="repLocCard" tabindex="-1">
+    <h3 id="repLocT">근처인지 확인할게요</h3>
+    <div id="repLocGps">
+      <p class="lvask-p"><b>내 위치를 써도 될까요?</b><br>제보는 그 장소 가까이(200m 안)에서만 남길 수 있어요. 지나가다 보낸 거짓 제보를 막기 위해서예요.</p>
+      <ul class="lvask-ul">
+        <li>위치는 <b>근처인지 확인만</b> 하고 <b>저장·전송하지 않아요</b>.</li>
+        <li>제보에는 장소 이름과 "근처에서 보냄" 표시만 남아요.</li>
+        <li>폰이 위치를 물으면 <b>허용</b>을 눌러 주세요.</li>
+      </ul>
+      <button type="button" class="btn primary lvask-b" id="repLocGo">위치 켜고 확인하기</button>
+    </div>
+    <p class="lvask-bundle" id="repLocNoGps" hidden>이 화면에서는 위치를 쓸 수 없어요. 아래 시연 단추로 흐름만 볼 수 있어요.</p>
+    <p class="lvask-bundle" id="repLocErr" role="alert" hidden></p>
+    <button type="button" class="btn lvask-b" id="repLocDemo">근처라고 치고 제보(시연) <span class="simchip">시연</span></button>
+    <button type="button" class="btn ghost lvask-b" data-rloc="close">나중에 할게요</button>
+  </div>
+</div>
+
+<!-- 실시간 여행 안내: 위치를 쓰기 전에 먼저 알려 주는 창 -->
+<div id="lvAsk" class="sheet" role="dialog" aria-modal="true" aria-labelledby="lvAskT" hidden>
+  <div class="sh-back" data-lvask="close"></div>
+  <div class="sh-card" id="lvAskCard" tabindex="-1">
+    <h3 id="lvAskT">여행 길안내</h3>
+    <p class="lvask-day" id="lvAskDay"></p>
+    <div id="lvAskGps">
+      <p class="lvask-p"><b>내 위치를 써도 될까요?</b><br>지금 어디쯤인지 보고, 다음 장소까지 남은 거리와 시간을 알려 드려요. 도착하면 이야기를 들려 드려요.</p>
+      <ul class="lvask-ul">
+        <li>내 위치는 <b>이 폰 안에서만</b> 써요. 어디로도 보내지 않아요.</li>
+        <li>저장하는 건 <b>몇 번째 장까지 갔는지</b>뿐이에요.</li>
+        <li>폰이 위치를 물으면 <b>허용</b>을 눌러 주세요.</li>
+      </ul>
+      <button type="button" class="btn primary lvask-b" id="lvAskGo">위치 켜고 안내 받기</button>
+    </div>
+    <p class="lvask-bundle" id="lvAskBundle" hidden>실제 위치 안내는 공개 주소에서 쓸 수 있어요. 여기서는 가상으로 따라가 볼 수 있어요.</p>
+    <button type="button" class="btn lvask-b" id="lvAskResume" hidden>이어서 하기</button>
+    <button type="button" class="btn lvask-b" id="lvAskSim">가상으로 따라가 보기 <span class="simchip">시연</span></button>
+    <button type="button" class="btn ghost lvask-b" data-lvask="close">나중에 할게요</button>
+  </div>
+</div>
+
+<!-- 실시간 여행 안내: 지도 위로 올라오는 창 -->
+<div id="live" class="lv" role="dialog" aria-modal="true" aria-label="실시간 여행 안내" hidden>
+  <div class="lv-mapbox">
+    <div id="lvMap" class="lv-map" hidden></div>
+    <div id="lvStatic" class="lv-static" hidden></div>
+  </div>
+  <div class="lv-top">
+    <button type="button" class="lv-pill" id="lvClose" aria-label="안내 끝내기"><svg class="ic" aria-hidden="true"><use href="#i-close"/></svg><span id="lvCloseTxt">끝내기</span></button>
+    <span class="lv-pill static" id="lvProg" aria-live="polite"></span>
+    <button type="button" class="lv-pill" id="lvFollow" aria-pressed="true" aria-label="내 위치 따라가기"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg><span>따라가기</span></button>
+  </div>
+  <div class="lv-sheet" id="lvSheet">
+    <button type="button" class="lv-handle" id="lvHandle" aria-expanded="false" aria-label="자세히 보기"><i></i></button>
+    <div class="lv-main" id="lvMain" aria-live="polite"></div>
+    <div class="lv-more" id="lvMore"></div>
+  </div>
+</div>
+
+<!-- 고친 뒤 되돌리기 알림 -->
+<div id="edSnack" class="snack" role="status" aria-live="polite" hidden><span id="edSnackTxt"></span><button type="button" class="eb" id="edSnackUndo">되돌리기</button></div>
+
+<div id="flash" class="flash" role="status" aria-live="polite" hidden></div>
+
+<script src="../지도키.js"></script>
+<script src="places.js"></script>
+<script src="pick100.js"></script>
+<script src="routes.js"></script>
+<script src="citytour.js"></script>
+<script src="facilities.js"></script>
+<script src="fac.js"></script>
+<script src="planner.js"></script>
+<script src="rep.js"></script>
+<script src="crowd.js"></script>
+<script src="editor.js"></script>
+<script src="live.js"></script>
+<script src="ov.js"></script>
+<script src="town.data.js"></script>
+<script src="town.js"></script>
+<script src="ai.js"></script>
+<script src="art.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
