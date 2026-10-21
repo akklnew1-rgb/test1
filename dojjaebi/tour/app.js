@@ -11,6 +11,15 @@
   var PLACE = {}; D.places.forEach(function (p) { PLACE[p.id] = p; });
   /* 한국관광공사 「대한민국 명소발굴 100×100」 선정 표시(pick100.js — 확인된 곳만 손으로 적은 목록). 목록에 없으면 표시하지 않는다 */
   var PK = window.TourPick100 || { has: function () { return false; }, label: '', full: '' };
+  /* 장소 종류 4가지(2026-10-21 시안): 코스 카드 번호 핀과 지도 번호 핀 색을 같게. 장소 이름으로만 가른다(자료에 없는 사실을 더하지 않음).
+     색만으로 구분하지 않도록 카드에는 종류 이름을 글로 함께 적고, 지도 설명 줄에도 적는다. 흰 글씨와 4.5:1 이상 */
+  var CAT = { sea: { n: '바다·자연', c: '#1f6feb' }, food: { n: '먹거리·시장', c: '#c2410c' }, see: { n: '볼거리', c: '#237032' }, stay: { n: '쉼·숙박', c: '#5f3dc4' } };
+  function catOf(p) {
+    var n = (p && p.name) || '';
+    if (/시장|장터|오일장|활어회/.test(n)) return 'food';
+    if (/해변|해수욕장|항|촛대바위|등대|바다/.test(n)) return 'sea';
+    return 'see';
+  }
   function pickHtml(p, cls) { return p && PK.has(p.id) ? '<span class="' + (cls || 'tag') + ' pick" title="' + esc(PK.full) + '">' + esc(PK.label) + '</span>' : ''; }
   /* 끼니 시간 슬롯(planner.js): 코스에는 특정 식당을 넣지 않고 점심·저녁 '시간'만 잡는다. 슬롯은 번호 붙은 장이 아니다. */
   function isSlot(s) { return !!(s && s.place && s.place.slot); }
@@ -137,6 +146,9 @@
     SCREENS.forEach(function (s) { $(s).hidden = (s !== id); });
     S.screen = id;
     stopSpeak();
+    var ttl = { 's-start': '여행 준비', 's-input': '여행 준비', 's-course': '오늘 코스', 's-map': '코스 지도', 's-report': '현장 제보', 's-stay': '동네', 's-card': '기록', 's-watch': '시청 화면' }[id] || '';
+    if ($('scrTitle')) $('scrTitle').textContent = ttl;
+    if ($('toMapTop')) $('toMapTop').hidden = !(id === 's-course' && S.plan);
     var inTab = !!S.plan && TAB_SCREENS.indexOf(id) >= 0;
     $('tabs').hidden = !inTab;
     Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) {
@@ -155,6 +167,7 @@
     var g = ev.target.closest('[data-go]'); if (g) { show(g.getAttribute('data-go')); }
   });
   $('homeBtn').addEventListener('click', function () { show('s-start'); });
+  $('toMapTop').addEventListener('click', function () { $('tabMap').click(); }); // 위 막대 「지도로 보기」 = 아래 메뉴 「지도」와 같음
   /* 아래 메뉴 */
   $('tabHome').addEventListener('click', function () { show(S.plan ? 's-course' : 's-start'); });
   $('tabMap').addEventListener('click', function () { S.mapFocus = null; if (!S.mapSeen) { S.mapSeen = true; S.mapLay = { course: true, eat: false, lodge: false, spot: false }; } show('s-map'); }); // 지도 탭을 처음 열 때는 코스만 (식당·숙소 층은 끈 채)
@@ -728,7 +741,6 @@
   function ico(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
   function placeTags(s) {
     var p = s.place, b = [];
-    if (PK.has(p.id)) b.push(pickHtml(p));
     if (p.region) b.push('<span class="tag">#' + esc(p.region) + '</span>');
     b.push(p.indoor ? '<span class="tag good">#실내</span>' : '<span class="tag">#야외</span>');
     if (p.stairs) b.push('<span class="tag warn">#계단있음</span>');
@@ -788,14 +800,17 @@
     var t = m === 'tour' ? '시티투어' : m === 'taxi' ? '택시' : m === 'bus' ? '버스' : m === 'car' ? '자가용' : '걸어서';
     return t + (n ? ' ' + n + '분' : '');
   }
+  /* 코스 카드(2026-10-21 시안): 사진은 늘 보이고, 그 아래 [종류 색 번호 핀 · 시각 · 종류] · 장소 이름(누르면 자세히) · 100×100 · 이동 줄.
+     번호 핀은 사진 위에 얹지 않는다(공공누리 제3유형 사진 위에는 글·배지를 두지 않는 규칙). 자세한 내용(이야기·묻기·태그·운영 시간)은 p-body 에 접어 둔다 */
   function foldHead(p, i, when, s, tomorrow, changed, num, open) {
     var mode = s && s.mode && MVIC[s.mode] ? s.mode : 'walk';
     var mv = tomorrow ? '' : '<span class="p-mv"><svg class="ic mvic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + MVIC[mode] + '</svg><span>' + esc(mvShort(s)) + '</span></span>';
-    return '<h3 class="p-h"><button type="button" class="p-head p-tog" data-fold="' + i + '" aria-expanded="' + (open ? 'true' : 'false') + '" aria-controls="pb-' + i + '">' +
-      '<span class="p-av"><span class="ring"><span>' + ART.svg(p.id) + '</span></span></span>' +
-      '<span class="pt"><span class="p-t">' + (num || i + 1) + '장 · ' + esc(p.name) + '</span><span class="p-sub">' + esc(when) + '</span>' + mv + (tomorrow ? '' : crowdHtml(s)) + '</span>' +
-      (changed ? '<span class="new-badge">방금 바뀜</span>' : '') +
-      '<svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></h3>';
+    var ck = CAT[catOf(p)], n = num || i + 1;
+    return '<div class="c-meta"><span class="c-pin" style="background:' + ck.c + '" aria-hidden="true"><span>' + n + '</span></span><span class="c-when">' + esc(when) + ' · ' + esc(ck.n) + '</span>' + (tomorrow ? '' : crowdHtml(s)) + '</div>' +
+      '<h3 class="p-h"><button type="button" class="p-head p-tog" data-fold="' + i + '" aria-expanded="' + (open ? 'true' : 'false') + '" aria-controls="pb-' + i + '">' +
+      '<span class="pt"><span class="p-t"><span class="visually-hidden">' + n + '장 · </span>' + esc(p.name) + '</span><span class="p-sub">자세히 보기</span></span>' +
+      '<svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></h3>' +
+      ((PK.has(p.id) || changed) ? '<div class="c-badges">' + pickHtml(p) + (changed ? '<span class="new-badge">방금 바뀜</span>' : '') + '</div>' : '') + mv;
   }
   /* 접힌 장은 사용자가 다시 누를 때까지 열린 채로 둔다: 여러 개를 동시에 열 수 있고, 다시 그려도(날씨·시간표·길안내·미리 보기·날짜 탭) 열린 장은 S.openFold 에서 되살린다 */
   function foldSet(li, open) {
@@ -818,9 +833,10 @@
     var changed = S.changed[s.id] ? ' changed' : '';
     var liked = !!S.liked[p.id];
     var qs = (p.qa || []).map(function (x, k) { return '<button type="button" class="btn" data-act="q" data-id="' + p.id + '" data-k="' + k + '">' + esc(x.q) + '</button>'; }).join('');
-    return '<li class="chap post fold' + changed + (isOpen ? ' open' : '') + '" data-id="' + p.id + '">' +
-      foldHead(p, i, when, s, !!extra, changed, num, isOpen) + '<div class="p-body" id="pb-' + i + '"' + (isOpen ? '' : ' hidden') + '>' +
-      artFig(p) +
+    var nb = extra ? '' : nearBtnHtml(s);
+    return '<li class="chap post fold card' + changed + (isOpen ? ' open' : '') + '" data-id="' + p.id + '">' +
+      artFig(p) + '<div class="c-info">' + foldHead(p, i, when, s, !!extra, changed, num, isOpen) + '</div>' + (nb ? '<div class="c-quick">' + nb + '</div>' : '') +
+      '<div class="p-body" id="pb-' + i + '"' + (isOpen ? '' : ' hidden') + '>' +
       '<div class="p-acts">' +
       '<button type="button" class="ico" data-act="like" data-id="' + p.id + '" aria-pressed="' + liked + '" aria-label="좋아요" title="좋아요">' + ico('heart') + '</button>' +
       '<button type="button" class="ico" data-act="ask" data-id="' + p.id + '" aria-label="도째비에게 묻기" title="도째비에게 묻기" aria-expanded="false">' + ico('chat') + '</button>' +
@@ -835,7 +851,7 @@
       '<p class="p-src">출처: ' + esc(st.source) + '</p>' +
       '<p class="tags">' + (extra ? '<span class="tag warn">#내일일출(예시시각)</span>' : placeTags(s)) + '</p>' + (extra ? '' : crowdBody(s)) +
       '<p class="p-hours">' + mvHtml(s, mv, extra) + (extra ? '' : (s.mode === 'tour' ? '<br>' : ' · ') + '운영 ' + esc(p.openText) + (p.restText ? ' · 쉬는 날 ' + esc(p.restText) : '')) + '</p>' +
-      (extra ? '' : tourBlock(s) + kmapHtml(s)) + wcLineHtml(p) + (extra ? '' : nearBtnHtml(s)) +
+      (extra ? '' : tourBlock(s) + kmapHtml(s)) + wcLineHtml(p) +
       '</div></li>';
   }
   /* 접힌 장 누름: 그 장만 열고 닫는다(다른 장은 건드리지 않음) */
@@ -996,11 +1012,25 @@
       '</div></li>';
   }
 
+  /* 아래 고정 바(2026-10-21 시안): 「코스 고치기」(위 고치기 단추와 같은 일) + 하루 여행일 때만 「하루 더 머물면」 제안 → 고치기 안의 「더 머물면? (막차 · 하룻밤)」을 연다 */
+  function cBarUi(on, label) {
+    var e = $('cBarEdit'); if (!e) return;
+    e.textContent = label; e.setAttribute('aria-pressed', on ? 'true' : 'false');
+    var pl = S.plan; $('cBarStay').hidden = !pl || !!pl.multi || S.mode === 'night' || on;
+  }
+  $('cBarEdit').addEventListener('click', function () { $('editBtn').click(); });
+  $('cBarStay').addEventListener('click', function () {
+    if (!S.editing) $('editBtn').click();
+    var d = $('stayDet'); if (!d) return;
+    d.open = true; renderStay();
+    try { d.scrollIntoView({ block: 'start' }); } catch (e) { /* 무시 */ }
+  });
   /* 위쪽: 고치기 단추 · 되돌리기 줄 · 마감 경고 + 한 번 눌러 고치기 */
   function renderEdUi() {
     var on = !!(S.editing && S.ed), eb = $('editBtn');
     eb.setAttribute('aria-pressed', on ? 'true' : 'false');
     eb.textContent = on ? '고치기 끝내기' : (S.ed && edDirty() ? '코스 더 고치기' : '코스 고치기');
+    cBarUi(on, eb.textContent);
     $('edPanel').hidden = !on;
     if (on && $('stayDet').open) renderStay();
     if (on) { $('edUndo').disabled = !S.ed.hist.canUndo(); $('edRedo').disabled = !S.ed.hist.canRedo(); $('edReset').disabled = !edDirty(); }
@@ -1970,7 +2000,7 @@
     POIS = out; return out;
   }
   var POI_ICON = { eat: '<path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2.5 1.5-3.5 5-3.5 8H17"/>', lodge: '<path d="M3 19V6M3 14h18v5M21 14v-2.5A2.5 2.5 0 0 0 18.5 9H11v5"/><circle cx="7" cy="11" r="1.6"/>', spot: '<path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>' };
-  var POI_KINDS = ['eat', 'lodge', 'spot'], POI_NAME = { eat: '식당', lodge: '숙소', spot: '볼거리' }, POI_COLOR = { eat: '#b35c00', lodge: '#5f3dc4', spot: '#2b7a3d' };
+  var POI_KINDS = ['eat', 'lodge', 'spot'], POI_NAME = { eat: '식당', lodge: '숙소', spot: '볼거리' }, POI_COLOR = { eat: '#b35c00', lodge: '#5f3dc4', spot: '#5f6672' };
   function layPoi() { var l = S.mapLay; return !!(l.eat || l.lodge || l.spot); }
   function notInCourse(p, have) { return p.kind !== 'spot' || !have[p.pid]; }
   function poiSvg(kind) { return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + POI_ICON[kind] + '</svg>'; }
@@ -2119,6 +2149,13 @@
     });
     if (!pick) return '';
     var svg = '';
+    var lblBoxes = null; // 이름표 자리(겹치면 그 이름표는 빼고 번호만 — 이름은 아래 목록에 있음)
+    function lblFree(x, y, w, h) {
+      if (x + w > pick.w - 4 || y < 4) return false;
+      var hit = lblBoxes.some(function (b) { return x < b.x + b.w && x + w > b.x && y < b.y + b.h && y + h > b.y; });
+      if (!hit) lblBoxes.push({ x: x, y: y, w: w, h: h });
+      return !hit;
+    }
     segs.forEach(function (sg) {
       var st = SEG[sg.kind] || SEG.est;
       svg += '<polyline fill="none" stroke="#fff" stroke-width="' + (st.w + 4) + '" stroke-linecap="round" stroke-linejoin="round" opacity=".85" points="' + sg.path.map(function (q) { var o = proj(q.lat, q.lng); return o.x.toFixed(1) + ',' + o.y.toFixed(1); }).join(' ') + '"/>';
@@ -2141,6 +2178,12 @@
     pts.slice().sort(function (x, y) { return (x.st ? 1 : 0) - (y.st ? 1 : 0); }).forEach(function (p) { // 출발·숙소·도착 표시는 번호 위에
       var o = proj(p.lat, p.lng); if (o.x < 0 || o.x > pick.w || o.y < 0 || o.y > pick.h) return;
       var w = p.st ? Math.max(76, 28 + String(p.label).length * 24) : 40;
+      if (!p.st) { // 2026-10-21 시안: 물방울 번호 핀(끝이 그 자리) + 이름표(코스 장소만, 겹치면 빼고 번호만 — 이름은 아래 목록에)
+        if (!lblBoxes) { lblBoxes = []; pts.forEach(function (q) { var qo = proj(q.lat, q.lng); lblBoxes.push({ x: qo.x - 22, y: qo.y + (q.dy || 0) - 58, w: 44, h: 58, pin: q }); }); }
+        svg += '<g transform="translate(' + o.x.toFixed(1) + ' ' + (o.y + (p.dy || 0)).toFixed(1) + ')"><path d="M0 0 C-6 -12 -21 -20 -21 -35 A21 21 0 1 1 21 -35 C21 -20 6 -12 0 0 Z" fill="' + (p.color || '#121212') + '" stroke="#fff" stroke-width="4"/><text y="-27" text-anchor="middle" font-size="22" font-weight="800" fill="#fff">' + esc(p.label) + '</text>' +
+          (p.short && lblFree(o.x + 24, o.y + (p.dy || 0) - 48, String(p.short).length * 19 + 8, 28) ? '<text x="26" y="-28" font-size="19" font-weight="800" fill="#121212" stroke="#fff" stroke-width="6" paint-order="stroke" stroke-linejoin="round">' + esc(p.short) + '</text>' : '') + '</g>';
+        return;
+      }
       svg += '<g transform="translate(' + o.x.toFixed(1) + ' ' + (o.y + (p.dy || 0)).toFixed(1) + ')"><rect x="' + (-w / 2) + '" y="-20" width="' + w + '" height="40" rx="20" fill="' + (p.st ? '#ffb02e' : '#121212') + '" stroke="#fff" stroke-width="4"/><text y="8" text-anchor="middle" font-size="' + (p.st ? 22 : 24) + '" font-weight="800" fill="' + (p.st ? '#2a1500' : '#fff') + '">' + esc(p.label) + '</text></g>';
     });
     if (meSlot) svg += '<g id="lvMeG" visibility="hidden"><circle id="lvMeAcc" r="0" fill="rgba(26,115,232,.16)" stroke="rgba(26,115,232,.5)" stroke-width="2"/><circle r="10" fill="#1a73e8" stroke="#fff" stroke-width="4"/></g>'; // 실시간 안내: 내 위치 점
@@ -2150,7 +2193,7 @@
   function mapFail() {
     mapState = 'fail'; mapApi = null;
     $('map').hidden = true; $('mapNote').hidden = false; $('mapFallback').hidden = false;
-    $('mapNote').textContent = '지도 그림 © Kakao (미리 받아 둔 그림) · 선: 카카오 길찾기 기준 (보라 = 걷기, 주황 = 버스, 진한 파랑 = 시티투어버스(정류장을 직선으로 이음), 분홍 = 택시·자가용, 점선 = 어림 직선) · 작은 동그라미: 주황 포크 = 식당, 보라 침대 = 숙소, 초록 별 = 코스에 없는 볼거리';
+    $('mapNote').textContent = '지도 그림 © Kakao (미리 받아 둔 그림) · 선: 카카오 길찾기 기준 (보라 = 걷기, 주황 = 버스, 진한 파랑 = 시티투어버스(정류장을 직선으로 이음), 분홍 = 택시·자가용, 점선 = 어림 직선) · 작은 동그라미: 주황 포크 = 식당, 보라 침대 = 숙소, 회색 별 = 코스에 없는 볼거리 · 번호 핀 색: 파랑 = 바다·자연, 주황 = 먹거리·시장, 초록 = 볼거리 (여러 날이면 날짜 색)';
     drawMap();
   }
   function bootMap() {
@@ -2173,8 +2216,10 @@
             var b = new km.LatLngBounds(), path = [];
             pts.forEach(function (p) {
               var pos = new km.LatLng(p.lat, p.lng); path.push(pos); b.extend(pos);
-              var d = document.createElement('div'); d.className = 'kpin' + (p.st ? ' st' : ''); d.textContent = p.label; if (p.dy) d.style.transform = 'translateY(' + p.dy + 'px)';
-              var ov = new km.CustomOverlay({ position: pos, content: d, xAnchor: 0.5, yAnchor: 0.5, zIndex: p.st ? 9 : 8 }); ov.setMap(map); ovs.push(ov); // 코스 번호·출발·숙소·도착 표시는 식당 묶음(2)·낱개(4) 위에, 출발·도착은 번호 위에
+              var d = document.createElement('div');
+              if (p.st) { d.className = 'kpin st'; d.textContent = p.label; if (p.dy) d.style.transform = 'translateY(' + p.dy + 'px)'; }
+              else { d.className = 'kdrop'; d.innerHTML = '<span class="kd-pin"' + (p.color ? ' style="background:' + p.color + '"' : '') + '><i>' + esc(p.label) + '</i></span>' + (p.short ? '<span class="kd-name">' + esc(p.short) + '</span>' : ''); d.title = p.name; } // 2026-10-21 시안: 종류 색 물방울 번호 핀 + 이름표(코스 장소만)
+              var ov = new km.CustomOverlay({ position: pos, content: d, xAnchor: 0.5, yAnchor: p.st ? 0.5 : 1, zIndex: p.st ? 9 : 8 }); ov.setMap(map); ovs.push(ov); // 코스 번호·출발·숙소·도착 표시는 식당 묶음(2)·낱개(4) 위에, 출발·도착은 번호 위에
             });
             (segs || []).forEach(function (sg) { // 실제 길(카카오 길찾기) 선. 길 값이 없는 구간은 점선 직선
               var st = SEG[sg.kind] || SEG.est;
@@ -2230,7 +2275,7 @@
     pts.forEach(function (p) {
       var near = p.st ? out.filter(function (q) { return q.st && P.hav(q, p) < 0.4; })[0] : null;
       if (near) { if (near.label.split('·').indexOf(p.label) < 0) near.label += '·' + p.label; near.name += ' · ' + p.name; }
-      else out.push({ lat: p.lat, lng: p.lng, label: p.label, st: p.st, name: p.name });
+      else out.push({ lat: p.lat, lng: p.lng, label: p.label, st: p.st, name: p.name, short: p.short, color: p.color });
     });
     var up = 0;
     out.forEach(function (q) {
@@ -2247,14 +2292,14 @@
     var pts = [{ lat: pl.startStation.lat, lng: pl.startStation.lng, label: '출발', st: true, name: pl.startStation.name }];
     if (pl.multi) {
       var gi = 0, stayDone = false;
-      pl.days.forEach(function (d) {
-        placeStops(d.plan.stops).forEach(function (s) { pts.push({ lat: s.place.lat, lng: s.place.lng, label: String(++gi), name: s.place.name }); });
+      pl.days.forEach(function (d, di) {
+        placeStops(d.plan.stops).forEach(function (s) { pts.push({ lat: s.place.lat, lng: s.place.lng, label: String(++gi), name: s.place.name, short: s.place.short, color: OV ? OV.dayColor(di, pl.days.length) : '' }); });
         if (d.stay && !stayDone) { stayDone = true; pts.push({ lat: d.stay.lat, lng: d.stay.lng, label: '숙소', st: true, name: d.stay.name + ' (숙소 자리)' }); }
       });
       pts.push({ lat: pl.endStation.lat, lng: pl.endStation.lng, label: '도착', st: true, name: pl.endStation.name });
     } else {
-      placeStops(pl.stops).forEach(function (s, i) { pts.push({ lat: s.place.lat, lng: s.place.lng, label: String(i + 1), name: s.place.name }); });
-      if (pl.tomorrow) pts.push({ lat: pl.tomorrow.place.lat, lng: pl.tomorrow.place.lng, label: String(placeStops(pl.stops).length + 1), name: pl.tomorrow.place.name });
+      placeStops(pl.stops).forEach(function (s, i) { pts.push({ lat: s.place.lat, lng: s.place.lng, label: String(i + 1), name: s.place.name, short: s.place.short, color: CAT[catOf(s.place)].c }); });
+      if (pl.tomorrow) pts.push({ lat: pl.tomorrow.place.lat, lng: pl.tomorrow.place.lng, label: String(placeStops(pl.stops).length + 1), name: pl.tomorrow.place.name, short: pl.tomorrow.place.short, color: CAT[catOf(pl.tomorrow.place)].c });
       if (pl.endStation !== pl.startStation && !pl.tomorrow) pts.push({ lat: pl.endStation.lat, lng: pl.endStation.lng, label: '도착', st: true, name: pl.endStation.name });
     }
     pts = declutterPts(pts);

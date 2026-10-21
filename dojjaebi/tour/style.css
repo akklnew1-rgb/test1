@@ -1081,3 +1081,59 @@ button.ovn-b{ cursor:pointer; }
 .sh-chips{ display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 2px; }
 .sh-chips .chip{ min-height:44px; padding:6px 14px; font-size:.95em; }
 .sh-chips .chip[aria-pressed="true"]{ background:var(--wz); border-color:var(--wz); color:#fff; }
+
+/* ---------- 2026-10-21 시안 반영: 위 막대 · 코스 카드 · 지도 물방울 핀 · 아래 고정 바 ---------- */
+:root{ --tabh:61px; }
+@media (max-height:700px){ :root{ --tabh:57px; } }
+/* 위 막대: 서비스 이름 글자 대신 작은 도깨비불 + 지금 화면 이름 */
+.scr-t{ font-size:1.12em; font-weight:800; color:var(--ink); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.top .flame{ width:24px; height:30px; }
+.tmap{ display:inline-flex; align-items:center; justify-content:center; gap:6px; min-height:44px; min-width:44px; padding:0 14px; margin-right:4px; border-radius:22px; border:0; background:var(--wz-ink,#2b2563); color:#fff; font:inherit; font-size:.9em; font-weight:700; white-space:nowrap; cursor:pointer; }
+.tmap[hidden]{ display:none; }
+.tmap .ic{ width:18px; height:18px; stroke:#fff; }
+.tmap-s{ display:none; }
+.top .brand{ flex:1 1 auto; }
+.scr-t{ flex:0 1 auto; min-width:4.6em; }
+@media (max-width:439px){ .tmap{ padding:0 12px; } .tmap-l{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; } .tmap-s{ display:inline; } }
+@media (max-width:359px){ .tmap{ padding:0 10px; } .tmap-s{ display:none; } }
+/* 코스 카드 */
+#timeline{ background:var(--soft); padding:6px 0 4px; }
+.post.card{ margin:10px var(--gut) 14px; padding:0; border:0; border-radius:16px; overflow:hidden; background:var(--paper,#fff); box-shadow:0 1px 3px rgba(20,24,36,.1); }
+.post.card .p-box{ height:auto; aspect-ratio:16/10; }
+.c-info{ padding:12px 16px 4px; display:flex; flex-direction:column; gap:4px; }
+.c-meta{ display:flex; align-items:center; flex-wrap:wrap; gap:4px 10px; }
+.c-pin{ flex:none; width:30px; height:30px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.25); display:inline-flex; align-items:center; justify-content:center; }
+.c-pin > span{ transform:rotate(45deg); color:#fff; font-weight:800; font-size:14px; line-height:1; }
+.c-when{ font-size:.88em; color:var(--muted); }
+.post.card .p-h{ margin:0; }
+.post.card .p-head,.post.card.fold:not(.open) .p-head{ padding:2px 0; min-height:60px; gap:8px; }
+.post.card .p-tog .p-t{ font-size:1.2em; }
+.post.card .p-tog .p-sub{ font-size:.8em; color:var(--brand); font-weight:700; }
+.post.card.open .p-tog .p-sub{ color:var(--muted); }
+.post.card.open .p-h .chev{ transform:rotate(180deg); }
+.c-badges{ display:flex; flex-wrap:wrap; gap:6px; }
+.c-quick{ padding:4px 16px 14px; }
+.c-quick .p-near{ padding:0; }
+.post.card .p-body{ border-top:1px solid var(--line); padding-top:4px; }
+.post.card.changed{ margin:10px calc(var(--gut) - 3px) 14px; }
+#timeline .post.slot{ margin:10px var(--gut); border:1px solid var(--wz-line); border-radius:16px; }
+/* 지도 탭: 물방울 번호 핀 + 이름표(코스 장소만) */
+.kdrop{ position:relative; width:34px; height:44px; cursor:pointer; }
+.kd-pin{ position:absolute; left:0; top:0; width:34px; height:34px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); background:#121212; border:3px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.3); display:flex; align-items:center; justify-content:center; box-sizing:border-box; }
+.kd-pin i{ transform:rotate(45deg); font-style:normal; color:#fff; font-weight:800; font-size:15px; line-height:1; }
+.kd-name{ position:absolute; left:38px; top:6px; padding:2px 7px; border-radius:6px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2); font-size:12px; font-weight:800; color:#121212; white-space:nowrap; }
+.kpoi.spot i,.poi-ic.spot,.kclu.spot i{ background:#5f6672; }
+/* 아래 고정 바 */
+.cbar{ position:sticky; bottom:calc(var(--tabh) + var(--safe-b, 0px)); z-index:30; margin-top:12px; padding:10px var(--gut); display:flex; flex-direction:column; gap:8px; background:rgba(255,255,255,.97); border-top:1px solid var(--line); backdrop-filter:saturate(1.4) blur(8px); }
+.cbar-stay{ display:flex; align-items:center; gap:10px; min-height:44px; padding:8px 12px; border:0; border-radius:12px; background:var(--wz-soft); color:var(--wz-ink); font:inherit; font-size:.9em; line-height:1.4; text-align:left; cursor:pointer; }
+.cbar-stay[hidden]{ display:none; }
+.cbar-dot{ flex:none; width:10px; height:10px; border-radius:50%; background:#5f3dc4; }
+.cbar-edit{ min-height:52px; }
+/* 키가 작은 폰(아이폰 SE 등): 아래 바를 한 줄로 — 「하루 더 머물면?」 + 「코스 고치기」 나란히 */
+.cbs-s{ display:none; }
+@media (max-height:700px){
+  .cbar{ flex-direction:row; align-items:stretch; padding:8px var(--gut); }
+  .cbar-stay{ flex:1 1 0; min-width:0; justify-content:center; font-weight:700; }
+  .cbar-edit{ flex:1 1 0; width:auto; min-height:48px; }
+  .cbs-l{ display:none; } .cbs-s{ display:inline; }
+}
