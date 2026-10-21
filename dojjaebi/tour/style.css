@@ -708,9 +708,9 @@ body.lv-open{ overflow:hidden; }
 .ex-card:focus-visible{ outline:3px solid var(--c3); outline-offset:3px; border-radius:16px; }
 @media (hover:hover){ .ex-card:hover b{ text-decoration:underline; } }
 
-/* 1~3. 한 단계 = 한 화면 */
-#st1,#st2,#st3{ --qa:var(--wz); --qs:var(--wz-soft); --ql:var(--wz-line); }
-#st1{ --p:33.33; } #st2{ --p:66.66; } #st3{ --p:100; }
+/* 1~5. 한 단계 = 한 화면(2026-10-21: 꼭 갈 곳·확인 두 단계가 늘면서 st4·st5 도 색 변수·진행률을 받아야 하는데 빠져 있던 것을 고침 — 「다음」 단추가 투명 배경이 되어 안 보이던 원인) */
+#st1,#st2,#st3,#st4,#st5{ --qa:var(--wz); --qs:var(--wz-soft); --ql:var(--wz-line); }
+#st1{ --p:20; } #st2{ --p:40; } #st3{ --p:60; } #st4{ --p:80; } #st5{ --p:100; }
 .st-n{ padding:0 var(--gut); }
 .st-bar{ display:flex; align-items:center; gap:10px; min-height:52px; margin:0 -10px 0 -8px; }
 .st-back{ flex:none; width:48px; height:48px; display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:50%; background:transparent; color:var(--ink); cursor:pointer; }
@@ -1154,8 +1154,10 @@ button.ovn-b{ cursor:pointer; }
 .seg2.branch-cta .ghost2{ background:var(--paper); border:2px solid var(--brand); color:var(--brand); }
 #nightsSeg,#nowBackSeg{ margin:10px 0; }
 #nowBackSeg{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+#nowBackSeg[hidden]{ display:none !important; }
 #nowBackSeg .chip,#nightsSeg .chip{ font-size:.98em; }
 #howSegNow{ display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:16px; }
+#howSegNow[hidden]{ display:none !important; }
 #howSegNow .chip{ padding:8px 4px; font-size:1.05em; }
 /* 꼭 갈 곳: 넣기 목록 재사용 + 고른 순서 숫자 */
 .mv-item{ position:relative; }

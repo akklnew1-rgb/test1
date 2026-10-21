@@ -235,6 +235,15 @@
   function nDays(c) { return P.dayCount(c.date, c.backDate); }
   function compOf(c) { return c.companions[0] || ''; }
   function setComp(c, name) { c.companions = name ? [name] : []; }
+  /* 누구와: 여러 명 함께 고를 수 있음(아이+부모님 등). 「혼자」는 다른 것과 같이 못 고름(서로 배타) */
+  function toggleComp(c, name) {
+    var arr = c.companions || (c.companions = []);
+    if (name === '혼자') { c.companions = arr.indexOf('혼자') >= 0 ? [] : ['혼자']; return; }
+    var i = arr.indexOf(name);
+    if (i >= 0) arr.splice(i, 1);
+    else { var j = arr.indexOf('혼자'); if (j >= 0) arr.splice(j, 1); arr.push(name); }
+  }
+  function compNames(c) { return (c.companions || []).join(', '); }
   /* 날짜 밑 작은 배지: 장날 · 시티투어 운행 · 쉬는 곳 (긴 안내 글 대신) */
   function bdg(txt, cls) { return '<span class="bdg' + (cls ? ' ' + cls : '') + '">' + esc(txt) + '</span>'; }
   function dateBadges(date, withNext) {
@@ -289,13 +298,13 @@
     Array.prototype.forEach.call(document.querySelectorAll('#bhowSeg [data-bhow]'), function (b) { b.hidden = c.how === 'car' ? b.getAttribute('data-bhow') !== 'car' : b.getAttribute('data-bhow') === 'car'; });
     $('bhowSeg').hidden = c.how === 'car'; // 하나만 남으면(자가용) 고를 게 없으니 묶음째 숨기고 글로만 알림
     var bhowNote = $('bhowNote'); if (bhowNote) { bhowNote.hidden = c.how !== 'car'; bhowNote.textContent = c.how === 'car' ? '자가용으로 다니니 돌아갈 때도 자가용이에요.' : ''; }
-    var eff = c.backHow === 'car' && c.noLimit ? 20 * 60 : c.back, body = '';
+    var eff = c.backHow === 'car' && c.noLimit ? 22 * 60 : c.back, body = ''; // 2026-10-21: 저녁 8시 상한은 너무 일러 야경 코스를 아예 못 넣었음 — 밤 10시로 늦춤
     if (c.backHow === 'train') {
       body = '<div class="seg" role="group" aria-label="기차 타는 역"><button type="button" class="chip" data-end="mukho" aria-pressed="' + (c.end === 'mukho') + '">묵호역</button><button type="button" class="chip" data-end="donghae" aria-pressed="' + (c.end === 'donghae') + '">동해역</button></div>' + nearestHelp(c);
     } else if (c.backHow === 'bus') {
       body = '<p class="note">' + esc(D.stations.bus.name) + '에는 버스 출발 15분 전까지 와 있으면 돼요. 버스 시간표는 아직 연결하지 않아서 시간을 직접 적어 주세요.</p>';
     } else {
-      body = '<div class="quick"><button type="button" class="chip" data-nolimit="1" aria-pressed="' + (c.noLimit ? 'true' : 'false') + '">정하지 않았어요 (저녁 8시까지)</button></div>' +
+      body = '<div class="quick"><button type="button" class="chip" data-nolimit="1" aria-pressed="' + (c.noLimit ? 'true' : 'false') + '">정하지 않았어요 (밤 10시까지)</button></div>' +
         '<p class="note">' + esc(D.stations.park.name) + '에 그 시각까지 오시면 돼요.' + (c.how === 'car' ? ' 걸어서 10분 안은 걷고, 먼 곳은 차로 가요(주차 5분 포함).' : '') + '</p>';
     }
     if ((c.how === 'car') !== (c.backHow === 'car')) body += '<p class="note warnline">차는 한쪽만 쓰는 여행이라 주차 위치를 한 번 확인해 주세요. 이동은 걷기·버스·택시로 짜요.</p>';
@@ -303,7 +312,7 @@
     if (c.backDate === c.date && eff < c.arrive) body += '<p class="note warnline">도착 시각보다 앞이에요. 날짜나 시각을 다시 골라 주세요.</p>';
     $('outBody').innerHTML = body;
     $('inNote').textContent = c.how === 'train' ? '' :c.how === 'bus' ? D.stations.bus.name + '에서 시작해요.' : D.stations.park.name + '에서 시작해요.';
-    $('chipComp').innerHTML = COMPS.map(function (nm) { return chip(nm, compOf(c) === nm, 'data-comp="' + nm + '"'); }).join('');
+    $('chipComp').innerHTML = COMPS.map(function (nm) { return chip(nm, (c.companions || []).indexOf(nm) >= 0, 'data-comp="' + nm + '"'); }).join('');
     $('chipMore').innerHTML = chip('점심·저녁 시간 넣기', c.food, 'data-food="1"') + chip('사진·노을', c.interests.indexOf('사진') >= 0, 'data-like="사진"') + chip('먹거리 구경', c.interests.indexOf('먹거리') >= 0, 'data-like="먹거리"') + chip('무릎·계단이 힘들어요', c.knee, 'data-knee="1"') + chip('날씨가 안 좋아요' + (S.wxRain ? ' (기상청)' : ''), c.rain, 'data-rain="1"');
     if (c.rain || c.food || c.knee || c.interests.length) $('moreBox').open = true;
     var sn = $('startNote'); sn.hidden = !S.startNote; sn.textContent = S.startNote || '';
@@ -362,7 +371,7 @@
       else { c.backDate = c.date; c.backDateTouched = true; c.backDateExplicit = true; backEdited(nb === 'pm' ? 15 * 60 : nb === 'eve' ? 19 * 60 : 18 * 60); }
     }
     else if (b.hasAttribute('data-nolimit')) { c.noLimit = !c.noLimit; }
-    else if (b.hasAttribute('data-comp')) { var n = b.getAttribute('data-comp'); setComp(c, compOf(c) === n ? '' : n); }
+    else if (b.hasAttribute('data-comp')) { toggleComp(c, b.getAttribute('data-comp')); }
     else if (b.hasAttribute('data-knee')) { c.knee = !c.knee; }
     else if (b.hasAttribute('data-rain')) { c.rain = !c.rain; if (!c.rain) S.wxRain = false; }
     else if (b.hasAttribute('data-food')) { c.food = !c.food; }
@@ -434,7 +443,7 @@
   twInit('twS', 'sTime'); twInit('twB', 'bTime');
 
   /* ---------- 시작 화면 단계 (S.step: 0 인사 · 1 올 때 · 2 돌아갈 때 · 3 누구와) — 한 화면에 한 가지씩 ---------- */
-  function backEarly(c) { var eff = c.backHow === 'car' && c.noLimit ? 20 * 60 : c.back; return c.backDate === c.date && eff < c.arrive; }
+  function backEarly(c) { var eff = c.backHow === 'car' && c.noLimit ? 22 * 60 : c.back; return c.backDate === c.date && eff < c.arrive; }
   function setHdr() { var t = $('top'); if (t) document.documentElement.style.setProperty('--hdr', t.offsetHeight + 'px'); }
   function setStep(n, opt) {
     opt = opt || {};
@@ -500,9 +509,9 @@
   function renderConfirm() {
     var c = S.cond;
     var whenTxt = esc(P.dateLabel(c.date) + ' ' + toTimeValue(c.arrive) + ' 도착 (' + HOW_NAME[c.how] + ')' + (c.branch === 'now' ? ' · 지금' : ''));
-    var effBack = c.backHow === 'car' && c.noLimit ? 20 * 60 : c.back;
+    var effBack = c.backHow === 'car' && c.noLimit ? 22 * 60 : c.back;
     var backTxt = esc((c.backDate !== c.date ? P.dateLabel(c.backDate) + ' ' : '') + toTimeValue(effBack) + (c.backHow === 'car' && c.noLimit ? '까지' : ' 출발') + ' (' + HOW_NAME[c.backHow] + ')' + (nDays(c) > 1 ? ' · ' + P.tripLabel(nDays(c)) : ''));
-    var compTxt = esc(compOf(c) ? compOf(c) + ' 함께' : '혼자');
+    var compTxt = esc(compOf(c) && compOf(c) !== '혼자' ? compNames(c) + ' 함께' : '혼자');
     var mv = mustNames(), multiMust = mv.length && nDays(c) > 1;
     var mvTxt = mv.length ? (esc(mv.join(', ')) + (multiMust ? ' <span class="warnline">(1박 이상은 아직 반영 못 해요)</span>' : '')) : '없음 (도째비가 알맞게 골라요)';
     $('confirmList').innerHTML = editRow('올 때', whenTxt, 1) + editRow('돌아갈 때', backTxt, 2) + editRow('누구와', compTxt, 3) + editRow('꼭 갈 곳', mvTxt, 4);
@@ -715,7 +724,7 @@
   function effTrain(mode) {
     var c = S.cond;
     if (mode === 'late') return c.backHow === 'train' ? lastTrain(c) : 21 * 60;
-    return c.backHow === 'car' && c.noLimit ? 20 * 60 : c.back;
+    return c.backHow === 'car' && c.noLimit ? 22 * 60 : c.back;
   }
   /* 돌아갈 시각이 어디서 왔나: 코레일 시간표에 있는 기차 · 예시 시간표 · 직접 고른 시간 */
   function backSrc(mode) {
@@ -844,7 +853,7 @@
   function renderPrep() {
     var c = S.cond, d = P.dayCount(todayIso(), c.date) - 1;
     $('prepDday').textContent = d <= 0 ? '오늘!' : 'D-' + d;
-    $('prepWhen').textContent = P.dateLabel(c.date) + (c.backDate !== c.date ? ' ~ ' + P.dateLabel(c.backDate) : '') + (compOf(c) ? ' · ' + compOf(c) + ' 함께' : '');
+    $('prepWhen').textContent = P.dateLabel(c.date) + (c.backDate !== c.date ? ' ~ ' + P.dateLabel(c.backDate) : '') + (compOf(c) && compOf(c) !== '혼자' ? ' · ' + compNames(c) + ' 함께' : '');
     var mk = marketPlace(), onMarket = mk && P.lastDigitDay(c.date, marketDigits());
     var rows = '';
     rows += (c.how === 'train' || c.backHow === 'train') ? factRow('기차표', realTrains(c) ? 'ok' : 'none', realTrains(c) ? '코레일 시간표를 확인했어요' : '아직 예매 전이에요 · 가까워지면 시간표가 나와요') : factRow('이동', 'ok', HOW_NAME[c.how] + '으로 와요');
@@ -1449,7 +1458,7 @@
     var st = pl.endStation.name;
     var lead;
     var HN = S.cond.backHow === 'bus' ? '버스' : '기차';
-    if (S.cond.backHow === 'car') lead = (S.mode === 'late' ? '저녁 ' : '') + pl.endStation.name + '에 ' + hhmm(pl.train) + '까지 돌아와요 (자가용' + (S.cond.noLimit && S.mode !== 'late' ? ' · 시간을 정하지 않아 저녁 8시까지' : '') + ')';
+    if (S.cond.backHow === 'car') lead = (S.mode === 'late' ? '저녁 ' : '') + pl.endStation.name + '에 ' + hhmm(pl.train) + '까지 돌아와요 (자가용' + (S.cond.noLimit && S.mode !== 'late' ? ' · 시간을 정하지 않아 밤 10시까지' : '') + ')';
     else if (S.mode === 'night') lead = '하룻밤 묵고 내일 추암 일출까지 이어가는 코스예요 · 출발 ' + hhmm(pl.start);
     else if (S.mode === 'late') lead = (S.cond.backHow === 'bus' ? '늦은 버스 ' : '막차 ') + hhmm(pl.train) + backSrc() + ' · ' + st + '에서 ' + hhmm(pl.train - 15) + '까지 돌아와요';
     else lead = HN + ' ' + hhmm(pl.train) + backSrc() + ' · ' + st + '에 ' + hhmm(pl.train - 15) + '까지 돌아와요';
