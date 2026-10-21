@@ -243,13 +243,16 @@
   <div class="st st-n" id="st5" data-st="5" hidden>
     <div class="st-bar"><button type="button" class="st-back" id="stBack5" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="6" aria-valuenow="5"><i></i></div><span class="st-count" aria-hidden="true">5/6</span></div>
     <div class="st-body q-stay" id="qStay">
-      <p class="st-tag">숙소</p>
-      <h2 id="hs5" tabindex="-1">숙소는 벌써 잡았어요?</h2>
-      <div class="chips" id="chipStay" role="group" aria-label="숙소 예약 여부">
-        <button type="button" class="chip" data-stay="booked" aria-pressed="false">예, 잡았어요</button>
-        <button type="button" class="chip" data-stay="none" aria-pressed="false">아직이에요</button>
+      <!-- 2026-10-22: 당일치기는 묵을 숙소가 없으니 이 질문 자체가 안 맞음 — 1박 이상(여러 날)일 때만 보임(renderStayUi 가 isMulti() 로 숨김) -->
+      <div id="stayQBlock">
+        <p class="st-tag">숙소</p>
+        <h2 id="hs5" tabindex="-1">숙소는 벌써 잡았어요?</h2>
+        <div class="chips" id="chipStay" role="group" aria-label="숙소 예약 여부">
+          <button type="button" class="chip" data-stay="booked" aria-pressed="false">예, 잡았어요</button>
+          <button type="button" class="chip" data-stay="none" aria-pressed="false">아직이에요</button>
+        </div>
+        <p class="note" id="stayNote" hidden>잘 됐어요 — 동선을 보고 숙소 자리를 알맞게 추천해 드려요. 「동네」 탭에서 둘러보고 바꿀 수 있어요.</p>
       </div>
-      <p class="note" id="stayNote" hidden>잘 됐어요 — 동선을 보고 숙소 자리를 알맞게 추천해 드려요. 「동네」 탭에서 둘러보고 바꿀 수 있어요.</p>
       <p class="st-tag" style="margin-top:22px">인원수</p>
       <h2 id="hsCount" tabindex="-1" style="font-size:1.25em">몇 명이 가요?</h2>
       <div class="qty" role="group" aria-label="인원수">

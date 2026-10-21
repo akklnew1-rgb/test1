@@ -555,7 +555,13 @@
   [1, 2, 3, 4, 5, 6].forEach(function (n) { $('stBack' + n).addEventListener('click', function () { setStep(n - 1); }); });
   /* ---------- 5단계: 숙소 예약 여부 + 인원수 (2026-10-21, 사용자 요청: "누구랑 와서 어디서 잘지도 추천해 주기 편하지 않니") ---------- */
   function stayUi() { Array.prototype.forEach.call(document.querySelectorAll('#chipStay [data-stay]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-stay') === S.cond.stayBooked ? 'true' : 'false'); }); $('stayNote').hidden = S.cond.stayBooked !== 'none'; /* 2026-10-22(Fable 리뷰): 이 글은 "숙소 자리를 추천해 드려요" 라는 내용 — 아직 안 잡았을 때(none)만 맞는 말이라 조건이 거꾸로였음 */ }
-  function renderStayUi() { stayUi(); $('countN').textContent = (S.cond.count || 1) + '명'; }
+  function renderStayUi() {
+    stayUi();
+    $('countN').textContent = (S.cond.count || 1) + '명';
+    var multi = isMulti();
+    if ($('stayQBlock')) $('stayQBlock').hidden = !multi; // 2026-10-22: 당일치기는 묵을 숙소가 없으니 이 질문을 안 보임
+    if (!multi) S.cond.stayBooked = null; // 당일치기로 바뀌면 전에 고른 값이 남아 확인 화면에 엉뚱하게 나오지 않게 비움
+  }
   $('chipStay').addEventListener('click', function (ev) { var b = ev.target.closest('[data-stay]'); if (!b) return; S.cond.stayBooked = b.getAttribute('data-stay'); stayUi(); });
   $('countMinus').addEventListener('click', function () { S.cond.count = Math.max(1, (S.cond.count || 1) - 1); $('countN').textContent = S.cond.count + '명'; });
   $('countPlus').addEventListener('click', function () { S.cond.count = Math.min(10, (S.cond.count || 1) + 1); $('countN').textContent = S.cond.count + '명'; });
@@ -600,20 +606,27 @@
     if (p.closedDow && dinfo && p.closedDow.indexOf(dinfo.dow) >= 0) return false;
     return true;
   }
+  /* 2026-10-22: 고른 게 코스에 들어갔는지 사용자가 눈으로 바로 알 수 있게 — placeTags() 가 이 두 가지를 찾아 표(⭐)를 붙인다.
+   * S.mustPicked: 「볼거리」로 고른 곳이 실제로 그 id 그대로 들어갔을 때(장소명=고른 것) 표시.
+   * S.mustFoodNear: 「맛집·카페」로 고른 곳은 그 가게가 코스에 들어가는 게 아니라 가장 가까운 볼거리로 동선만 짜 주므로, 그 볼거리 장에 "이 근처: 가게이름"으로 표시해 줘야 "골랐는데 안 보인다"고 느끼지 않음. */
   function resolveMust(must) {
     var out = [], seen = {};
+    S.mustFoodNear = {};
     (must || []).forEach(function (id) {
-      var key = mustFoodKey(id), pid = id;
+      var key = mustFoodKey(id), pid = id, foodName = null;
       if (key) {
         var x = TW.list('eat').filter(function (e) { return e.key === key; })[0];
-        pid = null;
+        pid = null; foodName = x ? x.name : null;
         if (x && x.lat && x.lng && FU) {
           var cands = FU.nearestN(D.places, x.lat, x.lng, 5, null) || [];
           var ok = cands.filter(function (c) { return c && c.item && dayOkFor(c.item); })[0];
           pid = (ok || cands[0]) ? (ok || cands[0]).item.id : null;
         }
       }
-      if (pid && !seen[pid]) { seen[pid] = 1; out.push(pid); }
+      if (pid && !seen[pid]) {
+        seen[pid] = 1; out.push(pid);
+        if (foodName) (S.mustFoodNear[pid] = S.mustFoodNear[pid] || []).push(foodName);
+      }
     });
     return out;
   }
@@ -634,8 +647,10 @@
     var compTxt = esc(compOf(c) && compOf(c) !== '혼자' ? compNames(c) + ' 함께' : '혼자');
     var mv = mustNames(), multiMust = mv.length && nDays(c) > 1;
     var mvTxt = mv.length ? (esc(mv.join(', ')) + (multiMust ? ' <span class="warnline">(1박 이상은 아직 반영 못 해요)</span>' : '')) : '없음 (도째비가 알맞게 골라요)';
-    var stayTxt = (c.stayBooked === 'booked' ? '벌써 잡았어요' : c.stayBooked === 'none' ? '아직이에요 (도째비가 추천해요)' : '안 물어봤어요') + ' · ' + (c.count || 1) + '명';
-    $('confirmList').innerHTML = editRow('올 때', whenTxt, 1) + editRow('돌아갈 때', backTxt, 2) + editRow('누구와', compTxt, 3) + editRow('꼭 갈 곳', mvTxt, 4) + editRow('숙소·인원', stayTxt, 5);
+    // 2026-10-22: 당일치기는 숙소를 안 물어보니(stayBooked 가 null) "안 물어봤어요"가 아니라 인원수만 보여줌
+    var stayLabel = isMulti() ? '숙소·인원' : '인원';
+    var stayTxt = isMulti() ? (c.stayBooked === 'booked' ? '벌써 잡았어요' : c.stayBooked === 'none' ? '아직이에요 (도째비가 추천해요)' : '안 물어봤어요') + ' · ' + (c.count || 1) + '명' : (c.count || 1) + '명';
+    $('confirmList').innerHTML = editRow('올 때', whenTxt, 1) + editRow('돌아갈 때', backTxt, 2) + editRow('누구와', compTxt, 3) + editRow('꼭 갈 곳', mvTxt, 4) + editRow(stayLabel, stayTxt, 5);
   }
   document.addEventListener('click', function (ev) { var b = ev.target.closest('[data-editstep]'); if (!b) return; setStep(+b.getAttribute('data-editstep'), { focus: false }); });
   /* 인사 화면: 대표 사진 여러 장이 천천히 바뀐다(공공누리 제1유형만 — 칸에 꽉 채워 잘라 쓰므로). 4.5초마다 · 점 · 1/6 · 좌우로 밀기 · 손대는 동안·탭이 가려지면 멈춤 · 움직임 줄이기면 자동으로 안 넘김 */
@@ -902,6 +917,7 @@
   function isCouple() { return S.cond.companions.indexOf('연인') >= 0; }
   function planOpts(over) {
     var multi = isMulti();
+    if (multi) S.mustFoodNear = {}; // 2026-10-22: 여러 날은 must 를 안 쓰니(날마다 강제되는 문제 회피) 전에 하루 코스에서 쓰던 "근처: 가게이름" 표도 지워 둠(묵은 표가 남지 않게)
     var o = { now: S.simNow, train: effTrain(S.mode), how: S.cond.how, backHow: S.cond.backHow, start: startId(), end: endId(), backDate: S.cond.backDate, stay: multi ? stayInfo() : undefined, sunrise: multi && !S.cond.rain && !isKid() && !isSlow() && (isCouple() || S.cond.companions.indexOf('친구') >= 0 || S.cond.companions.indexOf('혼자') >= 0 || !S.cond.companions.length), kid: isKid(), couple: isCouple(), slow: isSlow(), avoidStairs: isSlow() || isKid(), soft: isSlow(), food: !!S.cond.food, foodWord: S.cond.foodWord || '', rain: S.cond.rain, interests: S.cond.interests, fx: S.fx, crowdFn: S.crowd ? crowdFn : null, mode: S.mode, fixed: S.fixed, date: S.cond.date, tour: !!CT, tourPrefer: !!S.tourLoop, must: multi ? [] : resolveMust(S.cond.must) }; // 꼭 갈 곳(o.must)은 하루 코스에만: planDays 는 날마다 같은 o 를 쓰므로 여러 날이면 날마다 강제돼 버린다 · 2026-10-22: resolveMust 가 'food:' 선택을 가장 가까운 볼거리 id 로 바꿔 줌
     if (over) for (var k in over) o[k] = over[k];
     if (over && over.mode) o.train = effTrain(over.mode);
@@ -1066,6 +1082,9 @@
   function ico(name) { return '<svg class="ic" aria-hidden="true"><use href="#i-' + name + '"/></svg>'; }
   function placeTags(s) {
     var p = s.place, b = [];
+    // 2026-10-22: "꼭 갈 곳"으로 고른 게 코스에 들어갔을 때 바로 보이게(안 보이면 "골랐는데 반영이 안 됐다"고 느낌)
+    if (!S.cond.must || S.cond.must.indexOf(p.id) < 0) { if (S.mustFoodNear && S.mustFoodNear[p.id]) b.push('<span class="tag good">#꼭갈곳 · 근처 ' + esc(S.mustFoodNear[p.id].join('·')) + '</span>'); }
+    else b.push('<span class="tag good">#꼭갈곳으로고름</span>');
     if (p.region) b.push('<span class="tag">#' + esc(p.region) + '</span>');
     b.push(p.indoor ? '<span class="tag good">#실내</span>' : '<span class="tag">#야외</span>');
     if (p.stairs) b.push('<span class="tag warn">#계단있음</span>');
