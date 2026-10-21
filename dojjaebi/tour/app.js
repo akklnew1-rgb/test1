@@ -271,6 +271,8 @@
       Array.prototype.forEach.call($('nightsSeg').querySelectorAll('[data-nights]'), function (b) { b.setAttribute('aria-pressed', String((c.tripNights || 0) === +b.getAttribute('data-nights'))); });
     }
     if ($('nowBackSeg')) $('nowBackSeg').hidden = c.branch !== 'now';
+    if ($('howSeg')) $('howSeg').hidden = c.branch === 'now'; // 지금 branch 는 "올 때 이동수단"(기차·버스·자가용) 대신 "동해에서 이용할 교통수단"을 물음
+    if ($('howSegNow')) $('howSegNow').hidden = c.branch !== 'now';
     $('sDate').value = c.date || todayIso(); $('sDate').min = todayIso(); $('sTime').value = toTimeValue(c.arrive);
     var dmsg = $('dateMsg'); if (dmsg && !dmsg.hidden && !pastDate(c)) { dmsg.hidden = true; dmsg.textContent = ''; }
     $('bDate').value = c.backDate; $('bDate').min = c.date; $('bDate').max = P.addDays(c.date, 2) || '';

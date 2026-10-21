@@ -1138,6 +1138,14 @@ button.ovn-b{ cursor:pointer; }
   .cbs-l{ display:none; } .cbs-s{ display:inline; }
 }
 
+/* ---------- 2026-10-21: 인사 화면 「말로 하기 · 기차표 사진으로」를 글자 단추 대신 아이콘 단추로 ---------- */
+.intro-alt{ display:flex; gap:10px; justify-content:center; margin:6px 0 2px; }
+.ibtn{ display:inline-flex; align-items:center; gap:6px; min-height:44px; padding:0 16px; border-radius:999px; border:1px solid var(--line); background:var(--paper); color:var(--muted); font:inherit; font-weight:700; font-size:.92em; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent; }
+.ibtn .ic{ width:18px; height:18px; flex:none; }
+.ibtn:active{ transform:scale(.97); background:var(--soft); }
+@media (hover:hover){ .ibtn:hover{ border-color:var(--brand); color:var(--brand); } }
+@media (max-width:359px){ .ibtn{ padding:0 12px; font-size:.86em; } }
+
 /* ---------- 2026-10-21 6차안: 두 버튼 시작 · 꼭 갈 곳 · 확인 · 여행 준비(D-day) ---------- */
 #dtArrive[hidden]{ display:none !important; } /* #s-start .dt{ display:flex } 가 [hidden] 보다 더 세게 먹혀서 따로 눌러 둠 */
 .seg2.branch-cta{ display:flex; flex-direction:column; gap:10px; }
