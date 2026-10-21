@@ -48,6 +48,9 @@
     <symbol id="i-cloud" viewBox="0 0 24 24"><path d="M7 18a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 17.9 8.6 4.7 4.7 0 0 1 17.5 18z"/></symbol>
     <symbol id="i-rain" viewBox="0 0 24 24"><path d="M7 15a4.5 4.5 0 0 1-.6-8.96A6 6 0 0 1 17.9 5.6 4.7 4.7 0 0 1 17.5 15zM8 18.5l-1 2.5M12.5 18.5l-1 2.5M17 18.5l-1 2.5"/></symbol>
     <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="i-fork" viewBox="0 0 24 24"><path d="M6 2v9a2 2 0 0 0 4 0V2M8 11v11M15 2c-1.5 0-2.5 2-2.5 5s1 5 2.5 5v9"/></symbol>
+    <symbol id="i-cup" viewBox="0 0 24 24"><path d="M4 8h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V8z"/><path d="M17 9h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 2c-1 1-1 2 0 3M12 2c-1 1-1 2 0 3"/></symbol>
+    <symbol id="i-bed" viewBox="0 0 24 24"><path d="M3 19v-7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v7M3 19v2M21 19v2M3 14h18"/><rect x="5" y="7" width="7" height="4" rx="1.5"/></symbol>
     <symbol id="i-flame" viewBox="0 0 40 48"><path d="M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z"/></symbol>
   </defs>
 </svg>
@@ -114,9 +117,11 @@
   <!-- 1. 올 때 -->
   <div class="st st-n" id="st1" data-st="1" hidden>
     <div class="st-bar"><button type="button" class="st-back" id="stBack1" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="6" aria-valuenow="1"><i></i></div><span class="st-count" aria-hidden="true">1/6</span></div>
-    <div class="st-art st-art-photo">
+    <div class="st-art st-art-photo st-art-multi">
       <img src="사진캐시/2774728.jpg" alt="묵호항수변공원에서 바라본 동해 노을" loading="lazy" decoding="async" referrerpolicy="no-referrer">
-      <span class="st-art-credit">묵호항수변공원 · 노을 — 사진: 한국관광공사 · 공공누리 제1유형</span>
+      <img src="사진캐시/125713.jpg" alt="망상해수욕장" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+      <img src="사진캐시/2774430.jpg" alt="대진해수욕장" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+      <span class="st-art-credit">묵호항수변공원 · 망상해변 · 대진해변 — 사진: 한국관광공사 · 공공누리 제1·3유형</span>
     </div>
     <div class="st-body q-in" id="qIn">
       <p class="st-tag">방문일정</p>
@@ -133,6 +138,16 @@
         </div>
       </div>
       <div class="cal" id="calBox" role="group" aria-label="오는 날 · 가는 날 고르기(숙박 앱처럼 두 번 눌러요)" hidden></div>
+      <!-- 2026-10-22: 달력에서 날짜만 고르고 떠날 시각은 2단계로 넘어가야만 적을 수 있던 것을, 여기서 대략 바로 적을 수 있게 함(2단계 칸과 같은 값을 공유) -->
+      <div class="dt" id="calBackTimeWrap" hidden>
+        <div class="f tf"><span class="tf-l" id="calBTimeLb">떠날 시각(대략)</span>
+          <div class="tmw" id="twCalB" role="group" aria-labelledby="calBTimeLb">
+            <div class="tmw-ap" role="radiogroup" aria-label="오전 오후"><button type="button" class="tmw-b" role="radio" aria-checked="false" data-ap="am">오전</button><button type="button" class="tmw-b" role="radio" aria-checked="true" data-ap="pm">오후</button></div>
+            <input class="tmw-h" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="next" aria-label="시" placeholder="시"><span class="tmw-u" aria-hidden="true">시</span>
+            <input class="tmw-m" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="done" aria-label="분" placeholder="분"><span class="tmw-u" aria-hidden="true">분</span>
+          </div>
+        </div>
+      </div>
       <p class="note warnline" id="dateMsg" role="alert" hidden></p>
       <p class="badges" id="inBadges"></p>
       <p class="crowd-line" id="crowdLine" hidden></p>
@@ -154,7 +169,10 @@
   <!-- 2. 돌아갈 때 -->
   <div class="st st-n" id="st2" data-st="2" hidden>
     <div class="st-bar"><button type="button" class="st-back" id="stBack2" aria-label="이전"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button><div class="st-prog" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuemax="6" aria-valuenow="2"><i></i></div><span class="st-count" aria-hidden="true">2/6</span></div>
-    <div class="st-art" aria-hidden="true"><svg viewBox="0 0 400 76" preserveAspectRatio="xMidYMid slice" focusable="false"><defs><linearGradient id="gA2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff3c9"/><stop offset=".55" stop-color="#e9e5ff"/><stop offset="1" stop-color="#eaf6ff"/></linearGradient></defs><rect width="400" height="76" fill="url(#gA2)"/><circle cx="96" cy="40" r="26" fill="#ffe27a" opacity=".9"/><circle cx="96" cy="40" r="16" fill="#ffd24a"/><path d="M0 56q25-8 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0V76H0z" fill="#b9dcff"/><path d="M0 64q25-7 50 0t50 0 50 0 50 0 50 0 50 0 50 0 50 0V76H0z" fill="#9ccaf7"/><g transform="translate(268 10)"><path d="M14 0h12l4 10H10z" fill="#5b49e0"/><rect x="11" y="10" width="18" height="38" fill="#fff" stroke="#5b49e0" stroke-width="2.5"/><rect x="11" y="20" width="18" height="7" fill="#c8f08a"/><rect x="11" y="33" width="18" height="7" fill="#c8f08a"/><rect x="7" y="46" width="26" height="6" rx="2" fill="#5b49e0"/><path d="M20 0V-6" stroke="#5b49e0" stroke-width="2.5"/><path d="M0 4l10 3M40 4l-10 3" stroke="#ffd24a" stroke-width="3" stroke-linecap="round"/></g></svg></div>
+    <div class="st-art st-art-photo">
+      <img src="사진캐시/129000.jpg" alt="추암 촛대바위" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+      <span class="st-art-credit">추암 촛대바위 — 사진: 한국관광공사 · 공공누리 제3유형</span>
+    </div>
     <div class="st-body q-out" id="qOut">
       <p class="st-tag">돌아가는 날</p>
       <h2 id="hs2" tabindex="-1">언제까지 동해에 있을 수 있어요?</h2>
@@ -164,16 +182,9 @@
         <button type="button" class="chip" data-nowback="stay1">하루 자고 가요</button>
         <button type="button" class="chip" data-nowback="unknown">아직 몰라요</button>
       </div>
-      <div class="dt">
-        <label class="f"><span>날짜</span><input type="date" id="bDate"></label>
-        <div class="f tf"><span class="tf-l" id="bTimeLb">출발 시각</span><input type="time" id="bTime" class="t-src" tabindex="-1" aria-hidden="true">
-          <div class="tmw" id="twB" role="group" aria-labelledby="bTimeLb">
-            <div class="tmw-ap" role="radiogroup" aria-label="오전 오후"><button type="button" class="tmw-b" role="radio" aria-checked="false" data-ap="am">오전</button><button type="button" class="tmw-b" role="radio" aria-checked="true" data-ap="pm">오후</button></div>
-            <input class="tmw-h" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="next" aria-label="시" placeholder="시"><span class="tmw-u" aria-hidden="true">시</span>
-            <input class="tmw-m" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2" autocomplete="off" enterkeyhint="done" aria-label="분" placeholder="분"><span class="tmw-u" aria-hidden="true">분</span>
-          </div>
-        </div>
-      </div>
+      <!-- 2026-10-22: 가는 날짜·시각은 이제 1단계 달력에서 이미 정함(지금 branch 는 빠른 칩으로) — 여기서 또 묻지 않고, 값만 안 보이게 들고 있음(코드 쪽이 그대로 읽고 씀) -->
+      <input type="date" id="bDate" class="t-src" tabindex="-1" aria-hidden="true">
+      <input type="time" id="bTime" class="t-src" tabindex="-1" aria-hidden="true">
       <p class="badges" id="outBadges"></p>
       <div class="seg3" id="bhowSeg" role="group" aria-label="돌아갈 때 이동수단">
         <button type="button" class="chip" data-bhow="train" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-train"/></svg><span>기차</span></button>
@@ -474,10 +485,10 @@
 <section id="s-stay" class="screen" hidden aria-labelledby="h-stay">
   <h2 id="h-stay">동네 식당 · 숙소</h2>
   <div class="seg town-seg" id="townSeg" role="group" aria-label="보기 고르기">
-    <button type="button" class="chip" data-tk="eat" aria-pressed="true">식당</button>
-    <button type="button" class="chip" data-tk="cafe" aria-pressed="false">카페</button>
-    <button type="button" class="chip" data-tk="lodge" aria-pressed="false">숙소</button>
-    <button type="button" class="chip" data-tk="tour" aria-pressed="false">시티투어</button>
+    <button type="button" class="chip" data-tk="eat" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-fork"/></svg><span>식당</span></button>
+    <button type="button" class="chip" data-tk="cafe" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-cup"/></svg><span>카페</span></button>
+    <button type="button" class="chip" data-tk="lodge" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-bed"/></svg><span>숙소</span></button>
+    <button type="button" class="chip" data-tk="tour" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-bus"/></svg><span>시티투어</span></button>
   </div>
   <div id="tourBox" class="tourbox" hidden></div>
   <div id="townBox">

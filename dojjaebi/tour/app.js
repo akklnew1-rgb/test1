@@ -344,14 +344,16 @@
     if ($('dtArrive')) $('dtArrive').hidden = c.branch === 'now';
     if ($('nowArriveNote')) $('nowArriveNote').hidden = c.branch !== 'now';
     if ($('calBox')) { $('calBox').hidden = c.branch === 'now'; if (c.branch !== 'now') renderCal(); }
+    if ($('calBackTimeWrap')) $('calBackTimeWrap').hidden = c.branch === 'now'; // 2026-10-22: 달력과 같이 보이고 같이 숨음(지금 branch 는 날짜 자체를 안 물으니 떠날 시각도 여기선 안 물음, 2단계에서 물음)
     if ($('nowBackSeg')) $('nowBackSeg').hidden = c.branch !== 'now';
     if ($('howSeg')) $('howSeg').hidden = c.branch === 'now'; // 지금 branch 는 "올 때 이동수단"(기차·버스·자가용) 대신 "동해에서 이용할 교통수단"을 물음
     if ($('howSegNow')) $('howSegNow').hidden = c.branch !== 'now';
+    if ($('hs1')) $('hs1').textContent = c.branch === 'now' ? '어서 오세요!' : '언제 와요?'; // 2026-10-22: "지금 동해에 있어요"로 들어오면 이미 도착한 건데 "언제 와요?"라고 묻던 것을 고침
     $('sDate').value = c.date || todayIso(); $('sDate').min = todayIso(); $('sTime').value = toTimeValue(c.arrive);
     var dmsg = $('dateMsg'); if (dmsg && !dmsg.hidden && !pastDate(c)) { dmsg.hidden = true; dmsg.textContent = ''; }
     $('bDate').value = c.backDate; $('bDate').min = c.date; $('bDate').max = P.addDays(c.date, 2) || '';
     $('bTime').value = toTimeValue(c.back); $('bTime').disabled = c.backHow === 'car' && c.noLimit;
-    $('bTimeLb').textContent = c.backHow === 'car' ? '언제까지 머무세요?' : '출발 시각';
+    if ($('calBTimeLb')) $('calBTimeLb').textContent = (c.backHow === 'car' ? '언제까지 머무세요? (대략)' : '떠날 시각(대략)');
     twSync('sTime'); twSync('bTime');
     $('inBadges').innerHTML = dateBadges(c.date, true);
     renderCrowdLine(c);
@@ -465,11 +467,11 @@
   function twMinute(txt) { var n = parseInt(txt, 10); if (!isFinite(n)) return null; return Math.max(0, Math.min(59, n)); }
   function twAdvance(txt) { var t = String(txt || ''); return t.length >= 2 || (t.length === 1 && +t >= 3); } // 두 자리를 적었거나 3~9 한 자리면 분 칸으로
   /*TW-END*/
-  var TWS = {};
+  var TWS = {}; // srcId -> [widget, ...] (2026-10-22: 같은 hidden input 을 공유하는 위젯이 둘 이상일 수 있음 — 1단계 달력 밑 "떠날 시각(대략)" 과 2단계 "출발 시각"이 같은 #bTime 값을 같이 씀)
   function twInit(wid, srcId) {
     var w = $(wid), src = $(srcId); if (!w || !src) return;
     var st = { w: w, src: src, h: w.querySelector('.tmw-h'), m: w.querySelector('.tmw-m'), btns: w.querySelectorAll('.tmw-b'), pm: false };
-    TWS[srcId] = st;
+    (TWS[srcId] = TWS[srcId] || []).push(st);
     st.setPm = function (pm) { st.pm = pm; Array.prototype.forEach.call(st.btns, function (b) { b.setAttribute('aria-checked', (b.getAttribute('data-ap') === 'pm') === pm ? 'true' : 'false'); }); };
     function commit(force) {
       var h = twHour(st.h.value), m = twMinute(st.m.value);
@@ -495,18 +497,20 @@
     Array.prototype.forEach.call(st.btns, function (b) { b.addEventListener('click', function () { if (b.disabled) return; st.setPm(b.getAttribute('data-ap') === 'pm'); if (st.h.value && st.m.value) commit(true); else twSync(srcId); }); });
     twSync(srcId);
   }
-  function twSync(srcId) { // 눈에 안 보이는 type=time 값 → 보이는 칸
-    var st = TWS[srcId]; if (!st) return;
-    var v = st.src.value;
-    if (/^\d\d:\d\d$/.test(v)) {
-      var p = twFromMin(P.toMin(v)); st.setPm(p.pm);
-      if (document.activeElement !== st.h) st.h.value = String(p.h12);
-      if (document.activeElement !== st.m) st.m.value = ('0' + p.m).slice(-2);
-    } else { if (document.activeElement !== st.h) st.h.value = ''; if (document.activeElement !== st.m) st.m.value = ''; }
-    var dis = !!st.src.disabled; st.h.disabled = dis; st.m.disabled = dis;
-    Array.prototype.forEach.call(st.btns, function (b) { b.disabled = dis; });
+  function twSync(srcId) { // 눈에 안 보이는 type=time 값 → 보이는 칸(같은 값을 쓰는 위젯이 여럿이면 전부)
+    var list = TWS[srcId]; if (!list) return;
+    list.forEach(function (st) {
+      var v = st.src.value;
+      if (/^\d\d:\d\d$/.test(v)) {
+        var p = twFromMin(P.toMin(v)); st.setPm(p.pm);
+        if (document.activeElement !== st.h) st.h.value = String(p.h12);
+        if (document.activeElement !== st.m) st.m.value = ('0' + p.m).slice(-2);
+      } else { if (document.activeElement !== st.h) st.h.value = ''; if (document.activeElement !== st.m) st.m.value = ''; }
+      var dis = !!st.src.disabled; st.h.disabled = dis; st.m.disabled = dis;
+      Array.prototype.forEach.call(st.btns, function (b) { b.disabled = dis; });
+    });
   }
-  twInit('twS', 'sTime'); twInit('twB', 'bTime');
+  twInit('twS', 'sTime'); twInit('twB', 'bTime'); twInit('twCalB', 'bTime'); /* 2026-10-22: 1단계 달력 밑 "떠날 시각(대략)" — 2단계 #bTime 과 같은 값을 공유 */
 
   /* ---------- 시작 화면 단계 (S.step: 0 인사 · 1 올 때 · 2 돌아갈 때 · 3 누구와) — 한 화면에 한 가지씩 ---------- */
   function backEarly(c) { var eff = c.backHow === 'car' && c.noLimit ? 22 * 60 : c.back; return c.backDate === c.date && eff < c.arrive; }
@@ -2302,7 +2306,8 @@
      자료: 동네 탭 자료(좌표 있는 곳) + 관광공사 음식점 + 공공데이터 식당·숙박(편의 자료). 별점·후기·광고 없음. 같은 곳은 하나로 합친다. */
   /* 2026-10-21: "식당이랑 카페 분리" — 자료에 업태가 "카페"로 또렷이 적힌 곳은 4곳뿐이라(1,669곳 중), 이름에 카페·커피 낱말이 있는 곳도 같이 카페로 봄(44곳 안팎). 완벽하진 않지만 업태만 쓰는 것보다 실제에 가까움 */
   var CAFE_RE = /카페|까페|커피|coffee|cafe/i;
-  function isCafe(x) { return CAFE_RE.test(x.name || '') || CAFE_RE.test(x.type || ''); }
+  var BAR_TYPE_RE = /정종\/대포집\/소주방|호프\/통닭/; // 2026-10-22: 업소명에 "카페"가 들어가도(예: "꽃카페 정종") 업종이 술집(정종/대포집/소주방 · 호프/통닭)이면 카페가 아님 — 업종이 이름보다 믿을 만함
+  function isCafe(x) { if (BAR_TYPE_RE.test(x.type || '')) return false; return CAFE_RE.test(x.name || '') || CAFE_RE.test(x.type || ''); }
   S.mapLay = { course: true, eat: false, cafe: false, lodge: false, spot: false }; S.mapFocus = null; S.poiSel = null;
   var POIS = null;
   function buildPois() {
