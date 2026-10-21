@@ -207,7 +207,7 @@
   function freshCond() {
     var s0 = startDefaults();
     // 2026-10-21: companions 기본값을 ['친구']가 아니라 []로 — "친구"가 미리 눌려 있던 것을 없애고 아무것도 안 고른 채 시작
-    var c = { how: 'train', arrive: s0.arrive, back: 18 * 60, backDate: s0.date, backHow: 'train', backTouched: false, backHowTouched: false, backDateTouched: false, backDateExplicit: false, noLimit: false, end: 'mukho', companions: [], knee: false, interests: [], rain: false, food: false, foodWord: '', count: null, stayBooked: null, date: s0.date, branch: null, tripNights: null, must: [] };
+    var c = { how: 'train', arrive: s0.arrive, arriveTouched: false, back: 18 * 60, backDate: s0.date, backHow: 'train', backTouched: false, backHowTouched: false, backDateTouched: false, backDateExplicit: false, noLimit: false, end: 'mukho', companions: [], knee: false, interests: [], rain: false, food: false, foodWord: '', count: null, stayBooked: null, date: s0.date, branch: null, tripNights: null, must: [] }; // 2026-10-22: arriveTouched — 사용자가 "오는 시각"을 직접 고르기 전엔 시간칸을 미리 고른 것처럼 안 보이게(twSync)
     c.back = defaultBack(c);
     return c;
   }
@@ -455,7 +455,7 @@
   $('s-start').addEventListener('change', function (ev) {
     var t = ev.target, c = S.cond;
     if (t.id === 'sDate') { c.date = t.value || todayIso(); syncBack(c); }
-    else if (t.id === 'sTime') { if (t.value) { c.arrive = P.toMin(t.value); syncBack(c); } }
+    else if (t.id === 'sTime') { if (t.value) { c.arrive = P.toMin(t.value); c.arriveTouched = true; syncBack(c); } }
     else if (t.id === 'bDate') { c.backDate = t.value || c.date; c.backDateTouched = c.backDate !== c.date; c.backDateExplicit = true; c.tripNights = null; syncBack(c); }
     else if (t.id === 'bTime') { if (t.value) backEdited(P.toMin(t.value)); }
     else return;
@@ -500,14 +500,20 @@
     Array.prototype.forEach.call(st.btns, function (b) { b.addEventListener('click', function () { if (b.disabled) return; st.setPm(b.getAttribute('data-ap') === 'pm'); if (st.h.value && st.m.value) commit(true); else twSync(srcId); }); });
     twSync(srcId);
   }
+  // 2026-10-22(사용자 요청): "니가 선택 미리 해놓으니까 (헷갈려요), 먼저 선택하지 말자" — 아직 사용자가 직접 안 고른 시각은
+  // 미리 고른 것처럼 숫자·오전/오후가 채워져 보이지 않게(빈 칸 + 둘 다 안 눌린 상태)로 시작. 속값(S.cond.arrive/back)은 그대로 둬서
+  // 계산은 평소처럼 되고, 눈에만 "아직 안 골랐다"고 보이게 함 — 사용자가 손대는 순간(twInit 의 change 로 Touched=true) 바로 실제 값이 보임.
+  var TW_TOUCHED_KEY = { sTime: 'arriveTouched', bTime: 'backTouched' };
   function twSync(srcId) { // 눈에 안 보이는 type=time 값 → 보이는 칸(같은 값을 쓰는 위젯이 여럿이면 전부)
     var list = TWS[srcId]; if (!list) return;
+    var tk = TW_TOUCHED_KEY[srcId], touched = tk ? !!S.cond[tk] : true;
     list.forEach(function (st) {
       var v = st.src.value;
       if (/^\d\d:\d\d$/.test(v)) {
         var p = twFromMin(P.toMin(v)); st.setPm(p.pm);
-        if (document.activeElement !== st.h) st.h.value = String(p.h12);
-        if (document.activeElement !== st.m) st.m.value = ('0' + p.m).slice(-2);
+        if (!touched) Array.prototype.forEach.call(st.btns, function (b) { b.setAttribute('aria-checked', 'false'); }); // 속으로는 그 값을 들고 있되(그래야 시만 적어도 알맞은 오전/오후로 떨어짐), 버튼은 안 눌린 것처럼
+        if (document.activeElement !== st.h) st.h.value = touched ? String(p.h12) : '';
+        if (document.activeElement !== st.m) st.m.value = touched ? ('0' + p.m).slice(-2) : '';
       } else { if (document.activeElement !== st.h) st.h.value = ''; if (document.activeElement !== st.m) st.m.value = ''; }
       var dis = !!st.src.disabled; st.h.disabled = dis; st.m.disabled = dis;
       Array.prototype.forEach.call(st.btns, function (b) { b.disabled = dis; });

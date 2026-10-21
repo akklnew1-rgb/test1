@@ -970,10 +970,8 @@ button.ovn-b{ cursor:pointer; }
 .st-art-photo img{ display:block; width:100%; height:100%; object-fit:cover; }
 .st-art-photo .st-art-credit{ position:absolute; left:10px; bottom:8px; padding:3px 9px; border-radius:999px; background:rgba(20,16,40,.52); color:#fff; font-size:.72em; font-weight:600; line-height:1.3; }
 @media (max-height:700px){ .st-art-photo{ height:92px; } }
-/* 2026-10-22: 사진 자리에 여유가 있으면 한 장 대신 여러 장(2~3장) 나란히 — 1단계(방문일정)는 첫인상이라 동해 풍경을 여러 장 보여줌 */
-.st-art-multi{ display:flex; gap:2px; }
-.st-art-multi img{ flex:1 1 0; min-width:0; }
-.st-art-multi .st-art-credit{ right:10px; left:auto; max-width:calc(100% - 20px); white-space:normal; }
+/* 2026-10-22: 사진 2~3장을 가로로 나란히(st-art-multi) 넣어 봤는데 달력·시각 칸까지 생기며 화면이 작아져서 1장으로 되돌림(사용자 요청).
+   나중에 여러 장을 다시 넣을 땐 가로로 쪼개지 말고 아래에 큰 줄을 더 만드는 쪽으로 — 여기 쓰던 규칙은 지움 */
 
 /* 시각 입력: 오전/오후 + 시 + 분 */
 #s-start .dt input.t-src,.t-src{ position:absolute; width:1px !important; height:1px !important; min-height:0 !important; margin:-1px; overflow:hidden; clip:rect(0 0 0 0); opacity:0; pointer-events:none; }
