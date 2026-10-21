@@ -263,7 +263,7 @@
     if (CAL.picking === 'in' || !c.date) {
       c.date = iso; c.backDate = iso; c.backDateTouched = true; c.backDateExplicit = true; c.tripNights = null;
       CAL.picking = 'out';
-    } else if (iso === c.date) { c.backDate = c.date; CAL.picking = 'in'; }
+    } else if (iso === c.date) { c.backDate = c.date; CAL.picking = 'out'; } // 2026-10-21: 당일치기로 확정된 뒤 picking 을 'in'으로 되돌리면, 안내 글("다른 날짜를 한 번 더 눌러 늘리기")과 달리 다음 탭이 늘리기가 아니라 처음부터 다시 고르는 걸로 되던 버그 — 'out'을 유지해 다음 탭이 그대로 늘리기(또는 앞날이면 오는 날 옮기기)가 되게 함
     else if (iso < c.date) { c.date = iso; c.backDate = iso; }
     else {
       var mx = P.addDays(c.date, 2);
@@ -337,6 +337,8 @@
   }
   function renderStart() {
     var c = S.cond;
+    // 2026-10-21: 날씨로 자동 켠 "비 와요"(S.wxRain)는 "지금" 날씨라, 날짜를 앞날로 바꾸면 더는 맞지 않음 — 그 날로 바뀌면 자동으로 끔(사용자가 손으로 켠 건 그대로 둠)
+    if (S.wxRain && c.date !== todayIso()) { c.rain = false; S.wxRain = false; }
     /* 두 버튼 시작(6차안): branch==='now' 는 날짜·시각을 숨기고(오늘·지금), branch==='later' 는 며칠 묵는지 칩을 보인다 */
     if ($('dtArrive')) $('dtArrive').hidden = c.branch === 'now';
     if ($('nowArriveNote')) $('nowArriveNote').hidden = c.branch !== 'now';
@@ -637,8 +639,8 @@
       else if (c.backHow === 'car') { c.backHow = c.how; c.backHowTouched = false; }
     }
     c.end = r.end || 'mukho';
-    var order = ['부모님', '아이', '연인', '친구', '혼자'], pick = order.filter(function (n) { return r.companions.indexOf(n) >= 0; })[0];
-    if (pick) setComp(c, pick);
+    // 2026-10-21: 누구와는 이제 여러 명 동시 선택이 되는데, 말로/사진으로 들어온 값은 하나만 골라 쓰고 있었음(확인 글에는 다 보여주면서 실제로는 하나만 반영되던 버그) — 들어온 것 전부 반영, 혼자는 다른 것과 함께 못 둠
+    if (r.companions && r.companions.length) c.companions = r.companions.indexOf('혼자') >= 0 ? ['혼자'] : r.companions.filter(function (n) { return COMPS.indexOf(n) >= 0; });
     c.knee = !!r.knee; c.interests = r.interests.slice(); c.rain = !!r.rain || (S.wxRain && c.rain); c.food = !!r.food; c.foodWord = r.foodWord || ''; c.count = r.count;
     c.date = r.date || c.date || todayIso();
     syncBack(c);
@@ -782,11 +784,12 @@
   });
 
   /* ---------- 코스 만들기 ---------- */
-  /* 돌아갈 시각(분): 기차·버스 = 출발, 자가용 = 주차장에 돌아올 시각(정하지 않으면 20:00). 막차 보기 = 기차는 그날 마지막 기차, 버스·자가용은 21:00 */
+  /* 돌아갈 시각(분): 기차·버스 = 출발, 자가용 = 주차장에 돌아올 시각(정하지 않으면 밤 10시). 막차 보기 = 기차는 그날 마지막 기차, 버스·자가용은 밤 10시
+     2026-10-21: late 모드가 20·21시로 못 박혀 있던 걸 그대로 두면, "시간 안 정함"(c.noLimit)일 때 이미 밤 10시까지인데 "하루 더 머물면?" 의 "OO시까지 늘리기"가 오히려 더 이른 시각을 보여줘(코스가 짧아짐) — 늘 노멀 모드 상한(22시)과 같거나 늦게 맞춤 */
   function lastTrain(c) { var tl = trainTimes(c); return P.toMin(tl[tl.length - 1]); }
   function effTrain(mode) {
     var c = S.cond;
-    if (mode === 'late') return c.backHow === 'train' ? lastTrain(c) : 21 * 60;
+    if (mode === 'late') return c.backHow === 'train' ? lastTrain(c) : Math.max(22 * 60, c.back || 0);
     return c.backHow === 'car' && c.noLimit ? 22 * 60 : c.back;
   }
   /* 돌아갈 시각이 어디서 왔나: 코레일 시간표에 있는 기차 · 예시 시간표 · 직접 고른 시간 */
@@ -814,7 +817,8 @@
     if (!TW) return [];
     var lodges = TW.list('lodge').filter(function (x) { return x.lat && x.lng; }), byArea = {};
     lodges.forEach(function (x) { (byArea[x.area] = byArea[x.area] || []).push(x); });
-    return Object.keys(byArea).map(function (a) {
+    // 2026-10-21: 날마다 코스를 미리 짜 보는 계산이라 권역 하나하나가 비용이 꽤 됨 — 숙박업소가 1곳뿐인 권역(실제 숙박지로 보기 어려움)은 미리 빼서 계산을 줄임
+    return Object.keys(byArea).filter(function (a) { return byArea[a].length >= 2; }).map(function (a) {
       var arr = byArea[a], clat = arr.reduce(function (s, x) { return s + x.lat; }, 0) / arr.length, clng = arr.reduce(function (s, x) { return s + x.lng; }, 0) / arr.length;
       var near = FU ? FU.nearestN(arr.map(function (x) { return { name: x.name, lat: x.lat, lng: x.lng }; }), clat, clng, 1, null) : null;
       var best = (near && near[0] && near[0].item) || arr[0];
@@ -836,7 +840,7 @@
       var sc = planScore(pl);
       if (sc > bestScore) { bestScore = sc; best = cand; }
     });
-    return best || cands[0];
+    return best; // 2026-10-21: 어느 권역도 하루 안에 다 안 맞으면(infeasible) 아무 권역이나 골라 "추천"이라고 말하지 않고, 기존 기본값(묵호역 근처)으로 되돌림(stayInfo()) — cands[0] 은 추천이 아니라 그냥 첫 번째라 틀린 이유를 달고 보여주고 있었음
   }
   function isKid() { return S.cond.companions.indexOf('아이') >= 0; }
   function isCouple() { return S.cond.companions.indexOf('연인') >= 0; }
@@ -951,7 +955,8 @@
     else if (usesTrain) out.push({ k: 'ticket', t: '기차표 예매' });
     else if (usesBus) out.push({ k: 'ticket', t: '버스표 예매' });
     if (usesCar) out.push({ k: 'parking', t: '목적지 주차장 확인' });
-    out.push({ k: 'stay', t: '숙소 예약' }, { k: 'wear', t: '날씨에 맞는 옷 준비' });
+    if (nDays(c) > 1) out.push({ k: 'stay', t: '숙소 예약' }); // 2026-10-21: 당일치기(같은 날 돌아감)인데도 "숙소 예약"이 뜨던 버그 — 1박 이상일 때만
+    out.push({ k: 'wear', t: '날씨에 맞는 옷 준비' });
     return out;
   }
   function renderPrep() {
@@ -2103,7 +2108,7 @@
     if (S.plan && S.plan.multi) { // 여러 날 여행: 날마다 묵는 곳 안내
       var sy = S.plan.stay;
       $('stayOpts').innerHTML = '<div class="opt on"><b>' + esc(S.plan.label) + ' 코스예요</b><p>날마다 새로 짜서, 밤에는 숙소 앞에서 마쳐요. 둘째 날 새벽에는 추암 일출로 시작할 수 있어요(비 오는 날·아이·부모님과는 뺌).</p>' +
-        (sy && sy.examples && sy.examples.length ? '<p>숙소 예(묵호역에서 가까운 순): ' + sy.examples.map(esc).join(' · ') + '</p><p class="note">출처: ' + esc(sy.source) + ' · 모텔·펜션은 자료에 없어요 · 별점·광고 없음 · 예약·요금은 직접 확인</p>' : '<p class="note">숙박업소 자료가 없어 묵호역 둘레로 잡았어요.</p>') +
+        (sy && sy.examples && sy.examples.length ? '<p>숙소 예' + (sy.area ? '(' + esc(sy.area) + ' 권역)' : S.stayPick ? '' : '(묵호역에서 가까운 순)') + ': ' + sy.examples.map(esc).join(' · ') + '</p><p class="note">출처: ' + esc(sy.source) + ' · 모텔·펜션은 자료에 없어요 · 별점·광고 없음 · 예약·요금은 직접 확인</p>' : '<p class="note">숙박업소 자료가 없어 묵호역 둘레로 잡았어요.</p>') + // 2026-10-21: "가까운 순"은 기본값(묵호역 둘레)일 때만 맞는 말이라, 권역 추천·손으로 고른 숙소일 땐 다르게 보여줌
         '<p class="note">막차·하룻밤 비교는 하루 여행에서만 보여요.</p></div>';
       return;
     }
@@ -3535,7 +3540,8 @@
   }
   function setWx(w) {
     S.wx = w; renderWx();
-    if (w && !w.error && w.pty > 0 && !S.wxApplied && !w.snap) { S.wxApplied = true; S.wxRain = true; S.cond.rain = true; if (!$('s-start').hidden) renderStart(); }
+    // 2026-10-21: 이 값은 기상청 "지금 날씨"(초단기실황)라, 고른 날짜가 오늘이 아니면 자동으로 "비 와요"를 켜지 않음(다른 날 날씨를 지금 날씨로 잘못 맞추게 됨)
+    if (w && !w.error && w.pty > 0 && !S.wxApplied && !w.snap && S.cond.date === todayIso()) { S.wxApplied = true; S.wxRain = true; S.cond.rain = true; if (!$('s-start').hidden) renderStart(); }
   }
   function loadWeather() {
     var m = /[?&]mock-weather=([a-z]+)/.exec(location.search || '');

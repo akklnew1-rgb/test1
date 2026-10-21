@@ -16,6 +16,8 @@
   --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px;
   color-scheme:light;
 }
+/* 2026-10-21: 어떤 class·id 로 display 를 정해도 hidden 속성이 이기게(여러 번 반복됐던 "숨김 속성이 실제로 안 먹힘" 버그를 한 줄로 영구히 막음 — 아래 개별 [hidden] 규칙들은 이제 안 써도 되지만 그대로 둬도 해롭지 않음) */
+[hidden]{ display:none !important; }
 body:not(.big){ --fs:clamp(1rem, .85rem + 1vw, 1.125rem); }          /* 16~18px */
 body.big{ --fs:clamp(1.125rem, .95rem + 1.1vw, 1.3125rem); }         /* 18~21px */
 *{ box-sizing:border-box; }
