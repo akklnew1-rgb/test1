@@ -53,6 +53,22 @@ function cleanEdit(raw, places) {
 
 var EXPLAIN_SYS = '너는 동해시 여행 코스 앱의 안내자 "도째비"다. 아래 사실(facts)만 써서, 이 코스를 왜 이렇게 짰는지 3~4문장으로 쉽게 설명한다. 사실에 없는 장소·시간·날씨·가격은 절대 말하지 않는다. 존댓말, 영어·어려운 한자어 금지, 문장은 짧게. 마지막에 "고치고 싶으면 코스 고치기를 눌러 보세요" 로 끝낸다.';
 
+var PARSE_SYS = '너는 동해시 여행 앱의 "여행 이야기 → 조건" 번역기다. 사용자가 쓴 한국어 문장에서 아래 항목만 뽑는다. 말에 없는 항목은 비워 두고 절대 짐작해서 채우지 않는다. 오늘 날짜는 사용자 메시지의 today 로 계산한다("내일", "이번 토요일" 등을 YYYY-MM-DD 로). back 은 "돌아갈 시각"(기차·버스 출발 또는 떠날 시각) 24시간 HH:MM — "6시 10분 기차" 처럼 저녁 여행이 자연스러우면 18:10. 시각 말이 없으면 빈 문자열. how 는 가는 교통: car(자가용)·bus·train 중 하나, 말이 없으면 빈 문자열. companions 는 부모님·아이·연인·친구·혼자 중에서만. interests 는 사진·먹거리 중에서만. knee 는 무릎·계단·다리·허리 등 걷기 힘들다는 말이 있을 때 true. rain 은 비 이야기가 있을 때 true. food 는 밥·식사·맛집 말이 있을 때 true, foodWord 는 물회·칼국수·국수·회덮밥·모듬회·미역국·죽 중 말한 음식 하나(없으면 빈 문자열). count 는 사람 수(말이 없으면 0). end 는 동해역에서 끝나면 donghae, 아니면 mukho. reply 에는 한 줄로 "이렇게 알아들었어요: …" 를 쉬운 말로 쓴다.';
+var PARSE_SCHEMA = { type: 'OBJECT', properties: { date: { type: 'STRING' }, back: { type: 'STRING' }, how: { type: 'STRING' }, end: { type: 'STRING' }, companions: { type: 'ARRAY', items: { type: 'STRING' } }, interests: { type: 'ARRAY', items: { type: 'STRING' } }, knee: { type: 'BOOLEAN' }, rain: { type: 'BOOLEAN' }, food: { type: 'BOOLEAN' }, foodWord: { type: 'STRING' }, count: { type: 'INTEGER' }, reply: { type: 'STRING' } } };
+function cleanParse(raw) {
+  var j; try { j = JSON.parse(raw); } catch (e) { return null; }
+  var r = { date: null, train: null, how: null, end: 'mukho', companions: [], interests: [], knee: !!j.knee, rain: !!j.rain, food: !!j.food, foodWord: '', count: null };
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(j.date || ''))) r.date = j.date;
+  var m = String(j.back || '').match(/^(\d{1,2}):(\d{2})$/); if (m && +m[1] < 24 && +m[2] < 60) r.train = +m[1] * 60 + +m[2];
+  if (['car', 'bus', 'train'].indexOf(j.how) >= 0) r.how = j.how;
+  if (j.end === 'donghae') r.end = 'donghae';
+  (j.companions || []).forEach(function (c) { if (['부모님', '아이', '연인', '친구', '혼자'].indexOf(c) >= 0 && r.companions.indexOf(c) < 0) r.companions.push(c); });
+  (j.interests || []).forEach(function (c) { if (['사진', '먹거리'].indexOf(c) >= 0 && r.interests.indexOf(c) < 0) r.interests.push(c); });
+  if (['물회', '칼국수', '국수', '회덮밥', '모듬회', '미역국', '죽'].indexOf(j.foodWord) >= 0) { r.foodWord = j.foodWord; r.food = true; }
+  var n = parseInt(j.count, 10); if (n >= 1 && n <= 9) r.count = n;
+  return { r: r, reply: String(j.reply || '').slice(0, 100) };
+}
+
 module.exports = async function handler(req, res) {
   var origin = req.headers.origin || '';
   if (ALLOW.indexOf(origin) >= 0) { res.setHeader('Access-Control-Allow-Origin', origin); res.setHeader('Vary', 'Origin'); }
@@ -70,6 +86,14 @@ module.exports = async function handler(req, res) {
       var raw = await gemini(EDIT_SYS, '사용자 말: ' + text + '\nplaces: ' + JSON.stringify(places), EDIT_SCHEMA);
       var r = cleanEdit(raw, places); if (!r) { res.status(200).json({ ok: false, why: 'parse' }); return; }
       res.status(200).json({ ok: true, intents: r.intents, reply: r.reply, model: USED }); return;
+    }
+    if (b.task === 'parse') {
+      var pt = String(b.text || '').slice(0, 300), today = /^\d{4}-\d{2}-\d{2}$/.test(String(b.today || '')) ? b.today : '';
+      if (!pt.trim()) { res.status(400).json({ ok: false }); return; }
+      var wd = today ? '일월화수목금토'[new Date(today + 'T00:00:00Z').getUTCDay()] + '요일' : '';
+      var pr = cleanParse(await gemini(PARSE_SYS, 'today: ' + today + ' ' + wd + '\n사용자 말: ' + pt, PARSE_SCHEMA));
+      if (!pr) { res.status(200).json({ ok: false, why: 'parse' }); return; }
+      res.status(200).json({ ok: true, parsed: pr.r, reply: pr.reply, model: USED }); return;
     }
     if (b.task === 'explain') {
       var facts = JSON.stringify(b.facts || {}).slice(0, 3000);

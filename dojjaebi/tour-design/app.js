@@ -769,8 +769,25 @@
   if ($('ticketFile2')) $('ticketFile2').addEventListener('change', handleTicketFile); // 2026-10-22: 2단계("지금" 흐름)에서도 같은 승차권 사진 기능을 쓸 수 있게
   $('goVoice').addEventListener('click', function () { $('reqText').value = ''; show('s-input'); initMic(); });
   $('inputNext').addEventListener('click', function () {
-    var r = AI.aiParseRequest($('reqText').value, S.cond.arrive, todayIso());
-    applyParsed(r, '말씀하신 내용이에요.');
+    var txt = $('reqText').value, r = AI.aiParseRequest(txt, S.cond.arrive, todayIso()), btn = $('inputNext');
+    if (!aiUrl() || !txt.trim()) { applyParsed(r, '말씀하신 내용이에요.'); return; }
+    // 인공지능이 문장에서 조건을 뽑는다 — 규칙 결과를 바탕으로, AI 가 확실히 뽑은 칸만 덮어쓴다(틀리면 마지막 확인 화면에서 고친다). 답이 없으면 규칙 결과 그대로.
+    var old = btn.textContent; btn.disabled = true; btn.textContent = '도째비가 읽고 있어요…';
+    aiCall({ task: 'parse', text: txt, today: todayIso() }, 9000).then(function (j) {
+      btn.disabled = false; btn.textContent = old;
+      var a = j && j.parsed, lead = '말씀하신 내용이에요.';
+      if (a) {
+        ['date', 'train', 'how', 'count'].forEach(function (k) { if (a[k] != null && a[k] !== '') r[k] = a[k]; });
+        if (a.date && !(P.dateInfo && P.dateInfo(a.date))) r.date = null;
+        if (a.date && a.date < todayIso()) r.date = null;
+        if (a.end === 'donghae') r.end = 'donghae';
+        if (a.companions && a.companions.length) r.companions = a.companions;
+        ['interests'].forEach(function (k) { (a[k] || []).forEach(function (v) { if (r[k].indexOf(v) < 0) r[k].push(v); }); });
+        r.knee = r.knee || a.knee; r.rain = r.rain || a.rain; r.food = r.food || a.food; if (a.foodWord) r.foodWord = a.foodWord;
+        lead = '인공지능(제미나이)이 말씀을 읽었어요.';
+      }
+      applyParsed(r, lead);
+    });
   });
   $('runDemo').addEventListener('click', function () { runDemo('normal'); });
   $('runDemoMeal').addEventListener('click', function () { runDemo('meal'); });
