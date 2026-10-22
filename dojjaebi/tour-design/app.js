@@ -873,6 +873,16 @@
     makeCourse(false, false, future ? 's-prep' : 's-course');
   });
 
+  /* ---------- 코스 결과의 지도는 접어 두고 버튼으로만 (2026-10-22 디자인 시안) ---------- */
+  function ovMapOpen(open) {
+    var ov = $('ov'), b = $('ovToggle'); if (!ov || !b) return;
+    ov.classList.toggle('map-open', !!open); b.setAttribute('aria-expanded', open ? 'true' : 'false');
+    b.querySelector('span').textContent = open ? '지도 접기' : '지도로 동선 보기';
+    if (open) { try { ovKakaoEnsure(); } catch (e) { /* 지도 그림으로 계속 */ } try { if (OVS.frame && OA.state === 'idle') ovLayout(OVS.cam ? OVS.cam.z : 1); } catch (e) { /* 무시 */ } }
+  }
+  $('ovToggle').addEventListener('click', function () { ovMapOpen(!$('ov').classList.contains('map-open')); });
+  $('ovPlay').addEventListener('click', function () { if (!$('ov').classList.contains('map-open')) ovMapOpen(true); }, true); // 미리 보기는 지도 위에서 움직이니 자동으로 펼침
+
   /* ---------- 빠른 시작 (2026-10-22 디자인 시안): 큰 카드 3묶음 → 기존 코스 만들기에 그대로 연결 ---------- */
   var QS = { stay: null, comp: null, how: 'train' };
   function qsUi() {
@@ -1778,7 +1788,12 @@
     else fl = st + ' ' + hhmm(pl.back.arrive) + ' 도착' + (pl.back.text && placeStops(pl.multi ? pl.days[pl.nDays - 1].plan.stops : pl.stops).length ? '(마지막 곳에서 ' + pl.back.text + ')' : '') + ' · ' + (S.cond.backHow === 'car' ? '정한 시각 ' : S.cond.backHow === 'bus' ? '버스 ' : '기차 ') + hhmm(pl.train);
     if (pl.late > 0) fl += ' · ' + pl.late + '분 늦음';
     $('finalLine').classList.toggle('late', pl.late > 0);
-    $('finalLine').innerHTML = ico('train') + '<span>' + esc(fl) + '</span>';
+    /* 디자인 시안(10/22): 돌아갈 시간 신호등 — 여유 30분 이상 초록 · 그보다 적으면 노랑 · 늦으면 빨강. 색만이 아니라 글자로도 알려 준다. 여러 날·하룻밤 모드는 신호 없이 그대로. */
+    var slack = (pl.feasible && S.mode !== 'night' && !pl.multi && isFinite(pl.train) && pl.back && isFinite(pl.back.arrive)) ? (pl.train - pl.back.arrive) : null;
+    var sig = pl.late > 0 || !pl.feasible ? 'red' : (slack == null ? '' : (slack >= 30 ? 'green' : 'yellow'));
+    var sigTxt = sig === 'red' ? '서두르세요' : sig === 'yellow' ? '조금 빠듯해요' : sig === 'green' ? '여유 있어요' : '';
+    $('finalLine').setAttribute('data-sig', sig);
+    $('finalLine').innerHTML = (sig ? '<b class="sig-l"><i class="sig-dot" aria-hidden="true"></i>' + sigTxt + '</b>' : ico('train')) + '<span>' + esc(fl) + '</span>';
     renderEdUi();
     renderRepAlerts();
     if (S.screen === 's-stay') renderTown();
@@ -2080,7 +2095,7 @@
     try {
       var W = 1080, sc = W / c.w, msc = W / 360, mh = Math.round(c.h * sc), top = 150, bot = 140, cv = document.createElement('canvas'), ff = "'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif";
       cv.width = W; cv.height = top + mh + bot; var g = cv.getContext('2d');
-      var bg = g.createLinearGradient(0, 0, W, cv.height); bg.addColorStop(0, '#2b2563'); bg.addColorStop(1, '#4535c4'); g.fillStyle = bg; g.fillRect(0, 0, W, cv.height);
+      var bg = g.createLinearGradient(0, 0, W, cv.height); bg.addColorStop(0, '#0b2f52'); bg.addColorStop(1, '#12609a'); g.fillStyle = bg; g.fillRect(0, 0, W, cv.height);
       var nStops = v.nodes.filter(function (n) { return n.kind === 'stop'; }).length, ox = -(c.cx - c.w / 2) * sc, oy = top - (c.cy - c.h / 2) * sc;
       g.textAlign = 'left'; g.fillStyle = '#fff'; g.font = '800 54px ' + ff; g.fillText(ovDayTitle(), 48, 80);
       g.fillStyle = '#c9eeea'; g.font = '500 30px ' + ff; g.fillText((S.plan.multi && (OVS.all || v.sel < 0) ? S.plan.label + ' · ' : '') + nStops + '곳 · 번호는 가는 순서', 48, 126);
@@ -2526,7 +2541,7 @@
   });
 
   /* 선(길) 한 토막의 색·모양: 걷는 길(실제) = 보라 실선, 버스(실제) = 주황 실선, 길 값이 없는 구간(택시·어림) = 점선 직선 */
-  var SEG = { walk: { c: '#5b49e0', w: 5, dash: false }, bus: { c: '#e07a00', w: 5, dash: false }, taxi: { c: '#c2255c', w: 5, dash: false }, est: { c: '#6b7f86', w: 4, dash: true }, tour: { c: '#0b3d91', w: 6, dash: false } };
+  var SEG = { walk: { c: '#0f4c81', w: 5, dash: false }, bus: { c: '#e07a00', w: 5, dash: false }, taxi: { c: '#c2255c', w: 5, dash: false }, est: { c: '#6b7f86', w: 4, dash: true }, tour: { c: '#0b3d91', w: 6, dash: false } };
   function segOf(a, b, info) {
     if (info && info.path && info.path.length > 1) return { kind: info.mode === 'bus' ? 'bus' : (info.mode === 'taxi' || info.mode === 'car') ? 'taxi' : 'walk', path: info.path.map(function (q) { return { lat: q[1], lng: q[0] }; }) };
     return { kind: 'est', path: [{ lat: a.lat, lng: a.lng }, { lat: b.lat, lng: b.lng }] };
@@ -2581,7 +2596,7 @@
       pn++;
       if (g.n > 1) { svg += '<g class="spoi" data-clu="' + g.lat.toFixed(5) + ',' + g.lng.toFixed(5) + '" transform="translate(' + o.x.toFixed(1) + ' ' + o.y.toFixed(1) + ')"><circle class="hit" r="26" fill="transparent"/><circle r="17" fill="' + POI_COLOR[g.kind] + '" stroke="#fff" stroke-width="3"/><text y="5" text-anchor="middle" font-size="14" font-weight="800" fill="#fff">' + g.n + '</text></g>'; return; }
       var p = g.p;
-      svg += '<g class="spoi" data-poi="' + p.id + '" transform="translate(' + o.x.toFixed(1) + ' ' + o.y.toFixed(1) + ')"><circle class="hit" r="26" fill="transparent"/>' + (S.poiSel === p.id ? '<circle r="21" fill="none" stroke="#5b49e0" stroke-width="4"/>' : '') + '<circle r="13" fill="' + POI_COLOR[p.kind] + '" stroke="#fff" stroke-width="3"/><g transform="translate(-8 -8) scale(.67)" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' + POI_ICON[p.kind] + '</g></g>';
+      svg += '<g class="spoi" data-poi="' + p.id + '" transform="translate(' + o.x.toFixed(1) + ' ' + o.y.toFixed(1) + ')"><circle class="hit" r="26" fill="transparent"/>' + (S.poiSel === p.id ? '<circle r="21" fill="none" stroke="#0f4c81" stroke-width="4"/>' : '') + '<circle r="13" fill="' + POI_COLOR[p.kind] + '" stroke="#fff" stroke-width="3"/><g transform="translate(-8 -8) scale(.67)" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">' + POI_ICON[p.kind] + '</g></g>';
     });
     pts.slice().sort(function (x, y) { return (x.st ? 1 : 0) - (y.st ? 1 : 0); }).forEach(function (p) { // 출발·숙소·도착 표시는 번호 위에
       var o = proj(p.lat, p.lng); if (o.x < 0 || o.x > pick.w || o.y < 0 || o.y > pick.h) return;
@@ -3633,7 +3648,7 @@
     var c = cardParts(); if (!c) return;
     try {
       var W = 1080, cv = document.createElement('canvas'); cv.width = W; cv.height = W; var g = cv.getContext('2d');
-      var bg = g.createLinearGradient(0, 0, W, W); bg.addColorStop(0, '#2b2563'); bg.addColorStop(.62, '#4535c4'); bg.addColorStop(1, '#5b49e0'); g.fillStyle = bg; g.fillRect(0, 0, W, W);
+      var bg = g.createLinearGradient(0, 0, W, W); bg.addColorStop(0, '#0b2f52'); bg.addColorStop(.62, '#12609a'); bg.addColorStop(1, '#0f4c81'); g.fillStyle = bg; g.fillRect(0, 0, W, W);
       var sun = g.createRadialGradient(W - 120, W - 80, 10, W - 120, W - 80, 420); sun.addColorStop(0, 'rgba(255,178,90,.95)'); sun.addColorStop(.4, 'rgba(255,122,89,.6)'); sun.addColorStop(1, 'rgba(255,122,89,0)'); g.fillStyle = sun; g.fillRect(0, 0, W, W);
       var ff = "'Pretendard','Noto Sans KR','Malgun Gothic',sans-serif";
       g.fillStyle = '#fff'; g.font = '800 64px ' + ff; g.fillText('나의 동해 이야기', 72, 130);
