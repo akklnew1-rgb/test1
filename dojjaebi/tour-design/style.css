@@ -1507,3 +1507,28 @@ body.big #s-start .qs-card > span:last-child:not(.qs-e){ font-size:max(16px,.86e
   .tmap{ background:#2b79cc; color:#fff; }
   .cbar{ background:rgba(22,30,40,.98); border-top-color:#2e3b4e; }
 }
+
+/* 2026-10-22 간결화(제미나이 제안, 구성): 첫 화면을 스크롤 없이 질문 3개+단추 1개가 보이게. 사진 낮춤·설명 글자 접음·카드 한 줄로 */
+#s-start .hero{ height:150px; }
+#s-start .hero-sub,#s-start .hero-ctl{ display:none; }
+#s-start .hero-txt{ padding-bottom:4px; }
+#s-start .hero h1{ font-size:1.25em; }
+.intro-card{ margin-top:-10px; padding:8px 14px 6px; }
+#s-start .qs-h{ margin:8px 0 6px; font-size:1.05em; }
+#s-start .qs-grid{ margin-top:0; gap:8px; }
+#s-start .qs-card{ min-height:52px; flex-direction:row; align-items:center; justify-content:center; gap:8px; padding:6px 10px; border-radius:14px; }
+#s-start .qs-card > span:last-child:not(.qs-e){ display:none; }
+#s-start .qs-card .qs-e{ font-size:1.3em; line-height:1; }
+#s-start .qs-card b{ font-size:1em; }
+#s-start .qs-card.sm{ min-height:52px; }
+#s-start #qsGo{ margin-top:10px; min-height:54px; }
+#s-start .quiet.small{ margin:4px 0 0; }
+#s-start .intro-alt{ margin-top:2px; }
+body.big #s-start .qs-card{ min-height:56px; }
+#s-start .hero{ height:164px; }
+.intro-card{ margin-top:0; border-radius:0 0 22px 22px; }
+#s-start .qs-card.sm{ gap:4px; padding:6px 4px; white-space:nowrap; }
+#s-start .qs-card.sm .qs-e{ font-size:1.15em; }
+/* 간결화: 코스 고치기 단추가 두 개(칩+아래 큰 단추)였던 것을 큰 단추 하나로 */
+#editBtn{ display:none; }
+.tmap{ display:none !important; }  /* 위 막대의 "지도" 단추는 아래 탭과 겹치고 제목을 가려서 뺌 */
