@@ -999,7 +999,7 @@ button.ovn-b{ cursor:pointer; }
 .kpoi i{ display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.35); }
 .kpoi.eat i,.poi-ic.eat{ background:#d9480f; }
 .kpoi.cafe i,.poi-ic.cafe{ background:#0b7f6f; }
-.kpoi.lodge i,.poi-ic.lodge{ background:#1d3b66; }
+.kpoi.lodge i,.poi-ic.lodge{ background:#4263c9; }
 .kpoi.on i{ width:30px; height:30px; box-shadow:0 0 0 3px rgba(15,76,129,.45),0 2px 6px rgba(0,0,0,.35); }
 .kpoi svg{ width:14px; height:14px; }
 .kfocus{ width:54px; height:54px; border-radius:50%; border:3px dashed #6c5ce7; background:rgba(108,92,231,.14); pointer-events:none; }
@@ -1043,7 +1043,7 @@ button.ovn-b{ cursor:pointer; }
 /* 지도 식당·숙소 묶음(클러스터): 멀리서는 숫자 동그라미, 가까이서만 낱개 */
 .kclu{ min-width:44px; min-height:44px; padding:0; border:0; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; touch-action:manipulation; }
 .kclu i{ display:flex; align-items:center; justify-content:center; min-width:36px; height:36px; padding:0 6px; border-radius:18px; border:3px solid #fff; box-shadow:0 1px 5px rgba(0,0,0,.4); color:#fff; font-style:normal; font-weight:800; font-size:14px; line-height:1; font-variant-numeric:tabular-nums; }
-.kclu.eat i{ background:#d9480f; } .kclu.cafe i{ background:#0b7f6f; } .kclu.lodge i{ background:#1d3b66; }
+.kclu.eat i{ background:#d9480f; } .kclu.cafe i{ background:#0b7f6f; } .kclu.lodge i{ background:#4263c9; }
 .kclu.big i{ min-width:46px; height:46px; border-radius:23px; font-size:15px; }
 .poi-src{ margin:6px 0 0; font-size:.78em; color:var(--muted); }
 
@@ -1298,7 +1298,7 @@ body{ background:#f9f8f6; }
 .p-hours.note dd{ margin:0; font-weight:600; }
 
 /* ===== 지도·동네 색 통일(2026-10-22): 식당 붉은 주황 · 카페 청록 · 숙소 남색 · 볼거리 회색 — 동네 목록, 칩, 지도 핀, 안내가 모두 같은 색 ===== */
-:root{ --k-eat:#d9480f; --k-cafe:#0b7f6f; --k-lodge:#1d3b66; --k-spot:#4a5568; }
+:root{ --k-eat:#d9480f; --k-cafe:#0b7f6f; --k-lodge:#4263c9; --k-spot:#4a5568; }
 .poi-ic.spot,.kpoi.spot i{ background:var(--k-spot); }
 .facbar.laybar .chip[data-k]::before{ content:""; width:12px; height:12px; border-radius:50%; background:var(--kc); flex:none; box-shadow:0 0 0 2px #fff; }
 .facbar.laybar .chip[data-k="eat"]{ --kc:var(--k-eat); } .facbar.laybar .chip[data-k="cafe"]{ --kc:var(--k-cafe); }

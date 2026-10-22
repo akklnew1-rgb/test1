@@ -2430,7 +2430,7 @@
     POIS = out; return out;
   }
   var POI_ICON = { eat: '<path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2.5 1.5-3.5 5-3.5 8H17"/>', cafe: '<path d="M4 9h14v3a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9z"/><path d="M18 10h1.5a2 2 0 0 1 0 4H18"/><path d="M6 3.5c.5 1-.5 1.5 0 2.5M10 3.5c.5 1-.5 1.5 0 2.5"/>', lodge: '<path d="M3 19V6M3 14h18v5M21 14v-2.5A2.5 2.5 0 0 0 18.5 9H11v5"/><circle cx="7" cy="11" r="1.6"/>', spot: '<path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>' };
-  var POI_KINDS = ['eat', 'cafe', 'lodge', 'spot'], POI_NAME = { eat: '식당', cafe: '카페', lodge: '숙소', spot: '볼거리' }, POI_COLOR = { eat: '#d9480f', cafe: '#0b7f6f', lodge: '#1d3b66', spot: '#4a5568' };
+  var POI_KINDS = ['eat', 'cafe', 'lodge', 'spot'], POI_NAME = { eat: '식당', cafe: '카페', lodge: '숙소', spot: '볼거리' }, POI_COLOR = { eat: '#d9480f', cafe: '#0b7f6f', lodge: '#4263c9', spot: '#4a5568' };
   function layPoi() { var l = S.mapLay; return !!(l.eat || l.cafe || l.lodge || l.spot); }
   function notInCourse(p, have) { return p.kind !== 'spot' || !have[p.pid]; }
   function poiSvg(kind) { return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + POI_ICON[kind] + '</svg>'; }
