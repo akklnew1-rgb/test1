@@ -1376,3 +1376,34 @@ body.big .nact,body.big .nhelp{font-size:18px;min-height:56px}
 
 .eat-warn{margin:8px 0 0;padding:10px 12px;border:1.5px solid #d9480f;background:#fff4e6;color:#7a2e00;border-radius:8px;font-size:15px;line-height:1.5}
 body.big .eat-warn{font-size:18px}
+
+/* ===== 여행 준비 6단계 디자인 (2026-10-22) — 공통 틀·선택 칩 통일·안내 상자·강제 어두운 화면 대비 ===== */
+:root{ color-scheme:only light; }
+.st.enter{ animation:stFade .2s ease-out 1; }
+@keyframes stFade{ from{ opacity:0; } to{ opacity:1; } }
+.st-n{ background:#f9f8f6; }
+.st-foot{ background:linear-gradient(to top,#f9f8f6 72%,rgba(249,248,246,0)); }
+.st-prog{ background:#e2dfd8; height:4px; }
+.st-prog i{ background:#0f4c81; transition:width .25s ease; }
+.st-count{ color:#4a5568; font-size:max(14px,.8em); }
+.st-tag{ background:#e7f1f8; color:#0b2f52; border:1px solid #b9d3e6; font-size:max(13px,.82em); }
+.st-body h2{ color:#0b2f52; }
+#s-start .st-body .note,#s-start .st-body .help{ color:#4a5568; }
+/* 선택 칩·카드: 미선택 = 흰 바탕+뚜렷한 테두리, 선택 = 연파랑+파랑 테두리+체크 */
+#s-start .chip{ background:#fff; border:2px solid #c9ced6; color:#0b2f52; border-radius:14px; font-weight:700; }
+#s-start .chip[aria-pressed="true"],#s-start .chip[aria-checked="true"]{ background:#e7f1f8; border-color:#0f4c81; color:#0f4c81; }
+#s-start .st-n .chip[aria-pressed="true"]::after,#s-start .st-n .chip[aria-checked="true"]::after{ content:"\2713"; font-weight:900; margin-left:2px; }
+#s-start .st-n .chips.comp .chip[aria-pressed="true"]::after{ content:none; }
+/* 이동수단 칩: 긴 이름이 잘리지 않게 — 기차·버스 한 줄 2개, 자가용은 아래 한 줄 전체 */
+#s-start .seg3{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+#s-start .seg3 .chip:nth-child(3){ grid-column:1 / -1; }
+#s-start .seg3 .chip,#s-start .seg2 .chip{ white-space:normal; text-align:center; line-height:1.3; }
+#s-start .seg2{ display:grid; grid-template-columns:1fr; gap:8px; margin-top:16px; }
+#s-start .seg2[hidden]{ display:none !important; }
+/* 장날·시티투어 안내: 알약 대신 연파랑 안내 상자 */
+#inBadges,#outBadges{ flex-direction:column; flex-wrap:nowrap; gap:6px; padding:10px 14px; background:#e7f1f8; border:1.5px solid #b9d3e6; border-radius:10px; }
+#inBadges:empty,#outBadges:empty{ display:none; }
+#inBadges .bdg,#outBadges .bdg{ background:transparent; color:#0b2f52; padding:0; border-radius:0; font-weight:700; }
+#inBadges .bdg::before,#outBadges .bdg::before{ content:"\00b7"; margin-right:6px; font-weight:900; }
+#s-start .dt input,#s-start .tmw-h,#s-start .tmw-m{ border-color:#c9ced6; }
+body.big #s-start .chip{ font-size:max(18px,1.02em); }
