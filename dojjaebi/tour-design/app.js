@@ -739,6 +739,7 @@
     if (r.companions && r.companions.length) c.companions = r.companions.indexOf('혼자') >= 0 ? ['혼자'] : r.companions.filter(function (n) { return COMPS.indexOf(n) >= 0; });
     c.knee = !!r.knee; c.interests = r.interests.slice(); c.rain = !!r.rain || (S.wxRain && c.rain); c.food = !!r.food; c.foodWord = r.foodWord || ''; c.count = r.count;
     c.date = r.date || c.date || todayIso();
+    if (r.backDate && r.backDate > c.date) { c.backDate = r.backDate; c.backDateTouched = true; c.backDateExplicit = true; c.tripNights = null; }
     if (r.arrive != null) { c.arrive = r.arrive; c.arriveTouched = true; }
     if (r.must && r.must.length) c.must = r.must.slice();
     syncBack(c);
@@ -883,12 +884,11 @@
   }
   function cfMissing(r) {
     if (!r.date) return '여행 날짜를 정해 주세요';
-    if (!r.companions || !r.companions.length) return '누구와 가는지 골라 주세요';
-    if (!r.how) return '무엇을 타고 오는지 골라 주세요';
-    if (r.arrive == null) return '도착 시각을 정해 주세요';
-    if (r.train != null && r.train <= r.arrive) return '돌아갈 시각이 도착 시각보다 뒤여야 해요';
+    if (r.backDate && r.backDate < r.date) return '오는 날이 가는 날보다 빠를 수 없어요';
+    if (r.train != null && r.arrive != null && !(r.backDate && r.backDate > r.date) && r.train <= r.arrive) return '돌아갈 시각이 도착 시각보다 뒤여야 해요';
     return '';
   }
+  function cfDateText(r) { if (!r.date) return ''; if (r.backDate && r.backDate > r.date) return esc(P.dateLabel(r.date) + ' ~ ' + P.dateLabel(r.backDate) + ' (' + P.tripLabel(P.dayCount(r.date, r.backDate)) + ')'); return esc(P.dateLabel(r.date)) + ' · 당일치기'; }
   function cfRow(key, ico, label, val, miss, editor) {
     var open = CF.open === key;
     return '<div class="cf-item' + (open ? ' open' : '') + '"><button type="button" class="cf-row' + (miss ? ' miss' : '') + '" data-cf="row" data-k="' + key + '" aria-expanded="' + open + '">' +
@@ -902,11 +902,12 @@
     var HOWN = { train: '기차', bus: '버스', car: '자가용' }, comp = (r.companions || []).join(' · ');
     var mustN = (r.must || []).map(function (id) { var p = D.places.filter(function (q) { return q.id === id; })[0]; return p ? (p.short || p.name) : ''; }).filter(Boolean);
     var rows = '';
-    rows += cfRow('date', '📅', '여행 날짜', r.date ? esc(P.dateLabel(r.date)) : '', !r.date, '<input type="date" class="cf-in" id="cfDate" min="' + todayIso() + '" value="' + esc(r.date || '') + '" aria-label="여행 날짜">');
-    rows += cfRow('comp', '👥', '누구와', esc(comp), !comp, COMPS.map(function (n) { return cfChip('comp', n, n, (r.companions || []).indexOf(n) >= 0); }).join(''));
-    rows += cfRow('how', '🚆', '오는 교통', r.how ? HOWN[r.how] : '', !r.how, [['train', '기차'], ['bus', '버스'], ['car', '자가용']].map(function (h) { return cfChip('how', h[0], h[1], r.how === h[0]); }).join(''));
-    rows += cfRow('arrive', '🕐', '동해에 도착', r.arrive != null ? hhmm(r.arrive) : '', r.arrive == null, '<input type="time" class="cf-in" id="cfArrive" value="' + (r.arrive != null ? toTimeValue(r.arrive) : '') + '" aria-label="도착 시각">');
-    rows += cfRow('back', '🕑', r.how === 'car' ? '떠날 시각' : '돌아갈 시각', r.train != null ? hhmm(r.train) : '정하지 않았어요 — 저녁까지 넉넉히 잡아요', false, '<input type="time" class="cf-in" id="cfBack" value="' + (r.train != null ? toTimeValue(r.train) : '') + '" aria-label="돌아갈 시각">');
+    var AUTO = '정하지 않아도 돼요 — 도째비가 정해요';
+    rows += cfRow('date', '📅', '여행 날짜', cfDateText(r), !r.date, '<label class="cf-lb" for="cfDate">가는 날</label><input type="date" class="cf-in" id="cfDate" min="' + todayIso() + '" value="' + esc(r.date || '') + '"><label class="cf-lb" for="cfDate2">오는 날 (당일치기면 비워 두세요)</label><input type="date" class="cf-in" id="cfDate2" min="' + esc(r.date || todayIso()) + '" max="' + esc(r.date ? (P.addDays(r.date, 2) || '') : '') + '" value="' + esc(r.backDate && r.backDate > r.date ? r.backDate : '') + '">');
+    rows += cfRow('comp', '👥', '누구와', esc(comp) || AUTO, false, COMPS.map(function (n) { return cfChip('comp', n, n, (r.companions || []).indexOf(n) >= 0); }).join(''));
+    rows += cfRow('how', '🚆', '오는 교통', r.how ? HOWN[r.how] : '정하지 않으면 기차로 잡아요', false, [['train', '기차'], ['bus', '버스'], ['car', '자가용']].map(function (h) { return cfChip('how', h[0], h[1], r.how === h[0]); }).join(''));
+    rows += cfRow('arrive', '🕐', '동해에 도착', r.arrive != null ? hhmm(r.arrive) : AUTO, false, '<input type="time" class="cf-in" id="cfArrive" value="' + (r.arrive != null ? toTimeValue(r.arrive) : '') + '" aria-label="도착 시각">');
+    rows += cfRow('back', '🕑', r.how === 'car' ? '떠날 시각' : '돌아갈 시각', r.train != null ? hhmm(r.train) : AUTO, false, '<input type="time" class="cf-in" id="cfBack" value="' + (r.train != null ? toTimeValue(r.train) : '') + '" aria-label="돌아갈 시각">');
     rows += cfRow('must', '📍', '꼭 가고 싶은 곳', mustN.length ? esc(mustN.join(' · ')) : '없어요 — 도째비가 골라요', false, D.places.map(function (p) { return cfChip('must', p.id, p.short || p.name, (r.must || []).indexOf(p.id) >= 0); }).join(''));
     $('cfList').innerHTML = rows;
     var why = cfMissing(r); $('cfWhy').textContent = why; $('cfWhy').hidden = !why; $('cfGo').disabled = !!why;
@@ -928,7 +929,8 @@
   });
   $('cfSheet').addEventListener('change', function (ev) {
     var r = CF.r, id = ev.target.id; if (!r) return;
-    if (id === 'cfDate') { r.date = ev.target.value && ev.target.value >= todayIso() ? ev.target.value : null; }
+    if (id === 'cfDate') { r.date = ev.target.value && ev.target.value >= todayIso() ? ev.target.value : null; if (r.backDate && r.date && r.backDate < r.date) r.backDate = null; }
+    else if (id === 'cfDate2') { r.backDate = ev.target.value || null; }
     else if (id === 'cfArrive') { r.arrive = ev.target.value ? P.toMin(ev.target.value) : null; }
     else if (id === 'cfBack') { r.train = ev.target.value ? P.toMin(ev.target.value) : null; }
     else return;
@@ -940,6 +942,7 @@
     cfShow(false); applyParsed(CF.r, '도째비와 나눈 이야기에서 알아들었어요.', true);
   });
   $('chatMake').addEventListener('click', cfOpen);
+  if ($('askSheet')) $('askSheet').addEventListener('click', cfOpen);
   $('askGo').addEventListener('click', function () {
     var t = $('askText').value; if (!t.trim()) { var n = $('askNote'); n.textContent = '하실 말씀을 적어 주세요. 아래 예시를 눌러도 돼요.'; n.hidden = false; $('askText').focus(); return; }
     chatSend(t);

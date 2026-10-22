@@ -1605,3 +1605,8 @@ body.big #s-start .qs-card{ min-height:56px; }
 .pchip .pc-s{display:block;padding:0 10px 10px;font-size:.85rem;color:var(--muted)}
 .ask-credit{margin:2px 0 0;font-size:.75rem;color:var(--muted)}
 .ask-chips .pchip{padding:0 !important;min-height:0}.ask-chips .pchip img{border-radius:0}
+
+/* 한 시트로 합침: 예전 '직접 고르기' 카드 묶음은 숨김(날짜·동행·교통·시각은 확인 시트가 맡는다) */
+#quick .qs-h,#quick .qs-grid,#quick .qs-msg,#quick #qsGo{display:none}
+#askSheet{width:100%;min-height:56px;margin-top:6px}
+.cf-lb{display:block;width:100%;margin:6px 0 2px;font-size:.9rem;color:var(--muted)}
