@@ -1481,3 +1481,29 @@ body.big #s-start .qs-card > span:last-child:not(.qs-e){ font-size:max(16px,.86e
 /* 2026-10-22: 사진은 한 장, 가로 폭에 꽉 채우고 높이는 원본 비율 그대로(자르기·좌우 빈칸 없음) */
 .st-art-photo img{ width:100%; height:auto; max-height:none; object-fit:fill; background:none; }
 @media (max-height:700px){ .st-art-photo img{ height:auto; } }
+@media (prefers-color-scheme: dark){
+  .ntag,.nme,.nbad,.nhelp,.st-tag,.st-body h2,#s-start .chip,#inBadges .bdg,#outBadges .bdg,#s-start .qs-card,.nt{ color:#f1f5f9; }
+  .nhelp[aria-pressed="true"],#s-start .chip[aria-pressed="true"],#s-start .chip[aria-checked="true"]{ color:#fff; }
+  .nago,.nleft,.nempty,.st-count,#s-start .st-body .note,#s-start .st-body .help,.st-art-photo .st-art-credit{ color:#94a3b8; }
+  .nex{ color:#fcc419; }
+  #inBadges,#outBadges{ background:#16283d; border-color:#234973; color:#70b1f7; }
+  #inBadges .bdg,#outBadges .bdg{ color:#70b1f7; background:transparent; }
+  .lv-tour b,.rsv-i,.rsv-t,.rsv-a,.tt-facts b,.tw-t,.kmap,.lv-alert.soft,.p-wc,.tag.pick,.sh-t.pick,.poi-b.pick{ color:#70b1f7; }
+  .crowd-line.cr-low b,.crowd-q,.p-cr.cr-low,.p-crline.cr-low b,[data-sig="green"] .sig-l{ color:#40c057; }
+  [data-sig="yellow"] .sig-l{ color:#fcc419; }
+  [data-sig="red"] .sig-l,.qs-msg{ color:#ff8787; }
+  .kd-name{ color:#f1f5f9; }
+}
+@media (prefers-color-scheme: dark){
+  .sitem .nb,.final,.maplist .n,.simchip,.qn,.bdg.trip,.staynote,.er-n,.lv-pill.static,.lv-chip,.lv-btn.tog[aria-pressed="true"],.ovn-n,.dt-b.on,.ov-all[aria-pressed="true"]{ background:#2b79cc; color:#fff; }
+  .tmap-l,.tmap-s{ color:#fff; }
+  .facbar .chip.cap[aria-pressed="true"]{ background:#2b79cc; color:#fff; border-color:#388ee8; }
+  .nex{ background:#332514; color:#fcc419; }
+  #finalLine[data-sig="green"],#finalLine[data-sig="yellow"],#finalLine[data-sig="red"]{ background:#1a222d; color:#f1f5f9; }
+  #finalLine[data-sig="green"]{ border-color:#2f9e44; } #finalLine[data-sig="yellow"]{ border-color:#f0a830; } #finalLine[data-sig="red"]{ border-color:#e03131; }
+  .sig-main{ color:#f1f5f9; } .sig-sub{ color:#94a3b8; }
+}
+@media (prefers-color-scheme: dark){
+  .tmap{ background:#2b79cc; color:#fff; }
+  .cbar{ background:rgba(22,30,40,.98); border-top-color:#2e3b4e; }
+}
