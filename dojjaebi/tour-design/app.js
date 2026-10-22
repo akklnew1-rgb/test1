@@ -1635,7 +1635,7 @@
     if (!box.hidden) { box.hidden = true; btn.setAttribute('aria-expanded', 'false'); return; }
     var f = whyFacts(); if (!f) return;
     btn.setAttribute('aria-expanded', 'true'); box.hidden = false; box.textContent = '도째비가 생각하는 중이에요…';
-    aiCall({ task: 'explain', facts: f }, 7000).then(function (j) {
+    aiCall({ task: 'explain', facts: f }, 9000).then(function (j) {
       box.innerHTML = '<p>' + esc(j ? j.text : whyFallback(f)) + '</p><p class="why-src">' + (j ? '인공지능(제미나이)이 코스 자료를 보고 쓴 설명이에요' : '코스 자료로 만든 안내예요') + '</p>';
     });
   });
@@ -1667,7 +1667,7 @@
     }
     if (!aiUrl()) { finish(r.intents, 'rule'); return; }
     var go = $('nlGo'); go.disabled = true; var box = $('nlResult'); box.innerHTML = '<p class="nl-m">도째비가 말씀을 듣고 있어요…</p>'; box.hidden = false;
-    aiCall({ task: 'edit', text: t, places: edPlaceList() }, 4500).then(function (j) {
+    aiCall({ task: 'edit', text: t, places: edPlaceList() }, 9000).then(function (j) {
       go.disabled = false;
       if (j && j.intents && j.intents.length) finish(j.intents, 'ai', j.reply); else finish(r.intents, 'rule');
     });

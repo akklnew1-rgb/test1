@@ -3,7 +3,7 @@
  *   POST { task:'edit',    text:'다리가 아파서 덜 걷고 싶어', places:[{id,name}] }  → { ok, intents:[{type,ids?,when?,theme?}], reply }
  *   POST { task:'explain', facts:{...} }                                           → { ok, text }
  * 모델이 지어낸 장소 id 는 places 목록과 대조해서 버린다. 실패하면 { ok:false } — 앱이 알아서 규칙 방식으로 돌아간다. */
-var MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
+var USED = '', MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
 var ALLOW = (process.env.ALLOW_ORIGINS || 'https://akklnew1-rgb.github.io,https://dojjaebi-gildongmu.vercel.app,http://localhost:8765').split(',');
 var TYPES = ['remove', 'add', 'removeMeal', 'addMeal', 'addTheme', 'indoor', 'slower', 'longer', 'shorter', 'first', 'last', 'unknown'];
 var hits = {}; // 아주 단순한 속도 제한(주소별 분당 20번) — 시연 중 남용 방지
@@ -15,13 +15,18 @@ async function gemini(system, user, schema) {
   var key = mm ? mm[1] : (/\s/.test(raw) ? '' : raw); if (!key) throw new Error('no key');
   var body = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 700 } };
   if (schema) { body.generationConfig.responseMimeType = 'application/json'; body.generationConfig.responseSchema = schema; }
-  var ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 8000);
-  try {
-    var r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + MODEL + ':generateContent', { method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body), signal: ctl.signal });
-    if (!r.ok) throw new Error('gemini ' + r.status);
-    var j = await r.json(), p = j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
-    return (p || []).map(function (x) { return x.text || ''; }).join('');
-  } finally { clearTimeout(t); }
+  var models = [MODEL, 'gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-2.5-flash'].filter(function (m, i, a) { return m && a.indexOf(m) === i; }), last = 'gemini';
+  for (var i = 0; i < models.length; i++) {
+    var ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 4500);
+    try {
+      var r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent', { method: 'POST', headers: { 'content-type': 'application/json', 'x-goog-api-key': key }, body: JSON.stringify(body), signal: ctl.signal });
+      if (!r.ok) { last = 'gemini ' + r.status + ' ' + models[i]; continue; }
+      var j = await r.json(), p = j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts;
+      USED = models[i];
+      return (p || []).map(function (x) { return x.text || ''; }).join('');
+    } catch (e) { last = String(e && e.name === 'AbortError' ? 'timeout ' + models[i] : e); } finally { clearTimeout(t); }
+  }
+  throw new Error(last);
 }
 
 var EDIT_SYS = '너는 동해시 여행 코스 앱의 "말 → 명령" 번역기다. 사용자가 코스를 어떻게 고치고 싶은지 한국어로 말하면, 아래 명령 목록으로만 바꿔 intents 배열로 돌려준다. 장소를 새로 지어내지 말고 반드시 주어진 places 목록의 id 만 쓴다.\n' +
@@ -64,13 +69,13 @@ module.exports = async function handler(req, res) {
       if (!text.trim()) { res.status(400).json({ ok: false }); return; }
       var raw = await gemini(EDIT_SYS, '사용자 말: ' + text + '\nplaces: ' + JSON.stringify(places), EDIT_SCHEMA);
       var r = cleanEdit(raw, places); if (!r) { res.status(200).json({ ok: false, why: 'parse' }); return; }
-      res.status(200).json({ ok: true, intents: r.intents, reply: r.reply, model: MODEL }); return;
+      res.status(200).json({ ok: true, intents: r.intents, reply: r.reply, model: USED }); return;
     }
     if (b.task === 'explain') {
       var facts = JSON.stringify(b.facts || {}).slice(0, 3000);
       var t = await gemini(EXPLAIN_SYS, 'facts: ' + facts, null);
       t = String(t || '').trim().slice(0, 600); if (!t) { res.status(200).json({ ok: false }); return; }
-      res.status(200).json({ ok: true, text: t, model: MODEL }); return;
+      res.status(200).json({ ok: true, text: t, model: USED }); return;
     }
     res.status(400).json({ ok: false });
   } catch (e) { res.status(200).json({ ok: false, why: String(e && e.message || e).replace(/AI[a-zA-Z0-9_\-]{20,}|AQ\.[\w\-.]+/g, '***').slice(0, 40) }); }
