@@ -100,7 +100,7 @@ module.exports = async function handler(req, res) {
       var ctoday = /^\d{4}-\d{2}-\d{2}$/.test(String(b.today || '')) ? b.today : '';
       if (!msgs.length) { res.status(400).json({ ok: false }); return; }
       var cwd = ctoday ? '일월화수목금토'[new Date(ctoday + 'T00:00:00Z').getUTCDay()] + '요일' : '';
-      var craw = await gemini(CHAT_SYS, 'today: ' + ctoday + ' ' + cwd + '\ncands: ' + JSON.stringify(cands) + '\n대화:\n' + msgs.join('\n'), CHAT_SCHEMA, 1100);
+      var craw = await gemini(CHAT_SYS, 'today: ' + ctoday + ' ' + cwd + '\njoke_used: ' + (msgs.some(function (m) { return /^도째비:/.test(m) && /도깨비|입맛|혀/.test(m); }) ? 'true (이번엔 입맛 농담 금지)' : 'false (이번 답에 도깨비 입맛 농담을 반드시 한 문장 넣을 것: 예) "제가 도깨비라 쇠도 씹어 먹다 보니 사람 입맛은 영 모른답니다", "제 혀는 도깨비방망이 맛밖에 몰라요", "도깨비 눈엔 다 맛있어 보여서 큰일이에요"를 상황에 맞게 변형)') + '\ncands: ' + JSON.stringify(cands) + '\n대화:\n' + msgs.join('\n'), CHAT_SCHEMA, 1100);
       var cj; try { cj = JSON.parse(craw); } catch (e) { res.status(200).json({ ok: false, why: 'parse' }); return; }
       var okc = {}; cands.forEach(function (c) { okc[c.id] = 1; });
       var picks = (cj.picks || []).filter(function (id, i, a) { return okc[id] && a.indexOf(id) === i; }).slice(0, 3);
