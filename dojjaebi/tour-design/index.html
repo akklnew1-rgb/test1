@@ -453,8 +453,8 @@
 <section id="s-map" class="screen" hidden aria-labelledby="h-map">
   <h2 id="h-map">오늘 걷는 길</h2>
   <button type="button" class="btn back-town" id="backTown" hidden>← 동네 목록으로 돌아가기</button>
-  <div class="facbar laybar" role="group" aria-label="지도에 보기"><span class="fb-l">지도 보기</span><button type="button" class="chip" id="layCourse" aria-pressed="true">코스</button><button type="button" class="chip" id="layEat" data-k="eat" aria-pressed="false">식당</button><button type="button" class="chip" id="layCafe" data-k="cafe" aria-pressed="false">카페</button><button type="button" class="chip" id="layLodge" data-k="lodge" aria-pressed="false">숙소</button><button type="button" class="chip" id="laySpot" data-k="spot" aria-pressed="false">볼거리</button></div>
-  <div class="facbar" role="group" aria-label="지도에 같이 보기"><span class="fb-l">같이 보기</span><button type="button" class="chip" id="facWc" aria-pressed="false">화장실</button><button type="button" class="chip" id="facInfo" aria-pressed="false">관광안내소</button></div>
+  <div class="facbar laybar" role="group" aria-label="지도에 보기"><span class="fb-l fb-top">장소 켜기</span><button type="button" class="chip" id="layCourse" aria-pressed="true">코스</button><button type="button" class="chip" id="layEat" data-k="eat" aria-pressed="false">식당</button><button type="button" class="chip" id="layCafe" data-k="cafe" aria-pressed="false">카페</button><button type="button" class="chip" id="layLodge" data-k="lodge" aria-pressed="false">숙소</button><button type="button" class="chip" id="laySpot" data-k="spot" aria-pressed="false">볼거리</button></div>
+  <div class="facbar" role="group" aria-label="지도에 같이 보기"><span class="fb-l fb-top fb-urgent">급할 때 찾기</span><button type="button" class="chip cap" id="facWc" aria-pressed="false">🚻 개방화장실</button><button type="button" class="chip cap" id="facInfo" aria-pressed="false">ℹ️ 관광안내소</button></div>
   <div class="mapbox">
     <div id="map" aria-label="코스 지도"></div>
     <div id="mapFallback" class="mapfb" hidden></div>
