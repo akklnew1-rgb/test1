@@ -823,7 +823,7 @@
     d.innerHTML = '<b>' + esc(x.name) + '</b><span>' + esc((x.type || '') + ' · ' + (x.dong || '')) + '</span>';
     var a;
     if (TW.hasPos(x)) { a = document.createElement('button'); a.type = 'button'; a.className = 'btn'; a.textContent = '앱 안 지도에서 보기'; a.addEventListener('click', function () { S.fromTown = false; openMapAt({ lat: x.lat, lng: x.lng }, { eat: true, focusName: x.name }); }); }
-    else { a = document.createElement('a'); a.href = TW.kakaoSearch(x.name); a.target = '_blank'; a.rel = 'noopener'; a.textContent = '카카오맵에서 찾기(앱 이동)'; a.className = 'btn'; }
+    else return d; // 위치 정보가 없는 가게는 카드에 지도 버튼을 만들지 않는다
     d.appendChild(a); return d;
   }
   function chatMerge(a) {
