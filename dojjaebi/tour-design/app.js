@@ -884,8 +884,7 @@
     if (!r.companions || !r.companions.length) return '누구와 가는지 골라 주세요';
     if (!r.how) return '무엇을 타고 오는지 골라 주세요';
     if (r.arrive == null) return '도착 시각을 정해 주세요';
-    if (r.train == null) return '돌아갈 시각을 정해 주세요';
-    if (r.train <= r.arrive) return '돌아갈 시각이 도착 시각보다 뒤여야 해요';
+    if (r.train != null && r.train <= r.arrive) return '돌아갈 시각이 도착 시각보다 뒤여야 해요';
     return '';
   }
   function cfRow(key, ico, label, val, miss, editor) {
@@ -905,7 +904,7 @@
     rows += cfRow('comp', '👥', '누구와', esc(comp), !comp, COMPS.map(function (n) { return cfChip('comp', n, n, (r.companions || []).indexOf(n) >= 0); }).join(''));
     rows += cfRow('how', '🚆', '오는 교통', r.how ? HOWN[r.how] : '', !r.how, [['train', '기차'], ['bus', '버스'], ['car', '자가용']].map(function (h) { return cfChip('how', h[0], h[1], r.how === h[0]); }).join(''));
     rows += cfRow('arrive', '🕐', '동해에 도착', r.arrive != null ? hhmm(r.arrive) : '', r.arrive == null, '<input type="time" class="cf-in" id="cfArrive" value="' + (r.arrive != null ? toTimeValue(r.arrive) : '') + '" aria-label="도착 시각">');
-    rows += cfRow('back', '🕑', r.how === 'car' ? '떠날 시각' : '돌아갈 시각', r.train != null ? hhmm(r.train) : '', r.train == null, '<input type="time" class="cf-in" id="cfBack" value="' + (r.train != null ? toTimeValue(r.train) : '') + '" aria-label="돌아갈 시각">');
+    rows += cfRow('back', '🕑', r.how === 'car' ? '떠날 시각' : '돌아갈 시각', r.train != null ? hhmm(r.train) : '정하지 않았어요 — 저녁까지 넉넉히 잡아요', false, '<input type="time" class="cf-in" id="cfBack" value="' + (r.train != null ? toTimeValue(r.train) : '') + '" aria-label="돌아갈 시각">');
     rows += cfRow('must', '📍', '꼭 가고 싶은 곳', mustN.length ? esc(mustN.join(' · ')) : '없어요 — 도째비가 골라요', false, D.places.map(function (p) { return cfChip('must', p.id, p.short || p.name, (r.must || []).indexOf(p.id) >= 0); }).join(''));
     $('cfList').innerHTML = rows;
     var why = cfMissing(r); $('cfWhy').textContent = why; $('cfWhy').hidden = !why; $('cfGo').disabled = !!why;
