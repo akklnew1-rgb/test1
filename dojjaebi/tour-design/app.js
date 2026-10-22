@@ -873,6 +873,30 @@
     makeCourse(false, false, future ? 's-prep' : 's-course');
   });
 
+  /* ---------- 빠른 시작 (2026-10-22 디자인 시안): 큰 카드 3묶음 → 기존 코스 만들기에 그대로 연결 ---------- */
+  var QS = { stay: null, comp: null, how: 'train' };
+  function qsUi() {
+    Array.prototype.forEach.call(document.querySelectorAll('#quick [data-qs]'), function (b) {
+      var k = b.getAttribute('data-qs'), v = b.getAttribute('data-v');
+      b.setAttribute('aria-pressed', String(QS[k] != null && String(QS[k]) === v));
+    });
+    var m = $('qsMsg'); if (m && QS.stay != null && QS.comp) m.hidden = true;
+  }
+  $('quick').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-qs]'); if (!b) return;
+    var k = b.getAttribute('data-qs'), v = b.getAttribute('data-v');
+    QS[k] = k === 'stay' ? +v : v; qsUi();
+  });
+  $('qsGo').addEventListener('click', function () {
+    if (QS.stay == null || !QS.comp) { var m = $('qsMsg'); m.hidden = false; return; }
+    S.cond = freshCond(); var c = S.cond;
+    c.branch = 'later'; c.how = QS.how; c.backHow = QS.how; c.tripNights = QS.stay || null;
+    c.companions = [QS.comp];
+    if (QS.stay >= 1) c.stayBooked = 'none'; // 1박이면 숙소는 "아직이에요"로 두고 도째비가 추천
+    syncBack(c); loadTrains(); renderStart();
+    $('makeCourse').click();
+  });
+
   /* ---------- 코스 만들기 ---------- */
   /* 돌아갈 시각(분): 기차·버스 = 출발, 자가용 = 주차장에 돌아올 시각(정하지 않으면 밤 10시). 막차 보기 = 기차는 그날 마지막 기차, 버스·자가용은 밤 10시
      2026-10-21: late 모드가 20·21시로 못 박혀 있던 걸 그대로 두면, "시간 안 정함"(c.noLimit)일 때 이미 밤 10시까지인데 "하루 더 머물면?" 의 "OO시까지 늘리기"가 오히려 더 이른 시각을 보여줘(코스가 짧아짐) — 늘 노멀 모드 상한(22시)과 같거나 늦게 맞춤 */

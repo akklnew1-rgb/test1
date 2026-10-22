@@ -85,16 +85,36 @@
         <p class="wx-src" id="wxSrc"></p>
       </div>
       <div class="hero-txt">
-        <h1 id="h-start" tabindex="-1">기차 시간은 맞추고,<br>동해는 넉넉하게.</h1>
-        <p class="hero-sub">도째비가 돌아갈 기차 15분 전까지 코스를 짜 드려요</p>
+        <h1 id="h-start" tabindex="-1">동해 여행,<br>쉽고 편하게.</h1>
+        <p class="hero-sub">세 가지만 고르면 도째비가 코스를 짜 드려요</p>
       </div>
       <p class="hero-meta" id="heroMeta"><b id="heroName"></b><span class="hero-credit" id="heroCredit"></span></p>
       <div class="hero-ctl"><div class="hero-dots" id="heroDots" role="group" aria-label="사진 고르기"></div><span class="hero-count" id="heroCount" aria-hidden="true"></span></div>
     </div>
     <div class="intro-card">
-      <div class="seg2 branch-cta" role="group" aria-label="언제 오세요">
-        <button type="button" class="btn primary cta" id="goNow"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg><span>지금 동해에 있어요</span></button>
-        <button type="button" class="btn primary cta ghost2" id="goLater"><svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg><span>동해에 올 예정이에요</span></button>
+      <!-- 빠른 시작(2026-10-22 디자인 시안): 한 화면에서 큰 카드 3묶음만 고르면 바로 코스. 기존 6단계는 그대로 두고 아래 작은 링크로 열린다 -->
+      <div class="qs" id="quick">
+        <h2 class="qs-h"><span class="qs-n">1</span>얼마나 머무르시나요?</h2>
+        <div class="qs-grid two" role="group" aria-label="일정">
+          <button type="button" class="qs-card" data-qs="stay" data-v="0" aria-pressed="false"><span class="qs-e" aria-hidden="true">☀️</span><b>당일치기</b><span>하루 안에 다녀와요</span></button>
+          <button type="button" class="qs-card" data-qs="stay" data-v="1" aria-pressed="false"><span class="qs-e" aria-hidden="true">🌙</span><b>1박 2일</b><span>하룻밤 자고 와요</span></button>
+        </div>
+        <h2 class="qs-h"><span class="qs-n">2</span>누구와 함께 떠나나요?</h2>
+        <div class="qs-grid two" role="group" aria-label="함께 가는 사람">
+          <button type="button" class="qs-card" data-qs="comp" data-v="아이" aria-pressed="false"><span class="qs-e" aria-hidden="true">👨‍👩‍👧</span><b>아이·가족</b><span>쉬운 길, 체험 중심</span></button>
+          <button type="button" class="qs-card" data-qs="comp" data-v="부모님" aria-pressed="false"><span class="qs-e" aria-hidden="true">👵</span><b>부모님</b><span>덜 걷고 편안하게</span></button>
+          <button type="button" class="qs-card" data-qs="comp" data-v="친구" aria-pressed="false"><span class="qs-e" aria-hidden="true">🧑‍🤝‍🧑</span><b>친구·연인</b><span>사진·카페·노을</span></button>
+          <button type="button" class="qs-card" data-qs="comp" data-v="혼자" aria-pressed="false"><span class="qs-e" aria-hidden="true">🎒</span><b>나 혼자</b><span>조용히 쉬어 가요</span></button>
+        </div>
+        <h2 class="qs-h"><span class="qs-n">3</span>어떻게 오세요?</h2>
+        <div class="qs-grid three" role="group" aria-label="이동수단">
+          <button type="button" class="qs-card sm" data-qs="how" data-v="train" aria-pressed="true"><span class="qs-e" aria-hidden="true">🚆</span><b>기차</b></button>
+          <button type="button" class="qs-card sm" data-qs="how" data-v="bus" aria-pressed="false"><span class="qs-e" aria-hidden="true">🚌</span><b>버스</b></button>
+          <button type="button" class="qs-card sm" data-qs="how" data-v="car" aria-pressed="false"><span class="qs-e" aria-hidden="true">🚗</span><b>자가용</b></button>
+        </div>
+        <p class="note qs-msg" id="qsMsg" role="status" hidden>일정과 함께 가는 사람을 골라 주세요.</p>
+        <button type="button" class="btn primary cta" id="qsGo">✨ 도째비 맞춤 코스 보기</button>
+        <p class="quiet small"><button type="button" class="linkbtn" id="goNow">지금 동해에 있어요</button><button type="button" class="linkbtn" id="goLater">날짜·시간을 직접 고를래요</button></p>
       </div>
       <div class="intro-alt" role="group" aria-label="다른 방법으로 시작하기">
         <button type="button" class="ibtn" id="goVoice"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span>말로 하기</span></button>
