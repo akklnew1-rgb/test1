@@ -459,7 +459,10 @@
   /*TW-BEGIN*/
   function twToMin(pm, h12, m) { return ((h12 % 12) + (pm ? 12 : 0)) * 60 + m; }
   function twFromMin(min) { min = ((min % 1440) + 1440) % 1440; var h = Math.floor(min / 60); return { pm: h >= 12, h12: h % 12 === 0 ? 12 : h % 12, m: min % 60 }; }
-  function twHour(txt) { var n = parseInt(txt, 10); if (!isFinite(n)) return null; if (n === 0 || n > 23) return { h12: 12, pm: null }; if (n > 12) return { h12: n - 12, pm: true }; return { h12: n, pm: null }; } // 13~23 은 24시간으로 읽어 오후로, 0·24 이상은 12
+  // 2026-10-22(사용자 요청): "13 16시도 입력 가능하게" — disp 는 사용자가 실제로 적은(또는 그 시각이 가리키는) 24시간 숫자를 그대로 들고 있어서,
+  // 13~23 을 적으면 화면에도 13~23 그대로 보인다(예전엔 오후로 바꾸며 1~12 로 줄여 보여서 "방금 적은 숫자가 멋대로 바뀐다"고 느껴졌음).
+  function twHour(txt) { var n = parseInt(txt, 10); if (!isFinite(n)) return null; if (n === 0 || n > 23) return { h12: 12, pm: null, disp: 12 }; if (n > 12) return { h12: n - 12, pm: true, disp: n }; return { h12: n, pm: null, disp: n }; } // 13~23 은 24시간으로 읽어 오후로, 0·24 이상은 12
+  function twDisp(h12, pm) { return pm && h12 !== 12 ? h12 + 12 : h12; } // 오후면 13~23 로, 정오(12시)는 그대로 — 다시 보여 줄 때도 같은 모습이어야 "임의로 바뀐다"고 안 느낌
   function twMinute(txt) { var n = parseInt(txt, 10); if (!isFinite(n)) return null; return Math.max(0, Math.min(59, n)); }
   function twAdvance(txt) { var t = String(txt || ''); return t.length >= 2 || (t.length === 1 && +t >= 3); } // 두 자리를 적었거나 3~9 한 자리면 분 칸으로
   /*TW-END*/
@@ -481,16 +484,17 @@
       var h = twHour(st.h.value), m = twMinute(st.m.value);
       if (!h || m === null) return false;
       if (!force && st.m.value.length < 2) return false;
-      if (h.pm !== null) st.setPm(h.pm);
-      st.h.value = String(h.h12); st.m.value = ('0' + m).slice(-2);
-      var v = toTimeValue(twToMin(st.pm, h.h12, m));
+      if (h.pm !== null) st.setPm(h.pm); // 13~23 처럼 오후가 확실한 입력이면 버튼도 따라 바뀜
+      var pm = st.pm; // 1~12 처럼 애매하면 오전/오후 버튼이 정한 값을 따름
+      st.h.value = String(twDisp(h.h12, pm)); st.m.value = ('0' + m).slice(-2);
+      var v = toTimeValue(twToMin(pm, h.h12, m));
       if (src.value !== v) { src.value = v; src.dispatchEvent(new Event('change', { bubbles: true })); }
       return true;
     }
     function digits(el) { var v = el.value.replace(/[^0-9]/g, '').slice(0, 2); if (v !== el.value) el.value = v; return v; }
     st.h.addEventListener('input', function () {
       var v = digits(st.h);
-      if (twAdvance(v)) { var h = twHour(v); if (h) { st.h.value = String(h.h12); if (h.pm !== null) st.setPm(h.pm); } st.m.focus(); try { st.m.select(); } catch (e) { /* 무시 */ } if (st.m.value.length === 2) commit(false); }
+      if (twAdvance(v)) { var h = twHour(v); if (h) { st.h.value = String(h.disp); if (h.pm !== null) st.setPm(h.pm); } st.m.focus(); try { st.m.select(); } catch (e) { /* 무시 */ } if (st.m.value.length === 2) commit(false); }
     });
     st.m.addEventListener('input', function () { var v = digits(st.m); if (v.length === 2) { if (+v > 59) st.m.value = '59'; commit(false); } });
     [st.h, st.m].forEach(function (el) {
@@ -509,7 +513,7 @@
       if (/^\d\d:\d\d$/.test(v)) {
         var p = twFromMin(P.toMin(v)); st.setPm(p.pm);
         if (!touched) Array.prototype.forEach.call(st.btns, function (b) { b.setAttribute('aria-checked', 'false'); }); // 속으로는 그 값을 들고 있되(그래야 시만 적어도 알맞은 오전/오후로 떨어짐), 버튼은 안 눌린 것처럼
-        if (document.activeElement !== st.h) st.h.value = touched ? String(p.h12) : '';
+        if (document.activeElement !== st.h) st.h.value = touched ? String(twDisp(p.h12, p.pm)) : '';
         if (document.activeElement !== st.m) st.m.value = touched ? ('0' + p.m).slice(-2) : '';
       } else { if (document.activeElement !== st.h) st.h.value = ''; if (document.activeElement !== st.m) st.m.value = ''; }
       var dis = !!st.src.disabled; st.h.disabled = dis; st.m.disabled = dis;
