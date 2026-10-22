@@ -41,6 +41,7 @@
   var CAR_WALK_MAX = 10, PARK_MIN = 5;
   function leg(a, b, slow, routes, opt) {
     opt = opt || {};
+    if (a && a.entry) a = Object.assign({}, a, a.entry); if (b && b.entry) b = Object.assign({}, b, b.entry); // 차가 못 들어가는 곳(무릉계곡 용추폭포)은 입구 좌표로 이동을 계산
     var km = hav(a, b) * 1.3;
     var walkOld = km / (slow ? 3 : 4) * 60;
     var taxi = Math.ceil(6 + km / 45 * 60);

@@ -1202,6 +1202,9 @@
     }
     return result;
   }
+  /* 무릉계곡 용추폭포: 좌표는 폭포 자리(입구에서 약 2.5km 안쪽)라 차·택시는 입구(삼화사 쪽)까지만 간다. 이동은 입구 좌표로 계산하고, 걷는 시간은 머무는 시간(100분)에 들어 있다(출처: 한국관광공사 — 제1코스 3.1km·왕복 1시간 30분) */
+  (function () { var y = D.places.filter(function (p) { return p.id === 'yongchu'; })[0], s = D.places.filter(function (p) { return p.id === 'samhwasa'; })[0]; if (y && s) y.entry = { id: s.id, lat: s.lat, lng: s.lng }; })();
+  var PLACE_NOTE = { yongchu: '차는 무릉계곡 입구(삼화사 쪽)까지만 간다. 입구에서 폭포까지 걸어서 왕복 약 1시간 30분이고 visit 100분은 그 걷기를 포함한 값이다.' };
   /* ---------- AI 가 코스를 짠다 (2026-10-22): 장소 고르기·순서·이유는 AI, 시간·마감·휴무·이동 계산과 검증은 앱(planner)이 한다 ---------- */
   var AIP = null; // { key, days:[{ids, why:{id:글}}], summary }
   function aiKey() { var c = S.cond; return [c.date, c.backDate || c.date, (c.companions || []).slice().sort().join(','), c.how, c.knee ? 1 : 0, c.rain ? 1 : 0].join('|'); }
@@ -1218,7 +1221,7 @@
     var LG = P.makeLegger(base), moves = {}, st0 = D.stations[base.start] || D.stations.mukho, fromStn = {};
     D.places.forEach(function (p) { var row = {}; D.places.forEach(function (q) { if (q.id === p.id) return; try { var l = LG.legAt(P.realPos(p), q, base.slow, 720); if (l && l.min != null) row[q.id] = Math.round(l.min); } catch (e) { /* 계산 못 하면 비움 */ } }); moves[p.id] = row; try { var s0 = LG.legAt(st0, p, base.slow, 720); if (s0 && s0.min != null) fromStn[p.id] = Math.round(s0.min); } catch (e2) { /* 무시 */ } });
     var body = { task: 'compose', moves: moves, fromStation: fromStn, cond: { how: c.how, arrive: toTimeValue(c.arrive), back: c.backTouched ? toTimeValue(c.back) : '', companions: c.companions, knee: !!c.knee, rain: !!c.rain, interests: c.interests, must: c.must || [], stay: n > 1 ? '묵호 쪽 숙소(앱이 정함)' : '' }, days: days,
-      places: D.places.map(function (p) { return { id: p.id, name: p.short || p.name, region: p.region, group: p.group || '', visit: p.visit, indoor: !!p.indoor, stairs: !!p.stairs, trail: !!p.trail, rainAvoid: !!p.rainAvoid, tags: p.tags || [], openText: p.openText || '' }; }) };
+      places: D.places.map(function (p) { return { id: p.id, name: p.short || p.name, region: p.region, group: p.group || '', visit: p.visit, indoor: !!p.indoor, stairs: !!p.stairs, trail: !!p.trail, rainAvoid: !!p.rainAvoid, tags: p.tags || [], openText: p.openText || '', note: PLACE_NOTE[p.id] || '' }; }) };
     return aiCall(body, 28000).then(function (j) {
       if (!j || !j.days || !j.days.length) return false;
       var out = j.days.map(function (d) { var why = {}; d.ids.forEach(function (id, k) { if (d.why && d.why[k]) why[id] = d.why[k]; }); return { ids: d.ids, why: why }; });
@@ -1397,6 +1400,7 @@
     if (S.fx && S.fx.view[p.id]) b.push('<span class="tag good">#풍경좋다는제보</span>');
     if (S.fx && S.fx.news[p.id]) b.push('<span class="tag good">#새볼거리제보</span>');
     if (s.done) b.push('<span class="tag good">#도착함</span>');
+    if (p.id === 'yongchu') b.push('<span class="tag warn">#입구에서 왕복 약 1시간 30분 걷는 길(관광공사 안내)</span>');
     var ap2 = aiActive(), aw = ap2 && ap2.days.reduce(function (t, d) { return t || d.why[p.id]; }, ''); if (aw) b.push('<span class="tag good">🤖 ' + esc(aw) + '</span>');
     b.push(edTags(s));
     if (s.pre && S.plan && S.plan.multi && S.plan.days.some(function (d) { return d.sunrise && d.sunrise.place && d.sunrise.place.id === p.id; })) b.push('<span class="tag good">#새벽일출(어림시각)</span>');
