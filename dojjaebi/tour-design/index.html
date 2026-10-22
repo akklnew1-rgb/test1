@@ -167,14 +167,14 @@
       <p class="badges" id="inBadges"></p>
       <p class="crowd-line" id="crowdLine" hidden></p>
       <button type="button" class="chip crowd-q" id="crowdQuiet" hidden></button>
-      <div class="seg2" id="howSegNow" role="group" aria-label="동해에서 이용할 교통수단" hidden>
-        <button type="button" class="chip" data-how="train" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-bus"/></svg><span>대중교통 이용</span></button>
-        <button type="button" class="chip" data-how="car" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-car"/></svg><span>자가용 이용</span></button>
+      <div class="qs-grid two seg-now" id="howSegNow" role="group" aria-label="동해에서 이용할 교통수단" hidden>
+        <button type="button" class="qs-card sm" data-how="train" aria-pressed="true"><span class="qs-e" aria-hidden="true">🚌</span><b>대중교통 이용</b></button>
+        <button type="button" class="qs-card sm" data-how="car" aria-pressed="false"><span class="qs-e" aria-hidden="true">🚗</span><b>자가용 이용</b></button>
       </div>
-      <div class="seg3" id="howSeg" role="group" aria-label="올 때 이동수단">
-        <button type="button" class="chip" data-how="train" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-train"/></svg><span>기차</span></button>
-        <button type="button" class="chip" data-how="bus" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-bus"/></svg><span>버스</span></button>
-        <button type="button" class="chip" data-how="car" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-car"/></svg><span>자가용</span></button>
+      <div class="qs-grid three" id="howSeg" role="group" aria-label="올 때 이동수단">
+        <button type="button" class="qs-card sm" data-how="train" aria-pressed="true"><span class="qs-e" aria-hidden="true">🚆</span><b>기차</b></button>
+        <button type="button" class="qs-card sm" data-how="bus" aria-pressed="false"><span class="qs-e" aria-hidden="true">🚌</span><b>버스</b></button>
+        <button type="button" class="qs-card sm" data-how="car" aria-pressed="false"><span class="qs-e" aria-hidden="true">🚗</span><b>자가용</b></button>
       </div>
       <p class="note" id="inNote"></p>
     </div>
@@ -216,10 +216,10 @@
       <input type="date" id="bDate" class="t-src" tabindex="-1" aria-hidden="true">
       <input type="time" id="bTime" class="t-src" tabindex="-1" aria-hidden="true">
       <p class="badges" id="outBadges"></p>
-      <div class="seg3" id="bhowSeg" role="group" aria-label="돌아갈 때 이동수단">
-        <button type="button" class="chip" data-bhow="train" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-train"/></svg><span>기차</span></button>
-        <button type="button" class="chip" data-bhow="bus" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-bus"/></svg><span>버스</span></button>
-        <button type="button" class="chip" data-bhow="car" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-car"/></svg><span>자가용</span></button>
+      <div class="qs-grid three" id="bhowSeg" role="group" aria-label="돌아갈 때 이동수단">
+        <button type="button" class="qs-card sm" data-bhow="train" aria-pressed="true"><span class="qs-e" aria-hidden="true">🚆</span><b>기차</b></button>
+        <button type="button" class="qs-card sm" data-bhow="bus" aria-pressed="false"><span class="qs-e" aria-hidden="true">🚌</span><b>버스</b></button>
+        <button type="button" class="qs-card sm" data-bhow="car" aria-pressed="false"><span class="qs-e" aria-hidden="true">🚗</span><b>자가용</b></button>
       </div>
       <p class="note" id="bhowNote" hidden></p>
       <div id="outBody" class="howbody"></div>
@@ -236,7 +236,7 @@
       <p class="st-tag">누구와</p>
       <h2 id="hs3" tabindex="-1">누구와 함께?</h2>
       <p class="note" id="startNote" hidden></p>
-      <div class="chips comp" id="chipComp" role="group" aria-label="함께 가는 사람"></div>
+      <div class="qs-grid two" id="chipComp" role="group" aria-label="함께 가는 사람"></div>
       <details class="more" id="moreBox">
         <summary>더 고르기 (선택)</summary>
         <div class="chips" id="chipMore"></div>
@@ -253,9 +253,9 @@
       <h2 id="hs4" tabindex="-1">꼭 가고 싶은 곳이 있어요?</h2>
       <p class="note">원하는 만큼 골라요. 안 골라도 괜찮아요 — 도째비가 알맞게 짜 드려요. 식당·카페는 코스에 직접 넣진 않지만, 그 근처로 동선을 짜 드려요.</p>
       <div class="sh-chips" id="mvCat" role="group" aria-label="무엇을 고를까요">
-        <button type="button" class="chip" data-mvcat="place" aria-pressed="true">볼거리</button>
-        <button type="button" class="chip" data-mvcat="eat" aria-pressed="false">맛집</button>
-        <button type="button" class="chip" data-mvcat="cafe" aria-pressed="false">카페</button>
+        <button type="button" class="qs-card sm" data-mvcat="place" aria-pressed="true"><span class="qs-e" aria-hidden="true">🏞️</span><b>볼거리</b></button>
+        <button type="button" class="qs-card sm" data-mvcat="eat" aria-pressed="false"><span class="qs-e" aria-hidden="true">🍚</span><b>맛집</b></button>
+        <button type="button" class="qs-card sm" data-mvcat="cafe" aria-pressed="false"><span class="qs-e" aria-hidden="true">☕</span><b>카페</b></button>
       </div>
       <label class="f" for="mvQ"><span class="visually-hidden">이름으로 찾기</span><input type="search" id="mvQ" placeholder="이름으로 찾기 (예: 추암, 시장)" autocomplete="off"></label>
       <div class="sh-chips" id="mvChips">
@@ -277,9 +277,9 @@
       <div id="stayQBlock">
         <p class="st-tag">숙소</p>
         <h2 id="hs5" tabindex="-1">숙소는 벌써 잡았어요?</h2>
-        <div class="chips" id="chipStay" role="group" aria-label="숙소 예약 여부">
-          <button type="button" class="chip" data-stay="booked" aria-pressed="false">예, 잡았어요</button>
-          <button type="button" class="chip" data-stay="none" aria-pressed="false">아직이에요</button>
+        <div class="qs-grid two" id="chipStay" role="group" aria-label="숙소 예약 여부">
+          <button type="button" class="qs-card" data-stay="booked" aria-pressed="false"><span class="qs-e" aria-hidden="true">✅</span><b>예, 잡았어요</b><span>동선에 맞춰 코스를 짜요</span></button>
+          <button type="button" class="qs-card" data-stay="none" aria-pressed="false"><span class="qs-e" aria-hidden="true">🛏️</span><b>아직이에요</b><span>도째비가 알맞은 곳을 추천해요</span></button>
         </div>
         <p class="note" id="stayNote" hidden>잘 됐어요 — 동선을 보고 숙소 자리를 알맞게 추천해 드려요. 「동네」 탭에서 둘러보고 바꿀 수 있어요.</p>
       </div>

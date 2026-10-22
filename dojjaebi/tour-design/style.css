@@ -1407,3 +1407,19 @@ body.big .eat-warn{font-size:18px}
 #inBadges .bdg::before,#outBadges .bdg::before{ content:"\00b7"; margin-right:6px; font-weight:900; }
 #s-start .dt input,#s-start .tmw-h,#s-start .tmw-m{ border-color:#c9ced6; }
 body.big #s-start .chip{ font-size:max(18px,1.02em); }
+/* 6단계 화면도 첫 화면과 같은 큰 카드(이모지+굵은 글+작은 설명)로 통일 */
+.qs-grid[hidden],.qs-card[hidden]{ display:none !important; }
+#s-start .qs-grid{ margin-top:12px; }
+#s-start .qs-card{ border:2px solid #c9ced6; background:#fff; color:#0b2f52; }
+#s-start .qs-card[aria-pressed="true"]{ border-color:#0f4c81; background:#e7f1f8; box-shadow:0 0 0 2px #0f4c81 inset; }
+#s-start .qs-card > span:last-child:not(.qs-e){ color:#4a5568; }
+#s-start .qs-card.sm{ min-height:76px; }
+#s-start .qs-grid.three{ gap:8px; }
+#s-start #mvCat{ display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; }
+body.big #s-start .qs-card b{ font-size:max(18px,1.12em); }
+body.big #s-start .qs-card > span:last-child:not(.qs-e){ font-size:max(16px,.86em); }
+/* 6단계 사진: 제3유형 규정 — 자르지 않고(contain), 출처는 사진 밖 아래 줄에 */
+.st-art-photo{ height:auto; overflow:visible; background:none; border-radius:0; }
+.st-art-photo img{ height:132px; object-fit:contain; background:#f2f3f4; border-radius:14px; }
+.st-art-photo .st-art-credit{ position:static; display:block; background:none; color:#4a5568; padding:4px 2px 0; font-size:max(12px,.74em); font-weight:500; }
+@media (max-height:700px){ .st-art-photo img{ height:92px; } }

@@ -383,7 +383,8 @@
     if (c.backDate === c.date && eff < c.arrive) body += '<p class="note warnline">도착 시각보다 앞이에요. 날짜나 시각을 다시 골라 주세요.</p>';
     $('outBody').innerHTML = body;
     $('inNote').textContent = c.how === 'train' ? '' :c.how === 'bus' ? D.stations.bus.name + '에서 시작해요.' : D.stations.park.name + '에서 시작해요.';
-    $('chipComp').innerHTML = COMPS.map(function (nm) { return chip(nm, (c.companions || []).indexOf(nm) >= 0, 'data-comp="' + nm + '"'); }).join('');
+    var CE = { '친구': ['🧑‍🤝‍🧑', '사진·카페·노을'], '연인': ['💑', '노을·카페를 천천히'], '혼자': ['🎒', '조용히 쉬어 가요'], '아이': ['👨‍👩‍👧', '쉬운 길, 체험 중심'], '부모님': ['👵', '덜 걷고 편안하게'] };
+    $('chipComp').innerHTML = COMPS.map(function (nm) { return '<button type="button" class="qs-card" aria-pressed="' + ((c.companions || []).indexOf(nm) >= 0 ? 'true' : 'false') + '" data-comp="' + nm + '"><span class="qs-e" aria-hidden="true">' + CE[nm][0] + '</span><b>' + nm + '</b><span>' + CE[nm][1] + '</span></button>'; }).join('');
     $('chipMore').innerHTML = chip('점심·저녁 시간 넣기', c.food, 'data-food="1"') + chip('사진·노을', c.interests.indexOf('사진') >= 0, 'data-like="사진"') + chip('먹거리 구경', c.interests.indexOf('먹거리') >= 0, 'data-like="먹거리"') + chip('무릎·계단이 힘들어요', c.knee, 'data-knee="1"') + chip('날씨가 안 좋아요' + (S.wxRain ? ' (기상청)' : ''), c.rain, 'data-rain="1"');
     if (c.rain || c.food || c.knee || c.interests.length) $('moreBox').open = true;
     var sn = $('startNote'); sn.hidden = !S.startNote; sn.textContent = S.startNote || '';
