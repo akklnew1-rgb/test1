@@ -3640,7 +3640,8 @@
     ['noodle', '면·분식', /분식|냉면|김밥|국수|칼국수|우동|라면|막국수|수제비|떡볶이|메밀/],
     ['soup', '국밥·탕·찌개', /탕류|국밥|해장|탕$|설렁|감자탕|순대|찌개|곰탕|백반|순두부|두부/],
     ['meat', '고기·구이', /식육|숯불|갈비|삼겹|고기|구이|한우|돼지|오리|막창|곱창|족발|보쌈|불고기/],
-    ['bar', '치킨·술집', /호프|통닭|치킨|정종|대포|소주방|주점|포차|라이브|맥주|술/],
+    ['chk', '치킨', /통닭\(치킨\)|치킨|닭|후라이드|BBQ|bhc|bbq/i],
+    ['bar', '술집', /호프|통닭|정종|대포|소주방|주점|포차|라이브|맥주|술/],
     ['west', '양식·일식·외국', /경양식|일식|돈가스|초밥|스시|외국음식|패스트푸드|뷔페|피자|파스타|스테이크|햄버거|양식|카레|쌀국수/],
     ['kr', '한식 그 밖', /./]
   ];
@@ -3688,6 +3689,7 @@
     var shown = TW.page(list, TN.pages);
     var mbox = $('townMenu'); mbox.hidden = !isEat;
     if (isEat) mbox.innerHTML = '<button type="button" class="chip" data-menu="" aria-pressed="' + (!TN.menu) + '">모든 메뉴</button>' + MENU_GROUPS.filter(function (g) { return mcnt[g[0]]; }).map(function (g) { return '<button type="button" class="chip" data-menu="' + g[0] + '" aria-pressed="' + (TN.menu === g[0]) + '">' + g[1] + '</button>'; }).join('');
+    $('townChips').hidden = true; // 동 칩은 뺌(사용자 요청)
     $('townChips').innerHTML = '<button type="button" class="chip" data-area="" aria-pressed="' + (!TN.area) + '">전체</button>' +
       TW.areas(k === 'cafe' ? 'eat' : k).filter(function (a) { return cnt[a.area]; }).map(function (a) { return '<button type="button" class="chip" data-area="' + esc(a.area) + '" aria-pressed="' + (TN.area === a.area) + '">' + esc(a.area) + '</button>'; }).join('');
     $('townCount').textContent = (TN.area || '동해시 전체') + (TN.menu ? ' · ' + (MENU_GROUPS.filter(function (g) { return g[0] === TN.menu; })[0] || ['', ''])[1] : '') + (TN.q ? ' · “' + TN.q + '”' : '') + ' ' + list.length + '곳' + (list.length > shown.length ? ' 중 ' + shown.length + '곳 보여요' : '') + (TN.near ? (TN.nearKind === 'course' ? ' · 코스 가운데에서 가까운 순' : ' · 내 위치에서 가까운 순') : '') + (list.length ? '' : ' — 찾는 곳이 없어요. 다른 낱말로 찾아 보세요.');
