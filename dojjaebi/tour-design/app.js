@@ -3631,8 +3631,20 @@
   /* ---------- 동네 탭 (2026-10-17, 2026-10-22 숙소 241곳으로 보강) — 동해시 공공데이터 식당 1,669곳(깨진 글자 1줄 제외) · 숙박업소 241곳(좌표 있는 19곳 + 주소만 있는 222곳)을 동네별로 둘러본다 ----------
      계산(동네 묶음 · 찾기 · 30개씩)은 town.js, 자료는 town.data.js(동네수집.mjs). 가게 정보는 이름·업태·주소뿐(메뉴·좌표·별점 없음) → 카카오맵 찾기 링크로 넘긴다(키 없음).
      '코스에 넣기'는 숙소(좌표가 있는 곳, 여러 날 여행의 밤 숙소)만. 식당은 코스에 넣지 않고 '지도에서 보기'(지도 탭 식당 층)로 위치만 본다(2026-10-18). 마감(기차 15분 전 등)을 넘기면 코스를 바꾸지 않고 이유를 말한다. */
-  var TN = { kind: 'eat', area: '', q: '', pages: 1, near: null }, townT = null;
+  var TN = { kind: 'eat', area: '', menu: '', q: '', pages: 1, near: null }, townT = null;
   /* 2026-10-21: "식당이랑 카페는 분류해서" — TW.list('eat') 를 카페 이름·업태 기준으로 다시 나눈다(식당 탭은 카페를 빼고, 카페 탭은 그것만) */
+  /* 2026-10-22: "식당에서 메뉴 카테고리가 있었으면" — 공공데이터 업태(한식 597곳처럼 뭉뚱그려짐)에 가게 이름 낱말을 더해 8갈래로. 위에서부터 먼저 맞는 갈래에 넣음 */
+  var MENU_GROUPS = [
+    ['sea', '회·해산물', /횟집|회집|물회|활어|수산|해물|대게|게장|조개|생선|곰치|아귀|복어|오징어|문어|전복|장어|해녀|물곰/],
+    ['cn', '중식', /중국식|짜장|짬뽕|반점|중화|마라|탕수/],
+    ['noodle', '면·분식', /분식|냉면|김밥|국수|칼국수|우동|라면|막국수|수제비|떡볶이|메밀/],
+    ['soup', '국밥·탕·찌개', /탕류|국밥|해장|탕$|설렁|감자탕|순대|찌개|곰탕|백반|순두부|두부/],
+    ['meat', '고기·구이', /식육|숯불|갈비|삼겹|고기|구이|한우|돼지|오리|막창|곱창|족발|보쌈|불고기/],
+    ['bar', '치킨·술집', /호프|통닭|치킨|정종|대포|소주방|주점|포차|라이브|맥주|술/],
+    ['west', '양식·일식·외국', /경양식|일식|돈가스|초밥|스시|외국음식|패스트푸드|뷔페|피자|파스타|스테이크|햄버거|양식|카레|쌀국수/],
+    ['kr', '한식 그 밖', /./]
+  ];
+  function menuOf(x) { var s = (x.type || '') + ' ' + (x.name || ''); for (var i = 0; i < MENU_GROUPS.length; i++) if (MENU_GROUPS[i][2].test(s)) return MENU_GROUPS[i][0]; return 'kr'; }
   function kindList(k, q) {
     if (k === 'lodge') return TW.query('lodge', '', q);
     var base = TW.query('eat', '', q);
@@ -3666,13 +3678,19 @@
     renderTown();
   }
   function renderTown() {
-    var k = TN.kind, all = kindList(k, TN.q), list = TN.area ? all.filter(function (x) { return x.area === TN.area; }) : all, cnt = {};
-    all.forEach(function (x) { cnt[x.area] = (cnt[x.area] || 0) + 1; });
+    var k = TN.kind, all = kindList(k, TN.q), cnt = {}, mcnt = {}, isEat = k === 'eat';
+    if (!isEat) TN.menu = '';
+    var byMenu = isEat && TN.menu ? all.filter(function (x) { return menuOf(x) === TN.menu; }) : all;
+    var list = TN.area ? byMenu.filter(function (x) { return x.area === TN.area; }) : byMenu;
+    byMenu.forEach(function (x) { cnt[x.area] = (cnt[x.area] || 0) + 1; });
+    if (isEat) all.filter(function (x) { return !TN.area || x.area === TN.area; }).forEach(function (x) { var m = menuOf(x); mcnt[m] = (mcnt[m] || 0) + 1; });
     list = applyNear(list);
     var shown = TW.page(list, TN.pages);
-    $('townChips').innerHTML = '<button type="button" class="chip" data-area="" aria-pressed="' + (!TN.area) + '">전체 ' + all.length + '</button>' +
+    var mbox = $('townMenu'); mbox.hidden = !isEat;
+    if (isEat) mbox.innerHTML = '<button type="button" class="chip" data-menu="" aria-pressed="' + (!TN.menu) + '">모든 메뉴</button>' + MENU_GROUPS.filter(function (g) { return mcnt[g[0]]; }).map(function (g) { return '<button type="button" class="chip" data-menu="' + g[0] + '" aria-pressed="' + (TN.menu === g[0]) + '">' + g[1] + ' ' + mcnt[g[0]] + '</button>'; }).join('');
+    $('townChips').innerHTML = '<button type="button" class="chip" data-area="" aria-pressed="' + (!TN.area) + '">전체 ' + byMenu.length + '</button>' +
       TW.areas(k === 'cafe' ? 'eat' : k).filter(function (a) { return cnt[a.area]; }).map(function (a) { return '<button type="button" class="chip" data-area="' + esc(a.area) + '" aria-pressed="' + (TN.area === a.area) + '">' + esc(a.area) + ' ' + cnt[a.area] + '</button>'; }).join('');
-    $('townCount').textContent = (TN.area || '동해시 전체') + (TN.q ? ' · “' + TN.q + '”' : '') + ' ' + list.length + '곳' + (list.length > shown.length ? ' 중 ' + shown.length + '곳 보여요' : '') + (TN.near ? (TN.nearKind === 'course' ? ' · 코스 가운데에서 가까운 순' : ' · 내 위치에서 가까운 순') : '') + (list.length ? '' : ' — 찾는 곳이 없어요. 다른 낱말로 찾아 보세요.');
+    $('townCount').textContent = (TN.area || '동해시 전체') + (TN.menu ? ' · ' + (MENU_GROUPS.filter(function (g) { return g[0] === TN.menu; })[0] || ['', ''])[1] : '') + (TN.q ? ' · “' + TN.q + '”' : '') + ' ' + list.length + '곳' + (list.length > shown.length ? ' 중 ' + shown.length + '곳 보여요' : '') + (TN.near ? (TN.nearKind === 'course' ? ' · 코스 가운데에서 가까운 순' : ' · 내 위치에서 가까운 순') : '') + (list.length ? '' : ' — 찾는 곳이 없어요. 다른 낱말로 찾아 보세요.');
     $('townList').innerHTML = shown.map(function (x) {
       var st = townAddState(x), lod = x.kind === 'lodge', noPos = !TW.hasPos(x), tk = lod ? 'lodge' : (k === 'cafe' ? 'cafe' : 'eat');
       return '<li class="tw tw-' + tk + '" data-key="' + x.key + '"><div class="tw-main"><span class="poi-ic ' + tk + '" aria-hidden="true">' + poiSvg(tk) + '</span><b class="tw-n">' + esc(x.name) + '</b><span class="tw-t">' + esc(x.type) + (x._m != null ? ' · ' + (FU ? FU.round10(x._m) : Math.round(x._m)) + 'm' : '') + '</span></div>' +
@@ -3687,8 +3705,9 @@
   $('backTown').addEventListener('click', function () { var y = TN.sy || 0; show('s-stay'); setTimeout(function () { window.scrollTo(0, y); }, 40); });
   $('townSeg').addEventListener('click', function (ev) {
     var b = ev.target.closest('[data-tk]'); if (!b) return;
-    TN.kind = b.getAttribute('data-tk'); TN.area = ''; TN.pages = 1; $('townQ').value = TN.q = ''; $('townClear').hidden = true; townSay(''); renderTownTab();
+    TN.kind = b.getAttribute('data-tk'); TN.area = ''; TN.menu = ''; TN.pages = 1; $('townQ').value = TN.q = ''; $('townClear').hidden = true; townSay(''); renderTownTab();
   });
+  $('townMenu').addEventListener('click', function (ev) { var b = ev.target.closest('[data-menu]'); if (!b) return; TN.menu = b.getAttribute('data-menu'); TN.pages = 1; renderTown(); });
   $('townChips').addEventListener('click', function (ev) { var b = ev.target.closest('[data-area]'); if (!b) return; TN.area = b.getAttribute('data-area'); TN.pages = 1; renderTown(); });
   /* 2026-10-21: "가나다 순보다는 거리순, 혹은 목적지 부근 가까운 순" — 위치를 이미 쓰고 있으면 바로, 아니면 제보 화면과 같은 위치 동의 창을 띄움 */
   function courseCenter() { // 오늘 코스 장소들의 한가운데(위치 허락 없이 쓰는 거리 기준)
