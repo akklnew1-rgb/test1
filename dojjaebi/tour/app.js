@@ -480,12 +480,16 @@
     // 그때 Touched 가 아직 false 면 twSync 가 "안 고른 것"으로 보고 방금 입력한 걸 빈 칸으로 되돌려 버려 — 오전/오후가 안 눌리고 시각도 안 적히는 것처럼 보이던 원인.
     // 그래서 이 위젯을 처음 만지는 순간(포커스·버튼 누름) 바로 Touched 를 켜서, 그 뒤로는 twSync 가 실제 값을 보여 주게 함.
     function markTouched() { var tk = TW_TOUCHED_KEY[srcId]; if (tk) S.cond[tk] = true; }
-    function commit(force) {
+    // 2026-10-22(버그 고침): "오후로 가서 21시 되면 오전으로 안 바뀌고" — 13~23 처럼 적은 숫자는 오후가 확실해서,
+    // commit() 이 늘 그 뜻대로 오전/오후 단추를 되돌려 놨음 — 그래서 21시인 채로 오전 단추를 눌러도 소용없었음(눌러도 바로 오후로 되돌아감).
+    // 오전/오후 단추를 "직접 누른" 경우(pmOverride)는 그 누른 값이 맞다고 보고, 적힌 숫자가 뭐였든 그 뜻(예: 21→9)으로 바꿔 보여 줌.
+    function commit(force, pmOverride) {
       var h = twHour(st.h.value), m = twMinute(st.m.value);
       if (!h || m === null) return false;
       if (!force && st.m.value.length < 2) return false;
-      if (h.pm !== null) st.setPm(h.pm); // 13~23 처럼 오후가 확실한 입력이면 버튼도 따라 바뀜
-      var pm = st.pm; // 1~12 처럼 애매하면 오전/오후 버튼이 정한 값을 따름
+      var pm;
+      if (pmOverride !== undefined) { pm = pmOverride; st.setPm(pm); }
+      else { if (h.pm !== null) st.setPm(h.pm); pm = st.pm; } // 1~12 처럼 애매하면 오전/오후 버튼이 정한 값을 따름
       st.h.value = String(twDisp(h.h12, pm)); st.m.value = ('0' + m).slice(-2);
       var v = toTimeValue(twToMin(pm, h.h12, m));
       if (src.value !== v) { src.value = v; src.dispatchEvent(new Event('change', { bubbles: true })); }
@@ -502,7 +506,7 @@
       el.addEventListener('blur', function () { if (!commit(true)) twSync(srcId); });
     });
     st.m.addEventListener('keydown', function (ev) { if (ev.key === 'Backspace' && !st.m.value) { ev.preventDefault(); st.h.focus(); } });
-    Array.prototype.forEach.call(st.btns, function (b) { b.addEventListener('click', function () { if (b.disabled) return; markTouched(); st.setPm(b.getAttribute('data-ap') === 'pm'); if (st.h.value && st.m.value) commit(true); else twSync(srcId); }); });
+    Array.prototype.forEach.call(st.btns, function (b) { b.addEventListener('click', function () { if (b.disabled) return; markTouched(); var pm = b.getAttribute('data-ap') === 'pm'; if (st.h.value && st.m.value) commit(true, pm); else { st.setPm(pm); twSync(srcId); } }); });
     twSync(srcId);
   }
   function twSync(srcId) { // 눈에 안 보이는 type=time 값 → 보이는 칸(같은 값을 쓰는 위젯이 여럿이면 전부)
