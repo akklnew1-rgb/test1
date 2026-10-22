@@ -1240,7 +1240,8 @@
     var liked = !!S.liked[p.id];
     var qs = (p.qa || []).map(function (x, k) { return '<button type="button" class="btn" data-act="q" data-id="' + p.id + '" data-k="' + k + '">' + esc(x.q) + '</button>'; }).join('');
     var nb = extra ? '' : nearBtnHtml(s);
-    return '<li class="chap post fold card' + changed + (isOpen ? ' open' : '') + '" data-id="' + p.id + '">' +
+    var gap = (!extra && s.mode && s.legMin) ? '<li class="mvgap" aria-hidden="true"><span class="mvchip"><svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (MVIC[s.mode] || MVIC.walk) + '</svg>' + esc(mvShort(s)) + '</span></li>' : '';
+    return gap + '<li class="chap post fold card' + changed + (isOpen ? ' open' : '') + '" data-id="' + p.id + '">' +
       artFig(p) + '<div class="c-info">' + foldHead(p, i, when, s, !!extra, changed, num, isOpen) + '</div>' + (nb ? '<div class="c-quick">' + nb + '</div>' : '') +
       '<div class="p-body" id="pb-' + i + '"' + (isOpen ? '' : ' hidden') + '>' +
       '<div class="p-acts">' +
@@ -1256,7 +1257,10 @@
       '<div class="p-cap"><div class="cl"><b>도째비</b>' + esc(st.text) + '</div></div>' +
       '<p class="p-src">출처: ' + esc(st.source) + '</p>' +
       '<p class="tags">' + (extra ? '<span class="tag warn">#내일일출(예시시각)</span>' : placeTags(s)) + '</p>' + (extra ? '' : crowdBody(s)) +
-      '<p class="p-hours">' + mvHtml(s, mv, extra) + (extra ? '' : (s.mode === 'tour' ? '<br>' : ' · ') + '운영 ' + esc(p.openText) + (p.restText ? ' · 쉬는 날 ' + esc(p.restText) : '')) + '</p>' +
+      '<div class="p-hours note"><div class="note-h">여행자 수첩</div><dl>' +
+      '<div><dt>이동</dt><dd>' + mvHtml(s, mv, extra) + '</dd></div>' +
+      (extra ? '' : '<div><dt>머무는 시간</dt><dd>약 ' + p.visit + '분</dd></div><div><dt>운영 시간</dt><dd>' + esc(p.openText) + '</dd></div>' + (p.restText ? '<div><dt>쉬는 날</dt><dd>' + esc(p.restText) + '</dd></div>' : '')) +
+      '</dl></div>' +
       (extra ? '' : tourBlock(s) + kmapHtml(s)) + wcLineHtml(p) +
       '</div></li>';
   }

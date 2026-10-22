@@ -1148,7 +1148,7 @@ button.ovn-b{ cursor:pointer; }
 .cbar{ position:sticky; bottom:calc(var(--tabh) + var(--safe-b, 0px)); z-index:30; margin-top:12px; padding:10px var(--gut); display:flex; flex-direction:column; gap:8px; background:rgba(255,255,255,.97); border-top:1px solid var(--line); backdrop-filter:saturate(1.4) blur(8px); }
 .cbar-stay{ display:flex; align-items:center; gap:10px; min-height:44px; padding:8px 12px; border:0; border-radius:12px; background:var(--wz-soft); color:var(--wz-ink); font:inherit; font-size:.9em; line-height:1.4; text-align:left; cursor:pointer; }
 .cbar-stay[hidden]{ display:none; }
-.cbar-dot{ flex:none; width:10px; height:10px; border-radius:50%; background:#5f3dc4; }
+.cbar-dot{ flex:none; width:10px; height:10px; border-radius:50%; background:#0f4c81; }
 .cbar-edit{ min-height:52px; }
 /* 키가 작은 폰(아이폰 SE 등): 아래 바를 한 줄로 — 「하루 더 머물면?」 + 「코스 고치기」 나란히 */
 .cbs-s{ display:none; }
@@ -1279,3 +1279,20 @@ body.big{ --fs:clamp(1.25rem, 1.05rem + 1vw, 1.4375rem); }
 .sig-dot{ width:22px; height:22px; }
 .sig-main{ font-size:1.08em; font-weight:700; line-height:1.4; }
 .sig-sub{ font-size:.86em; font-weight:500; color:var(--muted); line-height:1.4; }
+
+/* ===== 매거진 시안(2026-10-22): 미색 종이 바탕 · 이동 점선+칩 · 여행자 수첩 박스 ===== */
+html{ background:#f9f8f6; }
+body{ background:#f9f8f6; }
+.post.card{ box-shadow:0 1px 2px rgba(40,34,20,.08),0 6px 18px rgba(40,34,20,.06); }
+#timeline .mvgap{ list-style:none; position:relative; height:56px; margin:0 var(--gut); display:flex; align-items:center; justify-content:center; }
+#timeline .mvgap::before{ content:""; position:absolute; left:50%; top:0; bottom:0; border-left:3px dotted #9db8cf; transform:translateX(-50%); }
+#timeline .mvchip{ position:relative; display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:4px 14px; border-radius:999px; background:#fff; border:1.5px solid #b9d3e6; color:var(--brand-dark); font-weight:700; font-size:.92em; }
+#timeline .mvchip .ic{ width:18px; height:18px; flex:none; }
+#timeline .post.card .p-mv{ display:none; }
+.p-hours.note{ margin:10px var(--gut) 12px; padding:12px 14px; border:1px solid #e3ddd0; border-radius:12px; background:#f9f8f6; color:var(--ink); font-size:.95em; }
+.p-hours.note .note-h{ font-weight:800; color:var(--brand-dark); margin-bottom:6px; }
+.p-hours.note dl{ margin:0; }
+.p-hours.note dl > div{ display:flex; gap:12px; padding:6px 0; border-top:1px dashed #d9d2c2; }
+.p-hours.note dl > div:first-child{ border-top:0; }
+.p-hours.note dt{ flex:none; width:6.2em; color:var(--muted); font-weight:700; }
+.p-hours.note dd{ margin:0; font-weight:600; }
