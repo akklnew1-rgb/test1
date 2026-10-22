@@ -851,7 +851,7 @@
         $('chatMake').hidden = !j.ready;
       } else {
         var rule2 = AI.aiParseRequest(all, S.cond.arrive, todayIso()); CH.rule = rule2;
-        chatEl('bot', '연결이 고르지 않아 대화가 어려워요. 말씀하신 조건은 적어 뒀으니 아래 "코스 만들기"를 누르거나, 아래에서 직접 골라 주세요.');
+        chatEl('bot', '연결이 고르지 않아 대화가 어려워요. 말씀하신 조건은 적어 뒀으니 아래 "이대로 코스 짜 주세요"를 누르거나, 아래에서 직접 골라 주세요.');
         $('chatMake').hidden = false;
       }
     });
@@ -873,6 +873,15 @@
     if (a.companions && a.companions.length) r.companions = a.companions;
     (a.interests || []).forEach(function (v) { if (r.interests.indexOf(v) < 0) r.interests.push(v); });
     r.knee = r.knee || !!a.knee; r.rain = r.rain || !!a.rain; r.food = r.food || !!a.food; if (a.foodWord) r.foodWord = a.foodWord;
+    if (!r.how) { // 이동수단을 말한 적이 없으면 기본값(기차)으로 넘기지 않고 눌러서 고르게 한다 (AI 가 안 될 때도 같다)
+      var b = chatEl('bot', '무엇을 타고 오세요?'), cw = document.createElement('div'); cw.className = 'bub-choices';
+      [['기차', 'train'], ['버스', 'bus'], ['자가용', 'car']].forEach(function (h) {
+        var cb = document.createElement('button'); cb.type = 'button'; cb.className = 'chip'; cb.textContent = h[0];
+        cb.addEventListener('click', function () { CH.cond = CH.cond || {}; CH.cond.how = h[1]; if (cw.parentNode) cw.parentNode.removeChild(cw); chatEl('me', esc(h[0])); $('chatMake').click(); });
+        cw.appendChild(cb);
+      });
+      b.appendChild(cw); $('chatMake').hidden = true; return;
+    }
     applyParsed(r, '도째비와 나눈 이야기에서 알아들었어요.', CH.direct);
   });
   $('askGo').addEventListener('click', function () {
