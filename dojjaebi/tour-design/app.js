@@ -1788,12 +1788,17 @@
     else fl = st + ' ' + hhmm(pl.back.arrive) + ' 도착' + (pl.back.text && placeStops(pl.multi ? pl.days[pl.nDays - 1].plan.stops : pl.stops).length ? '(마지막 곳에서 ' + pl.back.text + ')' : '') + ' · ' + (S.cond.backHow === 'car' ? '정한 시각 ' : S.cond.backHow === 'bus' ? '버스 ' : '기차 ') + hhmm(pl.train);
     if (pl.late > 0) fl += ' · ' + pl.late + '분 늦음';
     $('finalLine').classList.toggle('late', pl.late > 0);
-    /* 디자인 시안(10/22): 돌아갈 시간 신호등 — 여유 30분 이상 초록 · 그보다 적으면 노랑 · 늦으면 빨강. 색만이 아니라 글자로도 알려 준다. 여러 날·하룻밤 모드는 신호 없이 그대로. */
+    /* 디자인 시안(10/22): 돌아갈 시간 신호등 — 큰 글씨 한 줄(여유 있어요/빠듯해요/서두르세요) + 쉬운 한 줄(몇 시 도착 → 몇 시 출발, 몇 분 여유) + 작은 글씨(자세한 이동). 여러 날·하룻밤 모드는 신호 없이 그대로. */
     var slack = (pl.feasible && S.mode !== 'night' && !pl.multi && isFinite(pl.train) && pl.back && isFinite(pl.back.arrive)) ? (pl.train - pl.back.arrive) : null;
     var sig = pl.late > 0 || !pl.feasible ? 'red' : (slack == null ? '' : (slack >= 30 ? 'green' : 'yellow'));
     var sigTxt = sig === 'red' ? '서두르세요' : sig === 'yellow' ? '조금 빠듯해요' : sig === 'green' ? '여유 있어요' : '';
+    function gap(m) { m = Math.max(0, Math.round(m)); return m >= 60 ? Math.floor(m / 60) + '시간' + (m % 60 ? ' ' + (m % 60) + '분' : '') : m + '분'; }
+    var how = S.cond.backHow === 'car' ? '정한 시각' : S.cond.backHow === 'bus' ? '버스' : '기차';
+    var easy = sig ? (pl.feasible ? esc(st) + ' ' + hhmm(pl.back.arrive) + ' 도착 → ' + how + ' ' + hhmm(pl.train) + ' 출발' + (pl.late > 0 ? ' · ' + pl.late + '분 늦어요' : slack != null ? ' · ' + gap(slack) + ' 여유' : '') : esc(fl)) : '';
     $('finalLine').setAttribute('data-sig', sig);
-    $('finalLine').innerHTML = (sig ? '<b class="sig-l"><i class="sig-dot" aria-hidden="true"></i>' + sigTxt + '</b>' : ico('train')) + '<span>' + esc(fl) + '</span>';
+    $('finalLine').innerHTML = sig
+      ? '<b class="sig-l"><i class="sig-dot" aria-hidden="true"></i>' + sigTxt + '</b><span class="sig-main">' + easy + '</span>' + (pl.feasible ? '<span class="sig-sub">' + esc(fl) + '</span>' : '')
+      : ico('train') + '<span>' + esc(fl) + '</span>';
     renderEdUi();
     renderRepAlerts();
     if (S.screen === 's-stay') renderTown();
