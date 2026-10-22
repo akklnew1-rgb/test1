@@ -148,7 +148,7 @@
     S.screen = id;
     stopSpeak();
     if ($('backTown')) $('backTown').hidden = !(id === 's-map' && S.fromTown);
-    var ttl = { 's-start': '여행 준비', 's-input': '여행 준비', 's-prep': '여행 준비', 's-course': '오늘 코스', 's-map': '코스 지도', 's-report': '현장 제보', 's-stay': '동네', 's-card': '기록', 's-watch': '시청 화면' }[id] || '';
+    var ttl = { 's-start': '여행 준비', 's-input': '여행 준비', 's-prep': '여행 준비', 's-course': '오늘 코스', 's-map': '코스 지도', 's-report': '동네 소식', 's-stay': '동네', 's-card': '기록', 's-watch': '시청 화면' }[id] || '';
     if ($('scrTitle')) $('scrTitle').textContent = ttl;
     if ($('toMapTop')) $('toMapTop').hidden = !(id === 's-course' && S.plan);
     var inTab = !!S.plan && TAB_SCREENS.indexOf(id) >= 0;
@@ -3283,8 +3283,41 @@
   }
   $('repLocBtn').addEventListener('click', function () { S.demoNear = false; openLoc(); });
   $('repDemoNear').addEventListener('click', function () { S.demoNear = true; renderRepLoc(); renderRepPlaces(); renderRepAlerts(); flash('시연: 근처라고 치고 제보해요'); });
+
+  /* ---------- 동네 소식 목록 (제보를 소식처럼 보여 줌 · 이 폰에 저장된 것 + '예시') ---------- */
+  var K_HIDE = 'tour.newshide.v1';
+  var NEWS_EX = [
+    { id: 'ex1', ago: 12, type: 'crowd', pid: null, place: '도째비골 스카이밸리', text: '주차장이 거의 찼어요. 조금 걸어야 해요.' },
+    { id: 'ex2', ago: 40, type: 'view', pid: null, place: '추암 촛대바위', text: '구름이 걷혀서 바다 색이 아주 맑아요.' },
+    { id: 'ex3', ago: 95, type: 'closed', pid: null, place: '묵호 논골담길', text: '오늘 작은 가게 두 곳이 문을 닫았어요.' }
+  ];
+  function newsLife(t) { return t === 'crowd' ? 60 : 360; }
+  function renderNews() {
+    var ul = $('newsList'); if (!ul) return;
+    var hide = jget(K_HIDE, {}), now = Date.now(), items = [];
+    (jget(K_REP, []) || []).forEach(function (r) {
+      if (!r || REP.isVote(r) || !TYPE_NAME[r.type] || !PLACE[r.placeId]) return;
+      var ago = Math.round((now - r.at) / 60000), life = newsLife(r.type);
+      if (ago < 0 || ago >= life) return;
+      items.push({ id: r.id, ago: ago, left: life - ago, type: r.type, place: PLACE[r.placeId].name, text: r.text || (r.type === 'crowd' && r.minutes ? '줄 ' + r.minutes + '분' : ''), mine: r.dev === myDev(), ex: false });
+    });
+    NEWS_EX.forEach(function (e) { items.push({ id: e.id, ago: e.ago, left: newsLife(e.type) - e.ago, type: e.type, place: e.place, text: e.text, mine: false, ex: true }); });
+    items = items.filter(function (i) { return !hide[i.id]; }).sort(function (x, y) { return x.ago - y.ago; });
+    if (!items.length) { ul.innerHTML = '<li class="nempty">아직 소식이 없어요. 아래에서 첫 소식을 남겨 보세요.</li>'; return; }
+    ul.innerHTML = items.map(function (i) {
+      var agoT = i.ago < 1 ? '방금' : i.ago + '분 전', leftT = i.left >= 120 ? Math.round(i.left / 60) + '시간 뒤' : i.left + '분 뒤';
+      return '<li class="ncard n-' + i.type + '"><div class="nh"><span class="ntag">' + esc(TYPE_NAME[i.type]) + '</span>' + (i.ex ? '<span class="nex">예시</span>' : i.mine ? '<span class="nme">내 소식</span>' : '<span class="nme">여행자</span>') + '<span class="nago">' + agoT + '</span></div>' +
+        '<p class="nt"><b>' + esc(i.place) + '</b>' + (i.text ? ' · ' + esc(i.text) : '') + '</p>' +
+        '<div class="nf"><span class="nleft">' + leftT + ' 사라져요</span><button type="button" class="nbad" data-nhide="' + esc(i.id) + '">광고·거짓이에요</button></div></li>';
+    }).join('');
+  }
+  $('newsList').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-nhide]'); if (!b) return;
+    var hide = jget(K_HIDE, {}); hide[b.getAttribute('data-nhide')] = 1; lsSet(K_HIDE, JSON.stringify(hide)); renderNews(); flash('이 소식을 내 화면에서 가렸어요');
+  });
+
   function openReport() {
-    $('repResult').hidden = true;
+    $('repResult').hidden = true; renderNews();
     renderRepLoc(); renderRepPlaces();
     renderPresets();
     $('repBack').textContent = S.plan ? '코스로 돌아가기' : '처음으로';
@@ -3369,7 +3402,7 @@
       '<p>' + tail + '</p>' + (o.pre ? '<p class="note">시연: 먼저 다녀간 여행자(가상) 1명의 제보도 함께 넣었어요.</p>' : '') +
       '<p class="note">' + esc(r.maskNote) + (near.state === 'demo' ? ' · 시연: 근처라고 쳤어요' : ' · 위치는 근처 확인에만 쓰고 저장하지 않았어요') + (rep.type === 'crowd' ? ' · 붐빔 알림은 마지막 제보 60분 뒤 사라져요.' : '') + '</p>';
     $('repText').value = ''; S.presetSim = null;
-    renderRepPlaces();
+    renderRepPlaces(); renderNews();
   }
 
   /* ---------- 제보 받기(다른 창에서 온 것) ---------- */

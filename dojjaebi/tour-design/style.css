@@ -1344,3 +1344,19 @@ body.big .town-seg .chip{ flex-direction:row; gap:8px; font-size:1em; min-height
 
 #townCourse,#townNear{ margin:0 6px 8px 0; }
 #townCourse[aria-pressed="true"],#townNear[aria-pressed="true"]{ background:var(--brand); border-color:var(--brand); color:#fff; }
+
+/* 동네 소식 목록 */
+.nfeed .nlist{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:10px}
+.ncard{background:#fff;border:1px solid #e2dfd8;border-left:4px solid #4a5568;border-radius:8px;padding:12px 14px}
+.ncard.n-crowd{border-left-color:#d9480f}.ncard.n-closed{border-left-color:#4a5568}.ncard.n-view{border-left-color:#0b7f6f}.ncard.n-new{border-left-color:#4263c9}
+.nh{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px}
+.ntag{font-weight:800;color:#0b2f52}
+.nex{background:#fff3bf;color:#5f4300;border-radius:999px;padding:1px 8px;font-size:13px;font-weight:700}
+.nme{background:#e7f1f8;color:#0b2f52;border-radius:999px;padding:1px 8px;font-size:13px}
+.nago{margin-left:auto;color:#4a5568;font-size:13px}
+.nt{margin:6px 0 0;font-size:16px;line-height:1.55;color:#2d3748}
+.nf{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;flex-wrap:wrap}
+.nleft{font-size:13px;color:#4a5568}
+.nbad{min-height:48px;padding:0 12px;border:1px solid #d1d5db;background:#f9f8f6;color:#0b2f52;border-radius:8px;font-size:14px;font-weight:700}
+.nempty{color:#4a5568;font-size:15px;padding:8px 0}
+body.big .nt{font-size:19px}body.big .nh,body.big .nbad,body.big .nleft,body.big .nago{font-size:18px}body.big .nbad{min-height:56px}

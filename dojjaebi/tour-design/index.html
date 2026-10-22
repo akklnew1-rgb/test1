@@ -470,8 +470,13 @@
 
 <!-- 3. 현장 제보 -->
 <section id="s-report" class="screen" hidden aria-labelledby="h-report">
-  <h2 id="h-report">현장 제보</h2>
+  <h2 id="h-report">동네 소식</h2>
   <p class="lead" id="repLead">본 것을 알려 주면 근처 여행자에게 알림으로 가요. 다시 짤지는 본인이 골라요.</p>
+  <div class="group nfeed" id="newsBox">
+    <h3>지금 동해 소식</h3>
+    <p class="note">여행자가 남긴 소식이에요. 시간이 지나면 사라져요. 가게 홍보글과 사람 얼굴이 나온 사진은 받지 않아요.</p>
+    <ul class="nlist" id="newsList"></ul>
+  </div>
   <div class="group" id="repLocBox">
     <h3>1. 지금 그곳 근처인가요?</h3>
     <p class="note" id="repLocMsg" role="status" aria-live="polite">제보는 그 장소 200m 안에서만 남길 수 있어요. 위치는 근처인지 확인만 하고 저장·전송하지 않아요.</p>
@@ -481,7 +486,7 @@
     </div>
   </div>
   <div class="group">
-    <h3>2. 무엇을 알려 줄래요?</h3>
+    <h3>2. 어떤 소식인가요?</h3>
     <div class="types" role="radiogroup" aria-label="제보 종류">
       <button type="button" class="type" role="radio" aria-checked="false" data-type="crowd"><b>붐빔</b><span>줄이 길어요</span></button>
       <button type="button" class="type" role="radio" aria-checked="false" data-type="closed"><b>휴무</b><span>문을 닫았어요</span></button>
@@ -576,7 +581,7 @@
 <nav class="tabs" id="tabs" aria-label="아래 메뉴" hidden>
   <button type="button" class="tab" id="tabHome" data-tab="s-course"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>홈</span></button>
   <button type="button" class="tab" id="tabMap" data-tab="s-map"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg><span>지도</span></button>
-  <button type="button" class="tab plus" id="toReport" data-tab="s-report" aria-label="현장 제보 남기기"><span class="pbtn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span><span>제보</span></button>
+  <button type="button" class="tab plus" id="toReport" data-tab="s-report" aria-label="동네 소식 보기와 남기기"><span class="pbtn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span><span>소식</span></button>
   <button type="button" class="tab" id="toStay" data-tab="s-stay" aria-label="동네 (식당과 숙소)"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg><span>동네</span></button>
   <button type="button" class="tab" id="toCard" data-tab="s-card"><svg class="ic" aria-hidden="true"><use href="#i-mark"/></svg><span>기록</span></button>
 </nav>
