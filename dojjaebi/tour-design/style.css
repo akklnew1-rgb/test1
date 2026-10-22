@@ -1604,3 +1604,4 @@ body.big #s-start .qs-card{ min-height:56px; }
 .pchip .pc-t{display:block;padding:8px 10px 0;font-weight:800;font-size:1rem;line-height:1.3}
 .pchip .pc-s{display:block;padding:0 10px 10px;font-size:.85rem;color:var(--muted)}
 .ask-credit{margin:2px 0 0;font-size:.75rem;color:var(--muted)}
+.ask-chips .pchip{padding:0 !important;min-height:0}.ask-chips .pchip img{border-radius:0}
