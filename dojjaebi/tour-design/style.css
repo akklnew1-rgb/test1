@@ -997,9 +997,9 @@ button.ovn-b{ cursor:pointer; }
 .facbar.laybar .chip[aria-pressed="true"]{ background:var(--wz); border-color:var(--wz); color:#fff; }
 .kpoi{ width:44px; height:44px; padding:0; border:0; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; }
 .kpoi i{ display:flex; align-items:center; justify-content:center; width:24px; height:24px; border-radius:50%; border:2px solid #fff; box-shadow:0 1px 4px rgba(0,0,0,.35); }
-.kpoi.eat i,.poi-ic.eat{ background:#b35c00; }
-.kpoi.cafe i,.poi-ic.cafe{ background:#0d8a6b; }
-.kpoi.lodge i,.poi-ic.lodge{ background:#5f3dc4; }
+.kpoi.eat i,.poi-ic.eat{ background:#d9480f; }
+.kpoi.cafe i,.poi-ic.cafe{ background:#0b7f6f; }
+.kpoi.lodge i,.poi-ic.lodge{ background:#1d3b66; }
 .kpoi.on i{ width:30px; height:30px; box-shadow:0 0 0 3px rgba(15,76,129,.45),0 2px 6px rgba(0,0,0,.35); }
 .kpoi svg{ width:14px; height:14px; }
 .kfocus{ width:54px; height:54px; border-radius:50%; border:3px dashed #6c5ce7; background:rgba(108,92,231,.14); pointer-events:none; }
@@ -1296,3 +1296,32 @@ body{ background:#f9f8f6; }
 .p-hours.note dl > div:first-child{ border-top:0; }
 .p-hours.note dt{ flex:none; width:6.2em; color:var(--muted); font-weight:700; }
 .p-hours.note dd{ margin:0; font-weight:600; }
+
+/* ===== 지도·동네 색 통일(2026-10-22): 식당 붉은 주황 · 카페 청록 · 숙소 남색 · 볼거리 회색 — 동네 목록, 칩, 지도 핀, 안내가 모두 같은 색 ===== */
+:root{ --k-eat:#d9480f; --k-cafe:#0b7f6f; --k-lodge:#1d3b66; --k-spot:#4a5568; }
+.poi-ic.spot,.kpoi.spot i{ background:var(--k-spot); }
+.facbar.laybar .chip[data-k]::before{ content:""; width:12px; height:12px; border-radius:50%; background:var(--kc); flex:none; box-shadow:0 0 0 2px #fff; }
+.facbar.laybar .chip[data-k="eat"]{ --kc:var(--k-eat); } .facbar.laybar .chip[data-k="cafe"]{ --kc:var(--k-cafe); }
+.facbar.laybar .chip[data-k="lodge"]{ --kc:var(--k-lodge); } .facbar.laybar .chip[data-k="spot"]{ --kc:var(--k-spot); }
+.maplegend{ display:flex; flex-wrap:wrap; gap:8px 14px; margin:8px 0 4px; padding:10px 12px; background:#fff; border:1px solid var(--line); border-radius:12px; font-size:.92em; font-weight:700; color:var(--ink); }
+.maplegend .lg{ display:inline-flex; align-items:center; gap:6px; }
+.maplegend .lg i{ width:16px; height:16px; border-radius:50%; background:var(--lc); flex:none; }
+.maplegend .lg u{ display:inline-block; width:26px; height:0; border-top:4px solid var(--lc); flex:none; }
+.maplegend .c-eat{ --lc:var(--k-eat); } .maplegend .c-cafe{ --lc:var(--k-cafe); } .maplegend .c-lodge{ --lc:var(--k-lodge); } .maplegend .c-spot{ --lc:var(--k-spot); }
+.maplegend .walk{ --lc:#0f4c81; } .maplegend .walk u{ border-top-style:dotted; }
+.maplegend .bus{ --lc:#e07a00; } .maplegend .taxi{ --lc:#c2255c; } .maplegend .tour{ --lc:#0b3d91; } .maplegend .tour u{ border-top-width:6px; }
+/* 동네 목록: 왼쪽 색띠 + 같은 색 아이콘 원 */
+.town-list .tw{ position:relative; margin:0 0 10px; padding:12px 14px 12px 18px; background:#fff; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
+.town-list .tw::before{ content:""; position:absolute; left:0; top:0; bottom:0; width:6px; background:var(--tc,var(--k-eat)); }
+.tw-eat{ --tc:var(--k-eat); } .tw-cafe{ --tc:var(--k-cafe); } .tw-lodge{ --tc:var(--k-lodge); }
+.tw-main{ flex-wrap:nowrap; align-items:center; gap:10px; }
+.tw-main .poi-ic{ width:34px; height:34px; flex:none; }
+.tw-main .tw-n{ flex:1; min-width:0; font-size:1.08em; overflow-wrap:anywhere; }
+.tw-main .tw-t{ flex:none; color:#fff; background:var(--tc,var(--k-eat)); font-weight:700; max-width:42%; }
+.tw-onmap,.tw-add{ background:var(--tc,var(--brand)); border-color:var(--tc,var(--brand)); color:#fff; font-weight:800; }
+/* 동네 큰 칩 4개: 좁은 폰에서도 잘리지 않게 (칸을 똑같이 나누고 글자는 한 줄, 큰글씨 모드에서는 2줄 격자) */
+.town-seg{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:6px; }
+.town-seg .chip{ flex-direction:column; gap:2px; padding:6px 2px; min-height:64px; font-size:.9em; }
+.town-seg .chip .ic{ width:22px; height:22px; }
+body.big .town-seg{ grid-template-columns:repeat(2,minmax(0,1fr)); }
+body.big .town-seg .chip{ flex-direction:row; gap:8px; font-size:1em; min-height:60px; }

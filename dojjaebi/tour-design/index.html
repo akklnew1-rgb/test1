@@ -452,12 +452,13 @@
 <!-- 2b. 지도 -->
 <section id="s-map" class="screen" hidden aria-labelledby="h-map">
   <h2 id="h-map">오늘 걷는 길</h2>
-  <div class="facbar laybar" role="group" aria-label="지도에 보기"><span class="fb-l">지도 보기</span><button type="button" class="chip" id="layCourse" aria-pressed="true">코스</button><button type="button" class="chip" id="layEat" aria-pressed="false">식당</button><button type="button" class="chip" id="layCafe" aria-pressed="false">카페</button><button type="button" class="chip" id="layLodge" aria-pressed="false">숙소</button><button type="button" class="chip" id="laySpot" aria-pressed="false">볼거리</button></div>
+  <div class="facbar laybar" role="group" aria-label="지도에 보기"><span class="fb-l">지도 보기</span><button type="button" class="chip" id="layCourse" aria-pressed="true">코스</button><button type="button" class="chip" id="layEat" data-k="eat" aria-pressed="false">식당</button><button type="button" class="chip" id="layCafe" data-k="cafe" aria-pressed="false">카페</button><button type="button" class="chip" id="layLodge" data-k="lodge" aria-pressed="false">숙소</button><button type="button" class="chip" id="laySpot" data-k="spot" aria-pressed="false">볼거리</button></div>
   <div class="facbar" role="group" aria-label="지도에 같이 보기"><span class="fb-l">같이 보기</span><button type="button" class="chip" id="facWc" aria-pressed="false">화장실</button><button type="button" class="chip" id="facInfo" aria-pressed="false">관광안내소</button></div>
   <div class="mapbox">
     <div id="map" aria-label="코스 지도"></div>
     <div id="mapFallback" class="mapfb" hidden></div>
-    <p class="note" id="mapNote">지도 © Kakao · 선: 카카오 길찾기 기준 (보라 = 걷기, 주황 = 버스, 진한 파랑 = 시티투어버스(정류장을 직선으로 이음), 분홍 = 택시·자가용, 점선 = 어림 직선) · 작은 동그라미: 주황 포크 = 식당, 보라 침대 = 숙소, 회색 별 = 코스에 없는 볼거리 (위 「식당」「숙소」「볼거리」를 눌러 보기) · 번호 핀 색: 파랑 = 바다·자연, 주황 = 먹거리·시장, 초록 = 볼거리 (여러 날이면 날짜 색)</p>
+    <div class="maplegend" aria-label="지도 색 안내"><span class="lg c-eat"><i></i>식당</span><span class="lg c-cafe"><i></i>카페</span><span class="lg c-lodge"><i></i>숙소</span><span class="lg c-spot"><i></i>볼거리</span><span class="lg ln walk"><u></u>걷기</span><span class="lg ln bus"><u></u>버스</span><span class="lg ln taxi"><u></u>차·택시</span><span class="lg ln tour"><u></u>시티투어</span></div>
+    <p class="note" id="mapNote">지도 © Kakao · 선은 카카오 길찾기 기준, 점선은 어림 직선이에요 · 동네 탭의 색과 같은 색이에요</p>
   </div>
   <div id="poiCard" class="poicard" hidden aria-live="polite"></div>
   <div id="poiList" class="poilist" hidden aria-live="polite"></div>

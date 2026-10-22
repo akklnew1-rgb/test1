@@ -2428,7 +2428,7 @@
     POIS = out; return out;
   }
   var POI_ICON = { eat: '<path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2.5 1.5-3.5 5-3.5 8H17"/>', cafe: '<path d="M4 9h14v3a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9z"/><path d="M18 10h1.5a2 2 0 0 1 0 4H18"/><path d="M6 3.5c.5 1-.5 1.5 0 2.5M10 3.5c.5 1-.5 1.5 0 2.5"/>', lodge: '<path d="M3 19V6M3 14h18v5M21 14v-2.5A2.5 2.5 0 0 0 18.5 9H11v5"/><circle cx="7" cy="11" r="1.6"/>', spot: '<path d="M12 3.5l2.5 5.2 5.7.8-4.1 4 1 5.7-5.1-2.7-5.1 2.7 1-5.7-4.1-4 5.7-.8z"/>' };
-  var POI_KINDS = ['eat', 'cafe', 'lodge', 'spot'], POI_NAME = { eat: '식당', cafe: '카페', lodge: '숙소', spot: '볼거리' }, POI_COLOR = { eat: '#b35c00', cafe: '#0d8a6b', lodge: '#5f3dc4', spot: '#5f6672' };
+  var POI_KINDS = ['eat', 'cafe', 'lodge', 'spot'], POI_NAME = { eat: '식당', cafe: '카페', lodge: '숙소', spot: '볼거리' }, POI_COLOR = { eat: '#d9480f', cafe: '#0b7f6f', lodge: '#1d3b66', spot: '#4a5568' };
   function layPoi() { var l = S.mapLay; return !!(l.eat || l.cafe || l.lodge || l.spot); }
   function notInCourse(p, have) { return p.kind !== 'spot' || !have[p.pid]; }
   function poiSvg(kind) { return '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + POI_ICON[kind] + '</svg>'; }
@@ -2625,7 +2625,7 @@
   function mapFail() {
     mapState = 'fail'; mapApi = null;
     $('map').hidden = true; $('mapNote').hidden = false; $('mapFallback').hidden = false;
-    $('mapNote').textContent = '지도 그림 © Kakao (미리 받아 둔 그림) · 선: 카카오 길찾기 기준 (보라 = 걷기, 주황 = 버스, 진한 파랑 = 시티투어버스(정류장을 직선으로 이음), 분홍 = 택시·자가용, 점선 = 어림 직선) · 작은 동그라미: 주황 포크 = 식당, 보라 침대 = 숙소, 회색 별 = 코스에 없는 볼거리 · 번호 핀 색: 파랑 = 바다·자연, 주황 = 먹거리·시장, 초록 = 볼거리 (여러 날이면 날짜 색)';
+    $('mapNote').textContent = '지도 그림 © Kakao (미리 받아 둔 그림) · 선: 카카오 길찾기 기준 (진한 파랑 = 걷기, 주황 = 버스, 남색 굵은 선 = 시티투어버스, 분홍 = 택시·자가용, 점선 = 어림 직선) · 작은 동그라미: 붉은 주황 = 식당, 청록 = 카페, 남색 = 숙소, 회색 = 볼거리 · 번호 핀 색: 파랑 = 바다·자연, 주황 = 먹거리·시장, 초록 = 볼거리 (여러 날이면 날짜 색)';
     drawMap();
   }
   function bootMap() {
@@ -3549,8 +3549,8 @@
       TW.areas(k === 'cafe' ? 'eat' : k).filter(function (a) { return cnt[a.area]; }).map(function (a) { return '<button type="button" class="chip" data-area="' + esc(a.area) + '" aria-pressed="' + (TN.area === a.area) + '">' + esc(a.area) + ' ' + cnt[a.area] + '</button>'; }).join('');
     $('townCount').textContent = (TN.area || '동해시 전체') + (TN.q ? ' · “' + TN.q + '”' : '') + ' ' + list.length + '곳' + (list.length > shown.length ? ' 중 ' + shown.length + '곳 보여요' : '') + (list.length ? '' : ' — 찾는 곳이 없어요. 다른 낱말로 찾아 보세요.') + (TN.near ? ' · 가까운 순' : '');
     $('townList').innerHTML = shown.map(function (x) {
-      var st = townAddState(x), lod = x.kind === 'lodge', noPos = !TW.hasPos(x);
-      return '<li class="tw" data-key="' + x.key + '"><div class="tw-main"><b class="tw-n">' + esc(x.name) + '</b><span class="tw-t">' + esc(x.type) + (x._m != null ? ' · ' + (FU ? FU.round10(x._m) : Math.round(x._m)) + 'm' : '') + '</span></div>' +
+      var st = townAddState(x), lod = x.kind === 'lodge', noPos = !TW.hasPos(x), tk = lod ? 'lodge' : (k === 'cafe' ? 'cafe' : 'eat');
+      return '<li class="tw tw-' + tk + '" data-key="' + x.key + '"><div class="tw-main"><span class="poi-ic ' + tk + '" aria-hidden="true">' + poiSvg(tk) + '</span><b class="tw-n">' + esc(x.name) + '</b><span class="tw-t">' + esc(x.type) + (x._m != null ? ' · ' + (FU ? FU.round10(x._m) : Math.round(x._m)) + 'm' : '') + '</span></div>' +
         '<p class="tw-a">' + esc(x.area === TW.OTHER ? x.dong : x.area + ' · ' + x.dong) + ' · ' + esc(x.addr) + (x.tel ? ' · <a href="tel:' + esc(x.tel.replace(/[^0-9]/g, '')) + '">' + esc(x.tel) + '</a>' : '') + '</p>' +
         '<div class="tw-btns"><a class="btn tw-map" href="' + esc(TW.kakaoSearch(x.name)) + '" target="_blank" rel="noopener">카카오맵에서 보기</a>' +
         (!lod ? (noPos ? '' : '<button type="button" class="btn tw-onmap" data-onmap="' + x.key + '">지도에서 보기</button>') : (noPos ? '<span class="tw-nopos">위치 정보 없음</span>' : '<button type="button" class="btn tw-add" data-add="' + x.key + '"' + (st.ok ? '' : ' disabled aria-disabled="true"') + '>코스에 넣기</button>')) + '</div>' +
