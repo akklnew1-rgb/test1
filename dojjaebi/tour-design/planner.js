@@ -50,7 +50,7 @@
     if (a && a.entry) a = Object.assign({}, a, a.entry); if (b && b.entry) b = Object.assign({}, b, b.entry); // 차가 못 들어가는 곳(무릉계곡 용추폭포)은 입구 좌표로 이동을 계산
     var km = hav(a, b) * 1.3;
     var walkOld = km / (slow ? 3 : 4) * 60;
-    var taxi = Math.ceil(6 + km / 45 * 60);
+    var taxi = Math.ceil(5 + km / 40 * 60); // 2026-10-22: 길 데이터가 없을 때 택시·자가용 어림을 같은 속도(시속 40km)·같은 대기(5분)로 맞춤
     var pr = findPair(routes, a, b);
     var dr = pr ? pr.rec.drive : null;
     if (dr) taxi = Math.ceil(5 + dr.sec / 60);
@@ -59,7 +59,7 @@
     var walkMin = w ? Math.ceil(w.sec / 60 * (slow ? SLOW_K : 1)) : Math.ceil(walkOld);
     if (opt.car) {
       if (walkMin <= CAR_WALK_MAX) return { min: walkMin, mode: 'walk', walk: walkMin, km: w ? w.m / 1000 : km, real: !!w, text: '걸어서 ' + walkMin + '분' + (w ? '(실제 길)' : '(어림)'), path: w ? pathOf(w, pr.rev) : null };
-      var carMin = dr ? Math.ceil(dr.sec / 60) + PARK_MIN : Math.ceil(3 + km / 40 * 60) + PARK_MIN;
+      var carMin = dr ? Math.ceil(dr.sec / 60) + PARK_MIN : Math.ceil(km / 40 * 60) + PARK_MIN;
       return { min: carMin, mode: 'car', walk: walkMin, km: dr ? dr.m / 1000 : km, real: !!dr, text: '자가용 약 ' + carMin + '분(주차 ' + PARK_MIN + '분 포함' + (dr ? ', 실제 길)' : ', 어림)'), path: dr ? pathOf(dr, pr.rev) : null };
     }
     var wmax = opt.walkMax || (slow ? WALK_MAX_SLOW : WALK_MAX);
