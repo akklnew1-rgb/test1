@@ -3284,38 +3284,56 @@
   $('repLocBtn').addEventListener('click', function () { S.demoNear = false; openLoc(); });
   $('repDemoNear').addEventListener('click', function () { S.demoNear = true; renderRepLoc(); renderRepPlaces(); renderRepAlerts(); flash('시연: 근처라고 치고 제보해요'); });
 
-  /* ---------- 동네 소식 목록 (제보를 소식처럼 보여 줌 · 이 폰에 저장된 것 + '예시') ---------- */
   var K_HIDE = 'tour.newshide.v1';
-  var NEWS_EX = [
-    { id: 'ex1', ago: 12, type: 'crowd', pid: null, place: '도째비골 스카이밸리', text: '주차장이 거의 찼어요. 조금 걸어야 해요.' },
-    { id: 'ex2', ago: 40, type: 'view', pid: null, place: '추암 촛대바위', text: '구름이 걷혀서 바다 색이 아주 맑아요.' },
-    { id: 'ex3', ago: 95, type: 'closed', pid: null, place: '묵호 논골담길', text: '오늘 작은 가게 두 곳이 문을 닫았어요.' }
+  /* ---------- 동네 소식 = 한 줄 소식(라이브 스팟) ----------
+     예시 소식 + 이 폰의 '좋은 풍경' 제보를 24시간 동안 보여 준다. 서버가 없어 남의 글은 못 받는다(시연용).
+     풍경(볼거리) 카드는 [내 코스에 넣기] → 기존 코스 고치기 계산(spotAdd). 밥집·카페는 코스에 넣지 않고 지도에서 위치만 본다. */
+  var K_HELP = 'tour.livehelp.v1', LIVE_LIFE = 1440, LIVE_CAT = { view: '풍경', food: '밥집', cafe: '카페' };
+  var LIVE_EX = [
+    { id: 'lx1', cat: 'view', pid: 'chuam', ago: 14, text: '구름 사이로 빛이 내려와서 바다가 반짝여요.', help: 6 },
+    { id: 'lx2', cat: 'food', pid: 'cheongok', ago: 55, text: '천곡동 쪽 현지 식당 소식이에요(예시). 묵호보다 기다림이 적대요.', help: 3 },
+    { id: 'lx3', cat: 'view', pid: 'mangsang', ago: 120, text: '오늘 해변이 한적하고 파도가 잔잔해요.', help: 4 },
+    { id: 'lx4', cat: 'cafe', pid: 'chuambeach', ago: 200, text: '추암 해변 근처 바다 보이는 카페 소식이에요(예시).', help: 2 }
   ];
-  function newsLife(t) { return t === 'crowd' ? 60 : 360; }
+  var liveFilter = 'all';
   function renderNews() {
     var ul = $('newsList'); if (!ul) return;
-    var hide = jget(K_HIDE, {}), now = Date.now(), items = [];
+    var hide = jget(K_HIDE, {}), helped = jget(K_HELP, {}), now = Date.now(), items = [], inCourse = S.plan ? courseIds() : {};
     (jget(K_REP, []) || []).forEach(function (r) {
-      if (!r || REP.isVote(r) || !TYPE_NAME[r.type] || !PLACE[r.placeId]) return;
-      var ago = Math.round((now - r.at) / 60000), life = newsLife(r.type);
-      if (ago < 0 || ago >= life) return;
-      items.push({ id: r.id, ago: ago, left: life - ago, type: r.type, place: PLACE[r.placeId].name, text: r.text || (r.type === 'crowd' && r.minutes ? '줄 ' + r.minutes + '분' : ''), mine: r.dev === myDev(), ex: false });
+      if (!r || REP.isVote(r) || r.type !== 'view' || !PLACE[r.placeId]) return;
+      var ago = Math.round((now - r.at) / 60000); if (ago < 0 || ago >= LIVE_LIFE) return;
+      items.push({ id: r.id, cat: 'view', pid: r.placeId, ago: ago, text: r.text || '풍경이 좋아요.', help: 0, mine: r.dev === myDev(), ex: false });
     });
-    NEWS_EX.forEach(function (e) { items.push({ id: e.id, ago: e.ago, left: newsLife(e.type) - e.ago, type: e.type, place: e.place, text: e.text, mine: false, ex: true }); });
-    items = items.filter(function (i) { return !hide[i.id]; }).sort(function (x, y) { return x.ago - y.ago; });
-    if (!items.length) { ul.innerHTML = '<li class="nempty">아직 소식이 없어요. 아래에서 첫 소식을 남겨 보세요.</li>'; return; }
+    LIVE_EX.forEach(function (e) { if (PLACE[e.pid]) items.push({ id: e.id, cat: e.cat, pid: e.pid, ago: e.ago, text: e.text, help: e.help, mine: false, ex: true }); });
+    items = items.filter(function (i) { return !hide[i.id] && (liveFilter === 'all' || i.cat === liveFilter); }).sort(function (x, y) { return x.ago - y.ago; });
+    if (!items.length) { ul.innerHTML = '<li class="nempty">이 종류의 소식은 아직 없어요.</li>'; return; }
     ul.innerHTML = items.map(function (i) {
-      var agoT = i.ago < 1 ? '방금' : i.ago + '분 전', leftT = i.left >= 120 ? Math.round(i.left / 60) + '시간 뒤' : i.left + '분 뒤';
-      return '<li class="ncard n-' + i.type + '"><div class="nh"><span class="ntag">' + esc(TYPE_NAME[i.type]) + '</span>' + (i.ex ? '<span class="nex">예시</span>' : i.mine ? '<span class="nme">내 소식</span>' : '<span class="nme">여행자</span>') + '<span class="nago">' + agoT + '</span></div>' +
-        '<p class="nt"><b>' + esc(i.place) + '</b>' + (i.text ? ' · ' + esc(i.text) : '') + '</p>' +
-        '<div class="nf"><span class="nleft">' + leftT + ' 사라져요</span><button type="button" class="nbad" data-nhide="' + esc(i.id) + '">광고·거짓이에요</button></div></li>';
+      var p = PLACE[i.pid], agoT = i.ago < 1 ? '방금' : i.ago < 60 ? i.ago + '분 전' : Math.floor(i.ago / 60) + '시간 전', left = LIVE_LIFE - i.ago, leftT = left >= 120 ? Math.round(left / 60) + '시간 뒤' : left + '분 뒤';
+      var h1 = helped[i.id] ? 1 : 0, act;
+      if (i.cat === 'view') act = !S.plan ? '<button type="button" class="btn nact" disabled aria-disabled="true">코스를 먼저 짜면 넣을 수 있어요</button>' : inCourse[i.pid] ? '<button type="button" class="btn nact" disabled aria-disabled="true">이미 내 코스에 있어요</button>' : '<button type="button" class="btn primary nact" data-live-add="' + esc(i.pid) + '">내 코스에 넣기</button>';
+      else act = '<button type="button" class="btn nact" data-live-map="' + esc(i.pid) + '">근처 식당·카페 지도에서 보기</button>';
+      return '<li class="ncard n-' + i.cat + '">' + artFig(p) +
+        '<div class="nh"><span class="ntag">' + LIVE_CAT[i.cat] + '</span>' + (i.ex ? '<span class="nex">예시</span>' : i.mine ? '<span class="nme">내 소식</span>' : '<span class="nme">여행자</span>') + '<span class="nago">' + agoT + '</span></div>' +
+        '<p class="nt"><b>' + esc(p.name) + '</b> · ' + esc(i.text) + '</p>' +
+        '<p class="nleft">' + leftT + ' 사라져요</p>' +
+        '<div class="nact-row"><button type="button" class="btn nhelp" data-live-help="' + esc(i.id) + '" aria-pressed="' + (h1 ? 'true' : 'false') + '">도움돼요 ' + (i.help + h1) + '</button>' + act + '</div>' +
+        '<button type="button" class="nbad" data-nhide="' + esc(i.id) + '">광고·거짓이에요</button></li>';
     }).join('');
   }
-  $('newsList').addEventListener('click', function (ev) {
-    var b = ev.target.closest('[data-nhide]'); if (!b) return;
-    var hide = jget(K_HIDE, {}); hide[b.getAttribute('data-nhide')] = 1; lsSet(K_HIDE, JSON.stringify(hide)); renderNews(); flash('이 소식을 내 화면에서 가렸어요');
+  $('liveFilter').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-lf]'); if (!b) return; liveFilter = b.getAttribute('data-lf');
+    Array.prototype.forEach.call($('liveFilter').querySelectorAll('[data-lf]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    renderNews();
   });
-
+  $('newsList').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-nhide]');
+    if (b) { var hide = jget(K_HIDE, {}); hide[b.getAttribute('data-nhide')] = 1; lsSet(K_HIDE, JSON.stringify(hide)); renderNews(); flash('이 소식을 내 화면에서 가렸어요'); return; }
+    var hp = ev.target.closest('[data-live-help]');
+    if (hp) { var hh = jget(K_HELP, {}), id = hp.getAttribute('data-live-help'); if (hh[id]) delete hh[id]; else hh[id] = 1; lsSet(K_HELP, JSON.stringify(hh)); renderNews(); return; }
+    var ad = ev.target.closest('[data-live-add]'); if (ad) { spotAdd(ad.getAttribute('data-live-add')); return; }
+    var mp = ev.target.closest('[data-live-map]');
+    if (mp) { var q = PLACE[mp.getAttribute('data-live-map')]; if (q) { S.fromTown = false; openMapAt({ lat: q.lat, lng: q.lng }, { eat: true, focusName: (q.short || q.name) + ' 근처' }); } }
+  });
   function openReport() {
     $('repResult').hidden = true; renderNews();
     renderRepLoc(); renderRepPlaces();

@@ -1361,5 +1361,15 @@ body.big .town-seg .chip{ flex-direction:row; gap:8px; font-size:1em; min-height
 .nempty{color:#4a5568;font-size:15px;padding:8px 0}
 body.big .nt{font-size:19px}body.big .nh,body.big .nbad,body.big .nleft,body.big .nago{font-size:18px}body.big .nbad{min-height:56px}
 
-/* 제보 탭은 하단 메뉴에서 숨김(기능은 유지) — 하단 4칸 */
-#toReport,.sitem.add{ display:none !important; }
+
+/* 한 줄 소식(라이브 스팟) 카드 */
+.nfeed .chips{margin:10px 0 0}
+.ncard .p-art{margin:0 0 10px}
+.nact-row{display:grid;grid-template-columns:auto 1fr;gap:8px;margin-top:10px}
+.nact{min-height:48px;font-size:15px;font-weight:700}
+.nhelp{min-height:48px;padding:0 14px;font-size:15px;background:#fff;border:1px solid #d1d5db;color:#0b2f52;font-weight:700}
+.nhelp[aria-pressed="true"]{background:#e7f1f8;border-color:#0f4c81;color:#0f4c81}
+.ncard .nbad{margin-top:6px;width:100%}
+.ncard.n-view{border-left-color:#4a5568}.ncard.n-food{border-left-color:#d9480f}.ncard.n-cafe{border-left-color:#0b7f6f}
+body.big .nact,body.big .nhelp{font-size:18px;min-height:56px}
+@media (max-width:380px){.nact-row{grid-template-columns:1fr}}

@@ -473,8 +473,14 @@
   <h2 id="h-report">동네 소식</h2>
   <p class="lead" id="repLead">본 것을 알려 주면 근처 여행자에게 알림으로 가요. 다시 짤지는 본인이 골라요.</p>
   <div class="group nfeed" id="newsBox">
-    <h3>지금 동해 소식</h3>
-    <p class="note">여행자가 남긴 소식이에요. 시간이 지나면 사라져요. 가게 홍보글과 사람 얼굴이 나온 사진은 받지 않아요.</p>
+    <h3>지금 동해 한 줄 소식</h3>
+    <p class="note">24시간이 지나면 사라져요. 가게 홍보글과 사람 얼굴이 나온 사진은 받지 않아요. 아래 카드는 시연용 <b>예시</b>예요.</p>
+    <div class="chips" id="liveFilter" role="group" aria-label="소식 종류 고르기">
+      <button type="button" class="chip" data-lf="all" aria-pressed="true">전체</button>
+      <button type="button" class="chip" data-lf="view" aria-pressed="false">풍경</button>
+      <button type="button" class="chip" data-lf="food" aria-pressed="false">밥집</button>
+      <button type="button" class="chip" data-lf="cafe" aria-pressed="false">카페</button>
+    </div>
     <ul class="nlist" id="newsList"></ul>
   </div>
   <div class="group" id="repLocBox">
