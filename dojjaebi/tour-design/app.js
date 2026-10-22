@@ -777,7 +777,7 @@
       btn.disabled = false; btn.textContent = old;
       var a = j && j.parsed, lead = '말씀하신 내용이에요.';
       if (a) {
-        ['date', 'train', 'how', 'count'].forEach(function (k) { if (a[k] != null && a[k] !== '') r[k] = a[k]; });
+        ['date', 'train', 'how'].forEach(function (k) { if (a[k] != null && a[k] !== '') r[k] = a[k]; });
         if (a.date && !(P.dateInfo && P.dateInfo(a.date))) r.date = null;
         if (a.date && a.date < todayIso()) r.date = null;
         if (a.end === 'donghae') r.end = 'donghae';
