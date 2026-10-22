@@ -3687,9 +3687,9 @@
     list = applyNear(list);
     var shown = TW.page(list, TN.pages);
     var mbox = $('townMenu'); mbox.hidden = !isEat;
-    if (isEat) mbox.innerHTML = '<button type="button" class="chip" data-menu="" aria-pressed="' + (!TN.menu) + '">모든 메뉴</button>' + MENU_GROUPS.filter(function (g) { return mcnt[g[0]]; }).map(function (g) { return '<button type="button" class="chip" data-menu="' + g[0] + '" aria-pressed="' + (TN.menu === g[0]) + '">' + g[1] + ' ' + mcnt[g[0]] + '</button>'; }).join('');
-    $('townChips').innerHTML = '<button type="button" class="chip" data-area="" aria-pressed="' + (!TN.area) + '">전체 ' + byMenu.length + '</button>' +
-      TW.areas(k === 'cafe' ? 'eat' : k).filter(function (a) { return cnt[a.area]; }).map(function (a) { return '<button type="button" class="chip" data-area="' + esc(a.area) + '" aria-pressed="' + (TN.area === a.area) + '">' + esc(a.area) + ' ' + cnt[a.area] + '</button>'; }).join('');
+    if (isEat) mbox.innerHTML = '<button type="button" class="chip" data-menu="" aria-pressed="' + (!TN.menu) + '">모든 메뉴</button>' + MENU_GROUPS.filter(function (g) { return mcnt[g[0]]; }).map(function (g) { return '<button type="button" class="chip" data-menu="' + g[0] + '" aria-pressed="' + (TN.menu === g[0]) + '">' + g[1] + '</button>'; }).join('');
+    $('townChips').innerHTML = '<button type="button" class="chip" data-area="" aria-pressed="' + (!TN.area) + '">전체</button>' +
+      TW.areas(k === 'cafe' ? 'eat' : k).filter(function (a) { return cnt[a.area]; }).map(function (a) { return '<button type="button" class="chip" data-area="' + esc(a.area) + '" aria-pressed="' + (TN.area === a.area) + '">' + esc(a.area) + '</button>'; }).join('');
     $('townCount').textContent = (TN.area || '동해시 전체') + (TN.menu ? ' · ' + (MENU_GROUPS.filter(function (g) { return g[0] === TN.menu; })[0] || ['', ''])[1] : '') + (TN.q ? ' · “' + TN.q + '”' : '') + ' ' + list.length + '곳' + (list.length > shown.length ? ' 중 ' + shown.length + '곳 보여요' : '') + (TN.near ? (TN.nearKind === 'course' ? ' · 코스 가운데에서 가까운 순' : ' · 내 위치에서 가까운 순') : '') + (list.length ? '' : ' — 찾는 곳이 없어요. 다른 낱말로 찾아 보세요.');
     $('townList').innerHTML = shown.map(function (x) {
       var st = townAddState(x), lod = x.kind === 'lodge', noPos = !TW.hasPos(x), tk = lod ? 'lodge' : (k === 'cafe' ? 'cafe' : 'eat');
