@@ -773,7 +773,7 @@
     var r = AI.aiParseRequest(txt, S.cond.arrive, todayIso());
     if (!aiUrl() || !txt.trim()) { applyParsed(r, '말씀하신 내용이에요.'); return; }
     var old = btn.textContent; btn.disabled = true; btn.textContent = '도째비가 읽고 있어요…';
-    aiCall({ task: 'parse', text: txt, today: todayIso() }, 5000).then(function (j) {
+    aiCall({ task: 'parse', text: txt, today: todayIso() }, 8000).then(function (j) {
       btn.disabled = false; btn.textContent = old;
       var a = j && j.parsed, lead = '연결이 고르지 않아 기본 방식으로 읽었어요.';
       if (a) {
