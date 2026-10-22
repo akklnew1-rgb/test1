@@ -10,8 +10,9 @@ var hits = {}; // 아주 단순한 속도 제한(주소별 분당 20번) — 시
 function limited(ip) { var m = Math.floor(Date.now() / 60000), h = hits[ip] || (hits[ip] = { m: m, n: 0 }); if (h.m !== m) { h.m = m; h.n = 0; } return ++h.n > 20; }
 
 async function gemini(system, user, schema) {
-  // 환경변수에 열쇠만이 아니라 AI Studio 의 curl 예시 줄 전체를 붙여 넣어도 열쇠(AIza…)만 뽑아 쓴다
-  var key = (String(process.env.GEMINI_API_KEY || '').match(/AIza[0-9A-Za-z_\-]{30,}/) || [])[0]; if (!key) throw new Error('no key');
+  // 환경변수에 열쇠만이 아니라 AI Studio 의 curl 예시 줄 전체를 붙여 넣었어도 열쇠 부분만 뽑아 쓴다
+  var raw = String(process.env.GEMINI_API_KEY || '').trim(), mm = raw.match(/x-goog-api-key:\s*([^\s'"\\]+)/i) || raw.match(/[?&]key=([^&\s'"\\]+)/i);
+  var key = mm ? mm[1] : (/\s/.test(raw) ? '' : raw); if (!key) throw new Error('no key');
   var body = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 700 } };
   if (schema) { body.generationConfig.responseMimeType = 'application/json'; body.generationConfig.responseSchema = schema; }
   var ctl = new AbortController(), t = setTimeout(function () { ctl.abort(); }, 8000);
@@ -72,6 +73,6 @@ module.exports = async function handler(req, res) {
       res.status(200).json({ ok: true, text: t, model: MODEL }); return;
     }
     res.status(400).json({ ok: false });
-  } catch (e) { res.status(200).json({ ok: false, why: String(e && e.message || e).replace(/AIza[0-9A-Za-z_\-]+/g, '***').slice(0, 40) }); }
+  } catch (e) { res.status(200).json({ ok: false, why: String(e && e.message || e).replace(/AI[a-zA-Z0-9_\-]{20,}|AQ\.[\w\-.]+/g, '***').slice(0, 40) }); }
 };
 module.exports.cleanEdit = cleanEdit;
