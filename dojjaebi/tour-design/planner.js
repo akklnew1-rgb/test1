@@ -346,6 +346,7 @@
     // 먼 권역(망상·대진 / 추암·북평 / 삼화)은 코스 전체 시간(처음 출발 ~ 기차 15분 전)이 5시간 30분 이상일 때만 후보. "여기 왔어요" 뒤 다시 짤 때 흔들리지 않게 처음 출발 시각은 고정된 첫 장에서 거꾸로 구한다.
     var farOK = deadline - win0 >= FAR_WINDOW;
     D.places.forEach(function (p) {
+      if (o.onlyMust && must.length && !mustSet[p.id]) return; // AI 가 짠 코스: 정한 곳만 후보(시간·마감 계산만 한다)
       if (mustSet[p.id]) { cands.push(p); return; }
       if (avoidSet[p.id]) { skipped.push({ id: p.id, why: '앞 날에 갔어요' }); return; }
       if (FAR_REGIONS.indexOf(p.region) >= 0 && !farOK) { skipped.push({ id: p.id, why: '시간이 모자라 먼 곳은 뺌' }); return; }
@@ -587,6 +588,7 @@
       if (!last) { base.endStation = stay; base.end = undefined; base.train = DAY_END; base.buffer = 0; base.backHow = carBoth ? 'car' : 'bus'; }
       else if (carBoth) { base.endStation = stay; base.end = undefined; }
       if (i === 0) { base.mode = 'late'; if (wantSun) base.avoid = base.avoid.concat(chuamCluster.map(function (p) { return p.id; })); }
+      if (o.mustByDay) { var mb = (o.mustByDay[i] || []).filter(function (id) { return !(wantSun && i <= 1 && chuamCluster.some(function (q) { return q.id === id; })); }); if (mb.length) { base.must = mb; base.onlyMust = true; } } // AI 가 날마다 정한 곳(새벽 일출 자리는 앱이 따로 넣는다)
       var sun = null, brk = null, pl = null;
       if (i === 1 && wantSun && !sunDone) { // 둘째 날 새벽 추암 일출 + 아침 한 끼
         var ch = sunSpot || chuamCluster[0];
@@ -600,6 +602,7 @@
         else { base.fixed = []; base.now = DAY2_START; pl = null; }
       }
       if (!pl) pl = plan(D, base);
+      if (base.onlyMust && base.must && base.must.length) { var lf = base.must.slice(), dr = []; while (!pl.feasible && lf.length) { dr.push(lf.pop()); base.must = lf.slice(); if (!lf.length) base.onlyMust = false; pl = plan(D, base); } pl.mustDropped = dr; } // AI 가 정한 날 코스가 시간에 안 들어가면 뒤에서부터 뺀다
       pl.stops.forEach(function (s) { if (s.done) { delete s.done; s.pre = true; } s.day = i; avoid.push(s.id); if (s.place && s.place.group && sunSpot && s.place.group === sunSpot.group) chuamCluster.forEach(function (p) { if (avoid.indexOf(p.id) < 0) avoid.push(p.id); }); });
       days.push({ n: i + 1, date: date, label: (i + 1) + '일차 · ' + dateLabel(date), plan: pl, sunrise: sun, breakfast: brk, stay: last ? null : stay });
     }

@@ -759,7 +759,7 @@
     S.nextStep = 3; // 알아들은 내용을 마지막 단계에서 확인
     S.startNote = leadText + (found.length ? ' 알아들은 것: ' + found.join(' · ') + '.' : '') + ' 맞는지 보고 아래 단추를 눌러 주세요.';
     loadTrains();
-    if (direct) { setStep(6, { focus: false }); if (stepBlock()) { show('s-start'); return; } var fut = S.cond.branch !== 'now' && S.cond.date > todayIso(); makeCourse(false, false, fut ? 's-prep' : 's-course'); return; }
+    if (direct) { setStep(6, { focus: false }); if (stepBlock()) { show('s-start'); return; } var fut = S.cond.branch !== 'now' && S.cond.date > todayIso(); aiThenMake(fut ? 's-prep' : 's-course', r.__done); return; }
     show('s-start');
   }
   function handleTicketFile(ev) {
@@ -939,7 +939,10 @@
   document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && !$('cfSheet').hidden) cfShow(false); });
   $('cfGo').addEventListener('click', function () {
     if (!CF.r || cfMissing(CF.r)) return;
-    cfShow(false); applyParsed(CF.r, '도째비와 나눈 이야기에서 알아들었어요.', true);
+    var gb = $('cfGo'); gb.disabled = true; gb.textContent = '🤖 도째비가 코스를 짜는 중…';
+    CF.r.__done = function () { gb.textContent = '✨ 이대로 코스 짜 주세요'; cfShow(false); };
+    applyParsed(CF.r, '도째비와 나눈 이야기에서 알아들었어요.', true);
+    if (!S.aiBusy) { gb.disabled = false; gb.textContent = '✨ 이대로 코스 짜 주세요'; cfShow(false); }
   });
   $('chatMake').addEventListener('click', cfOpen);
   if ($('askSheet')) $('askSheet').addEventListener('click', cfOpen);
@@ -1163,15 +1166,28 @@
     if (over) for (var k in over) o[k] = over[k];
     if (over && over.mode) o.train = effTrain(over.mode);
     if (multi) { o.fixed = []; o.mode = 'normal'; o.now = S.cond.arrive; }
+    var ap = aiActive();
+    if (ap && !(over && over.must)) { // AI 가 정한 장소·순서를 후보로 쓴다. 시간·마감·휴무는 아래 planner 가 그대로 계산·검증한다
+      if (multi) o.mustByDay = ap.days.map(function (d) { return d.ids.slice(); });
+      else if (ap.days[0] && ap.days[0].ids.length) { o.must = ap.days[0].ids.slice(); o.onlyMust = true; }
+    }
     return o;
   }
   /* 2026-10-22(Fable 리뷰 반영): '꼭 갈 곳'을 너무 많이 고르면 하루 안에 다 못 돌아 코스가 아예 비어 버리고,
    * "돌아갈 시간까지 여유가 적어요"(시간이 모자란 것처럼 보이는) 안내만 나가던 문제를 고친다.
    * 안 들어가면 뒤에서부터 하나씩 빼고 다시 짜 보고, 그래도 안 되면 또 뺀다 — 뭘 뺐는지는 S.mustDropped 에 남겨 코스 화면에 알려 준다. */
   function buildPlan(over) {
-    var o = planOpts(over);
-    S.mustDropped = [];
-    if (isMulti()) return P.planDays(D, o);
+    var o = planOpts(over), aiOn = !!(o.mustByDay || o.onlyMust);
+    S.mustDropped = []; S.aiState = aiOn ? 'ai' : 'rule';
+    if (isMulti()) {
+      var pm = P.planDays(D, o);
+      if (o.mustByDay) {
+        pm.days.forEach(function (d) { (d.plan.mustDropped || []).forEach(function (id) { S.mustDropped.push(id); }); });
+        if (pm.days.every(function (d) { return !placeStops(d.plan.stops).length; })) { var oa = {}; for (var ka in o) oa[ka] = o[ka]; delete oa.mustByDay; pm = P.planDays(D, oa); S.aiState = 'rule-fallback'; S.mustDropped = []; }
+        else if (S.mustDropped.length) S.aiState = 'ai-trimmed';
+      }
+      return pm;
+    }
     var result = P.plan(D, o);
     if (o.must && o.must.length) {
       var left = o.must.slice();
@@ -1179,10 +1195,48 @@
         S.mustDropped.push(left.pop());
         var o2 = {}; for (var k in o) o2[k] = o[k];
         o2.must = left;
+        if (!left.length) o2.onlyMust = false; // 하나도 못 넣으면 AI 안 대신 규칙 코스
         result = P.plan(D, o2);
       }
+      if (aiOn) S.aiState = !left.length ? 'rule-fallback' : S.mustDropped.length ? 'ai-trimmed' : 'ai';
     }
     return result;
+  }
+  /* ---------- AI 가 코스를 짠다 (2026-10-22): 장소 고르기·순서·이유는 AI, 시간·마감·휴무·이동 계산과 검증은 앱(planner)이 한다 ---------- */
+  var AIP = null; // { key, days:[{ids, why:{id:글}}], summary }
+  function aiKey() { var c = S.cond; return [c.date, c.backDate || c.date, (c.companions || []).slice().sort().join(','), c.how, c.knee ? 1 : 0, c.rain ? 1 : 0].join('|'); }
+  function aiActive() { return AIP && AIP.key === aiKey() ? AIP : null; }
+  function aiCompose() {
+    var c = S.cond, n = Math.max(1, nDays(c)), days = [], base = planOpts({ must: [] }), i;
+    for (i = 0; i < n; i++) {
+      var oo = {}; for (var k in base) oo[k] = base[k];
+      oo.date = P.addDays(c.date, i); oo.must = []; oo.onlyMust = false; oo.mustByDay = null;
+      if (n > 1) { oo.fixed = []; oo.mode = 'normal'; oo.now = i ? 540 : c.arrive; oo.train = i === n - 1 ? base.train : 1260; oo.max = 8; }
+      var r = P.plan(D, oo), len = (oo.train - 15 - oo.now) / 60;
+      days.push({ date: oo.date, window: toTimeValue(oo.now) + '~' + toTimeValue(Math.max(oo.now, oo.train - 15)), count: len >= 7 ? '5~6' : len >= 4 ? '4~5' : len >= 2.5 ? '3~4' : '2~3', banned: (r.skipped || []).map(function (x) { return x.id; }) });
+    }
+    var body = { task: 'compose', cond: { how: c.how, arrive: toTimeValue(c.arrive), back: c.backTouched ? toTimeValue(c.back) : '', companions: c.companions, knee: !!c.knee, rain: !!c.rain, interests: c.interests, must: c.must || [], stay: n > 1 ? '묵호 쪽 숙소(앱이 정함)' : '' }, days: days,
+      places: D.places.map(function (p) { return { id: p.id, name: p.short || p.name, region: p.region, group: p.group || '', visit: p.visit, indoor: !!p.indoor, stairs: !!p.stairs, trail: !!p.trail, rainAvoid: !!p.rainAvoid, tags: p.tags || [], openText: p.openText || '' }; }) };
+    return aiCall(body, 28000).then(function (j) {
+      if (!j || !j.days || !j.days.length) return false;
+      var out = j.days.map(function (d) { var why = {}; d.ids.forEach(function (id, k) { if (d.why && d.why[k]) why[id] = d.why[k]; }); return { ids: d.ids, why: why }; });
+      (c.must || []).forEach(function (id) { if (!out.some(function (d) { return d.ids.indexOf(id) >= 0; }) && days[0].banned.indexOf(id) < 0) out[0].ids.unshift(id); }); // 꼭 가고 싶다고 한 곳은 AI 가 빼먹어도 첫날에 넣는다(막혀 있으면 안 넣음)
+      AIP = { key: aiKey(), days: out, summary: j.summary || '' };
+      return true;
+    });
+  }
+  function aiThenMake(to, done) {
+    var go = function () { S.aiBusy = false; makeCourse(false, false, to); if (done) done(); };
+    AIP = null; S.aiFail = false; S.aiBusy = true;
+    aiCompose().then(function (ok) { if (!ok) S.aiFail = true; go(); }, function () { S.aiFail = true; go(); });
+  }
+  function aiNoteText() {
+    var ap = aiActive();
+    if (S.aiFail) return '🤖 AI 연결이 고르지 않아 기본 규칙으로 짠 코스예요.';
+    if (!ap) return '';
+    if (S.aiState === 'rule-fallback') return '🤖 AI가 짠 순서가 시간·마감에 맞지 않아 기본 규칙으로 다시 짰어요.';
+    var nm = (S.mustDropped || []).map(function (id) { var p = D.places.filter(function (q) { return q.id === id; })[0]; return p ? (p.short || p.name) : ''; }).filter(Boolean);
+    return '🤖 도째비(AI)가 이 순서로 짰어요' + (ap.summary ? ' — ' + ap.summary : '') + ' 시간·휴무·막차 마감은 앱이 계산해 확인했어요.' + (nm.length ? ' 시간이 모자라 뺀 곳: ' + nm.join('·') + '.' : '');
   }
   /* 제보는 코스를 자동으로 바꾸지 않는다: 코스 계산에 들어가는 것은 사람이 [코스 다시 짜기]로 받아들인(S.applied) 알림의 제보뿐 */
   function recomputeFx() { S.fx = P.effectsFromReports(REP.acceptedReports(S.reports, S.applied, S.simNow), S.simNow, true); }
@@ -1341,6 +1395,7 @@
     if (S.fx && S.fx.view[p.id]) b.push('<span class="tag good">#풍경좋다는제보</span>');
     if (S.fx && S.fx.news[p.id]) b.push('<span class="tag good">#새볼거리제보</span>');
     if (s.done) b.push('<span class="tag good">#도착함</span>');
+    var ap2 = aiActive(), aw = ap2 && ap2.days.reduce(function (t, d) { return t || d.why[p.id]; }, ''); if (aw) b.push('<span class="tag good">🤖 ' + esc(aw) + '</span>');
     b.push(edTags(s));
     if (s.pre && S.plan && S.plan.multi && S.plan.days.some(function (d) { return d.sunrise && d.sunrise.place && d.sunrise.place.id === p.id; })) b.push('<span class="tag good">#새벽일출(어림시각)</span>');
     return b.join('');
@@ -2000,6 +2055,7 @@
     else lead = HN + ' ' + hhmm(pl.train) + backSrc() + ' · ' + st + '에 ' + hhmm(pl.train - 15) + '까지 돌아와요';
     if (pl.multi) lead = pl.label + ' · ' + P.dateLabel(pl.date) + ' ~ ' + P.dateLabel(pl.backDate) + ' · ' + lead.replace(/^막차 /, '');
     $('courseLead').textContent = lead + ' · ' + placeStops(pl.stops).length + '곳' + (pl.meal ? ' (점심·저녁 시간 포함)' : '') + (S.ed && edDirty() ? ' · 직접 고친 코스' : '');
+    var an = $('aiNote'); if (an) { var at = aiNoteText(); an.textContent = at; an.hidden = !at; }
     var notes = [];
     if (pl.how === 'car') notes.push('자가용 · 걸어서 10분 안은 걷고 먼 곳은 차로(주차 5분 포함)');
     if (isKid()) notes.push('아이와 함께 · 걷기 20분 안 · 짧게 보는 곳 먼저 · 계단 있는 곳 뺌');

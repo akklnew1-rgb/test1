@@ -61,6 +61,15 @@ var CHAT_SYS = '너는 동해시 여행 앱 "도째비 길동무"의 대화 도�
   '조건 모으기: parsed 에는 지금까지 대화 전체에서 알게 된 여행 조건을 넣는다(말하지 않은 칸은 비움, 짐작 금지). date 는 YYYY-MM-DD(today 기준), arrive 는 도착(출발해서 동해에 닿는) 시각 24시간 HH:MM("오후 1시 도착"이면 13:00, 말 안 했으면 비움), back 은 돌아갈 시각 24시간 HH:MM, how 는 car·bus·train, companions 는 부모님·아이·연인·친구·혼자, interests 는 사진·먹거리, knee·rain·food·foodWord·count·end 는 말한 것만. ' +
   '질문: 코스를 짜는 데 꼭 필요한 정보(날짜 → 누구와 → 돌아갈 시각 순)가 비었으면 한 번에 하나만 가볍게 묻는다. 식당만 물었으면 먼저 식당을 알려 주고 그다음에 "코스도 짜 드릴까요?"처럼 이어 간다. ' +
   '코스 만들기 대화 순서(한 번에 하나씩, 사용자가 한 번에 여러 개 말하면 건너뛴다): ① 날짜 ② 누구와 ③ 오는 교통(기차·버스·자가용, how 에 담고 말하지 않았으면 한 번만 가볍게 묻고, 모른다·상관없다고 하면 비워 둔 채 넘어간다(앱이 기본값으로 잡는다)) ④ 도착 시각과 돌아갈 시각(돌아갈 시각은 선택 사항이다. 사용자가 아직 안 정했다·모른다·몰라·안정했어 라고 하면 절대 다시 묻지 말고 "그럼 저녁까지 넉넉히 잡을게요" 하고 다음으로 넘어간다. 같은 질문은 두 번 하지 않는다) ⑤ 꼭 가고 싶은 곳(없으면 도째비가 고른다고 안내하고 choices 에 "없어요, 알아서 짜 주세요" 를 넣는다). 인원수는 묻지 않는다. 사용자가 가고 싶은 곳을 말하면 places 목록의 id 로만 must 에 담는다(없는 곳이면 목록에 없다고 솔직히 말한다). ①~④ 와 ⑤ 질문이 끝나면(⑤ 는 없다고 답했거나 곳을 말했으면 끝난 것) 조건을 한 문장으로 정리해 "이대로 코스를 짜 드릴까요?" 라고 묻고 ready=true. 그 전에는 ready=false. 정리 문장에는 날짜(몇 월 며칠만 말하고 요일은 말하지 않는다 — 요일 계산은 틀리기 쉽다), 누구와, 도착·돌아갈 시각, 가고 싶은 곳을 자연스럽게 담는다. 사용자가 정리 내용을 고치고 싶다고 하면 고친 값으로 다시 정리한다. 시각·휴무 같은 계산은 앱이 하니 네가 말하지 않는다.';
+var COMPOSE_SYS = '너는 동해시 여행 앱 "도째비 길동무"의 코스 설계자다. 입력의 places 목록에서만 장소를 골라 날짜별 방문 순서를 짠다. 규칙: ' +
+  '(1) 목록에 없는 장소·식당·카페는 절대 넣지 않는다. 식사 시간은 앱이 따로 넣으니 식당은 다루지 않는다. 새벽 일출은 앱이 따로 넣으니 일출만을 위한 장소는 넣지 않는다. ' +
+  '(2) days[i].banned 에 있는 id 는 그 날 쓰지 않는다. 같은 장소를 다른 날에 또 넣지 않는다. ' +
+  '(3) 하루 장소 수는 days[i].count 안쪽(보통 4~6곳, 시간이 짧으면 2~3곳). 같은 권역(region)끼리 이어서 도는 동선으로, 갔다가 떠난 권역에 다시 돌아가지 않는다. group 이 같은 곳은 하루에 한 곳만. 먼 권역(망상·대진, 추암·북평, 삼화)은 시간이 넉넉할 때만. ' +
+  '(4) knee 이거나 동행에 부모님이 있으면 stairs·trail 이 true 인 곳을 뺀다. rain 이면 rainAvoid 가 true 인 곳을 뺀다. 아이·친구·연인·혼자의 취향과 interests 를 tags 와 맞춰 고른다. must 는 반드시 넣는다. ' +
+  '(5) 하루의 첫 장소는 도착 시각에, 마지막 장소는 돌아갈 시각 한 시간 전에 끝나게 시간을 가늠한다(visit 은 머무는 분). 너무 많이 넣어 서두르게 하지 않는다. ' +
+  '(6) why 는 각 장소를 넣은 이유를 한 줄(30자 이내)로, places 에 적힌 사실(tags, visit, indoor, region, openText)과 동선 이유만 근거로 쓴다. "맛있다·유명하다·최고" 같은 평가와 추측은 쓰지 않는다. 쉬운 말로. ' +
+  '(7) summary 에는 이 코스를 왜 이렇게 짰는지 한두 문장(80자 이내)으로 쓴다.';
+var COMPOSE_SCHEMA = { type: 'OBJECT', properties: { days: { type: 'ARRAY', items: { type: 'OBJECT', properties: { ids: { type: 'ARRAY', items: { type: 'STRING' } }, why: { type: 'ARRAY', items: { type: 'STRING' } } }, required: ['ids'] } }, summary: { type: 'STRING' } }, required: ['days'] };
 var CHAT_SCHEMA = { type: 'OBJECT', properties: { reply: { type: 'STRING' }, picks: { type: 'ARRAY', items: { type: 'STRING' } }, choices: { type: 'ARRAY', items: { type: 'STRING' } }, ready: { type: 'BOOLEAN' }, must: { type: 'ARRAY', items: { type: 'STRING' } }, parsed: PARSE_SCHEMA }, required: ['reply'] };
 function cleanParse(raw) {
   var j = raw; if (typeof raw === 'string') { try { j = JSON.parse(raw); } catch (e) { return null; } } if (!j || typeof j !== 'object') return null;
@@ -94,6 +103,25 @@ module.exports = async function handler(req, res) {
       var raw = await gemini(EDIT_SYS, '사용자 말: ' + text + '\nplaces: ' + JSON.stringify(places), EDIT_SCHEMA);
       var r = cleanEdit(raw, places); if (!r) { res.status(200).json({ ok: false, why: 'parse' }); return; }
       res.status(200).json({ ok: true, intents: r.intents, reply: r.reply, model: USED }); return;
+    }
+    if (b.task === 'compose') {
+      var cdays = (Array.isArray(b.days) ? b.days : []).slice(0, 3).map(function (d) { return { date: String(d.date || '').slice(0, 10), window: String(d.window || '').slice(0, 20), count: String(d.count || '4~6').slice(0, 8), banned: (Array.isArray(d.banned) ? d.banned : []).slice(0, 40).map(String) }; });
+      var cpl = (Array.isArray(b.places) ? b.places : []).slice(0, 60).map(function (p) { return { id: String(p.id), name: String(p.name || '').slice(0, 24), region: String(p.region || '').slice(0, 10), group: String(p.group || ''), visit: +p.visit || 0, indoor: !!p.indoor, stairs: !!p.stairs, trail: !!p.trail, rainAvoid: !!p.rainAvoid, tags: (Array.isArray(p.tags) ? p.tags : []).slice(0, 6).map(function (t) { return String(t).slice(0, 8); }), openText: String(p.openText || '').slice(0, 40) }; });
+      var cc = b.cond || {};
+      if (!cdays.length || !cpl.length) { res.status(400).json({ ok: false }); return; }
+      var craw2 = await gemini(COMPOSE_SYS, '조건: ' + JSON.stringify({ how: cc.how, arrive: cc.arrive, back: cc.back, companions: cc.companions, knee: !!cc.knee, rain: !!cc.rain, interests: cc.interests, must: cc.must, stay: cc.stay }) + '\ndays: ' + JSON.stringify(cdays) + '\nplaces: ' + JSON.stringify(cpl), COMPOSE_SCHEMA, 1800, 12000);
+      var cj2; try { cj2 = JSON.parse(craw2); } catch (e) { res.status(200).json({ ok: false, why: 'parse' }); return; }
+      var okid = {}; cpl.forEach(function (p) { okid[p.id] = 1; });
+      var BAN2 = /맛있|존맛|꿀맛|일품|유명|소문|대표|줄\s*서|1위|엄선|보증|실패\s*없|최고/, used = {};
+      var outDays = (cj2.days || []).slice(0, cdays.length).map(function (d, di) {
+        var ban = {}; cdays[di].banned.forEach(function (x) { ban[x] = 1; });
+        var ids = [], why = [];
+        (d.ids || []).forEach(function (id, k) { if (!okid[id] || ban[id] || used[id]) return; used[id] = 1; ids.push(id); var w = String((d.why || [])[k] || '').replace(/\s+/g, ' ').trim().slice(0, 40); why.push(BAN2.test(w) ? '' : w); });
+        return { ids: ids.slice(0, 7), why: why.slice(0, 7) };
+      });
+      if (!outDays.some(function (d) { return d.ids.length; })) { res.status(200).json({ ok: false, why: 'empty' }); return; }
+      var sm = String(cj2.summary || '').replace(/\s+/g, ' ').trim().slice(0, 120); if (BAN2.test(sm)) sm = '';
+      res.status(200).json({ ok: true, days: outDays, summary: sm, model: USED }); return;
     }
     if (b.task === 'chat') {
       var msgs = (Array.isArray(b.messages) ? b.messages : []).slice(-8).map(function (m) { return (m && m.role === 'bot' ? '도째비: ' : '사용자: ') + String(m && m.text || '').slice(0, 300); });
