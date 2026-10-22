@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <a class="skip" href="#app">본문으로 건너뛰기</a>
@@ -94,18 +94,22 @@
     <div class="intro-card">
       <!-- 2026-10-22: 인공지능 입구 — 한 문장(또는 예시 칩)을 쓰면 AI 가 조건을 읽고, 맞는지 확인한 뒤 코스를 짠다. 아래 큰 카드는 "직접 고르기"(AI 가 안 될 때의 길) -->
       <div class="ask" id="ask">
-        <h2 class="ask-h" id="askH">어떤 동해 여행을 꿈꾸시나요?</h2>
-        <label for="askText" class="visually-hidden">여행 이야기</label>
-        <textarea id="askText" rows="2" placeholder="예) 토요일 부모님과 기차로, 7시 40분에 돌아와요. 무릎이 안 좋으세요."></textarea>
+        <h2 class="ask-h" id="askH">도째비와 이야기해 보세요</h2>
+        <div class="chat" id="chat" role="log" aria-live="polite" aria-label="도째비와 대화">
+          <div class="bub bot">안녕하세요, 도째비예요. 동해 여행을 편하게 말씀해 주세요. 맛집이 궁금하면 물어보셔도 돼요.</div>
+        </div>
+        <button type="button" class="btn primary cta" id="chatMake" hidden>✨ 이대로 코스 만들기</button>
+        <label for="askText" class="visually-hidden">도째비에게 할 말</label>
+        <textarea id="askText" rows="2" placeholder="예) 23일에 부모님이랑 가는데 물회 맛집 알려 주세요"></textarea>
         <div class="ask-row">
-          <button type="button" class="btn primary" id="askGo">✨ 코스 찾기</button>
+          <button type="button" class="btn primary" id="askGo">보내기</button>
           <button type="button" class="btn" id="askMic"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span>말로 하기</span></button>
         </div>
         <p class="ask-note" id="askNote" role="status" hidden></p>
-        <div class="ask-chips" role="group" aria-label="예시 문장">
+        <div class="ask-chips" id="askChips" role="group" aria-label="예시 문장">
           <button type="button" class="chip" data-say="이번 토요일 부모님이랑 기차 타고 가요. 7시 40분 기차로 돌아오고, 무릎이 안 좋으세요.">부모님과 당일치기 (무릎 배려)</button>
-          <button type="button" class="chip" data-say="아이랑 주말 1박 2일로 자가용 타고 가요. 체험 위주로 하고 싶어요.">아이랑 1박 2일 자가용</button>
-          <button type="button" class="chip" data-say="친구랑 노을 보고 7시 40분 기차로 돌아와요. 물회도 먹고 싶어요.">친구랑 노을·물회</button>
+          <button type="button" class="chip" data-say="묵호 쪽에서 물회 맛집 알려 주세요.">묵호 물회 맛집</button>
+          <button type="button" class="chip" data-say="친구랑 노을 보고 7시 40분 기차로 돌아와요.">친구랑 노을 보기</button>
         </div>
         <p class="ask-or"><span>또는 직접 고르기</span></p>
       </div>
@@ -750,6 +754,6 @@
 <script src="ai-config.js"></script>
 <script src="ai.js?v=3"></script>
 <script src="art.js"></script>
-<script src="app.js?v=6"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>

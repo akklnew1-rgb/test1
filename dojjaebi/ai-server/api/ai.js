@@ -9,11 +9,11 @@ var TYPES = ['remove', 'add', 'removeMeal', 'addMeal', 'addTheme', 'indoor', 'sl
 var hits = {}; // 아주 단순한 속도 제한(주소별 분당 20번) — 시연 중 남용 방지
 function limited(ip) { var m = Math.floor(Date.now() / 60000), h = hits[ip] || (hits[ip] = { m: m, n: 0 }); if (h.m !== m) { h.m = m; h.n = 0; } return ++h.n > 20; }
 
-async function gemini(system, user, schema) {
+async function gemini(system, user, schema, maxTok) {
   // 환경변수에 열쇠만이 아니라 AI Studio 의 curl 예시 줄 전체를 붙여 넣었어도 열쇠 부분만 뽑아 쓴다
   var raw = String(process.env.GEMINI_API_KEY || '').trim(), mm = raw.match(/x-goog-api-key:\s*([^\s'"\\]+)/i) || raw.match(/[?&]key=([^&\s'"\\]+)/i);
   var key = mm ? mm[1] : (/\s/.test(raw) ? '' : raw); if (!key) throw new Error('no key');
-  var body = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { temperature: 0.2, maxOutputTokens: 700 } };
+  var body = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { temperature: 0.2, maxOutputTokens: maxTok || 700 } };
   if (schema) { body.generationConfig.responseMimeType = 'application/json'; body.generationConfig.responseSchema = schema; }
   var models = [MODEL, 'gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-2.5-flash'].filter(function (m, i, a) { return m && a.indexOf(m) === i; }), last = 'gemini';
   for (var i = 0; i < models.length; i++) {
@@ -55,8 +55,15 @@ var EXPLAIN_SYS = '너는 동해시 여행 코스 앱의 안내자 "도째비"�
 
 var PARSE_SYS = '너는 동해시 여행 앱의 "여행 이야기 → 조건" 번역기다. 사용자가 쓴 한국어 문장에서 아래 항목만 뽑는다. 말에 없는 항목은 비워 두고 절대 짐작해서 채우지 않는다. 오늘 날짜는 사용자 메시지의 today 로 계산한다("내일", "이번 토요일" 등을 YYYY-MM-DD 로). back 은 "돌아갈 시각"(기차·버스 출발 또는 떠날 시각) 24시간 HH:MM — "6시 10분 기차" 처럼 저녁 여행이 자연스러우면 18:10. 시각 말이 없으면 빈 문자열. how 는 가는 교통: car(자가용)·bus·train 중 하나, 말이 없으면 빈 문자열. companions 는 부모님·아이·연인·친구·혼자 중에서만. interests 는 사진·먹거리 중에서만. knee 는 무릎·계단·다리·허리 등 걷기 힘들다는 말이 있을 때 true. rain 은 비 이야기가 있을 때 true. food 는 밥·식사·맛집 말이 있을 때 true, foodWord 는 물회·칼국수·국수·회덮밥·모듬회·미역국·죽 중 말한 음식 하나(없으면 빈 문자열). count 는 사람 수(말이 없으면 0). end 는 동해역에서 끝나면 donghae, 아니면 mukho. reply 에는 한 줄로 "이렇게 알아들었어요: …" 를 쉬운 말로 쓴다.';
 var PARSE_SCHEMA = { type: 'OBJECT', properties: { date: { type: 'STRING' }, back: { type: 'STRING' }, how: { type: 'STRING' }, end: { type: 'STRING' }, companions: { type: 'ARRAY', items: { type: 'STRING' } }, interests: { type: 'ARRAY', items: { type: 'STRING' } }, knee: { type: 'BOOLEAN' }, rain: { type: 'BOOLEAN' }, food: { type: 'BOOLEAN' }, foodWord: { type: 'STRING' }, count: { type: 'INTEGER' }, reply: { type: 'STRING' } } };
+
+var CHAT_SYS = '너는 동해시 여행 앱 "도째비 길동무"의 대화 도우미 도째비다. 한국어 존댓말로 따뜻하고 짧게(2~3문장) 말한다. 어려운 한자어·영어는 쓰지 않는다. 동해시 여행 이야기만 한다(다른 주제는 "동해 여행 이야기만 도와 드려요"라고 부드럽게 돌려 말한다). ' +
+  '식당 추천: 반드시 cands 목록의 id 만 picks 에 최대 3개 담는다. 목록에 없는 가게 이름을 지어내지 않는다. 이 자료는 공공데이터라 평점·후기·인기는 모른다는 점을 한 번은 솔직히 말하고, 메뉴와 동네 기준으로 골랐다고 말한다. cands 가 비어 있으면 식당은 추천하지 않는다. ' +
+  '조건 모으기: parsed 에는 지금까지 대화 전체에서 알게 된 여행 조건을 넣는다(말하지 않은 칸은 비움, 짐작 금지). date 는 YYYY-MM-DD(today 기준), back 은 돌아갈 시각 24시간 HH:MM, how 는 car·bus·train, companions 는 부모님·아이·연인·친구·혼자, interests 는 사진·먹거리, knee·rain·food·foodWord·count·end 는 말한 것만. ' +
+  '질문: 코스를 짜는 데 꼭 필요한 정보(날짜 → 누구와 → 돌아갈 시각 순)가 비었으면 한 번에 하나만 가볍게 묻는다. 식당만 물었으면 먼저 식당을 알려 주고 그다음에 "코스도 짜 드릴까요?"처럼 이어 간다. ' +
+  'ready: 날짜를 알고, 누구와 또는 돌아갈 시각 중 하나 이상을 알면 true, 아니면 false. 시각·휴무 같은 계산은 앱이 하니 네가 말하지 않는다.';
+var CHAT_SCHEMA = { type: 'OBJECT', properties: { reply: { type: 'STRING' }, picks: { type: 'ARRAY', items: { type: 'STRING' } }, ready: { type: 'BOOLEAN' }, parsed: PARSE_SCHEMA }, required: ['reply'] };
 function cleanParse(raw) {
-  var j; try { j = JSON.parse(raw); } catch (e) { return null; }
+  var j = raw; if (typeof raw === 'string') { try { j = JSON.parse(raw); } catch (e) { return null; } } if (!j || typeof j !== 'object') return null;
   var r = { date: null, train: null, how: null, end: 'mukho', companions: [], interests: [], knee: !!j.knee, rain: !!j.rain, food: !!j.food, foodWord: '', count: null };
   if (/^\d{4}-\d{2}-\d{2}$/.test(String(j.date || ''))) r.date = j.date;
   var m = String(j.back || '').match(/^(\d{1,2}):(\d{2})$/); if (m && +m[1] < 24 && +m[2] < 60) r.train = +m[1] * 60 + +m[2];
@@ -86,6 +93,20 @@ module.exports = async function handler(req, res) {
       var raw = await gemini(EDIT_SYS, '사용자 말: ' + text + '\nplaces: ' + JSON.stringify(places), EDIT_SCHEMA);
       var r = cleanEdit(raw, places); if (!r) { res.status(200).json({ ok: false, why: 'parse' }); return; }
       res.status(200).json({ ok: true, intents: r.intents, reply: r.reply, model: USED }); return;
+    }
+    if (b.task === 'chat') {
+      var msgs = (Array.isArray(b.messages) ? b.messages : []).slice(-8).map(function (m) { return (m && m.role === 'bot' ? '도째비: ' : '사용자: ') + String(m && m.text || '').slice(0, 300); });
+      var cands = (Array.isArray(b.cands) ? b.cands : []).slice(0, 30).map(function (c) { return { id: String(c.id), name: String(c.name || '').slice(0, 30), menu: String(c.menu || '').slice(0, 20), area: String(c.area || '').slice(0, 12) }; });
+      var ctoday = /^\d{4}-\d{2}-\d{2}$/.test(String(b.today || '')) ? b.today : '';
+      if (!msgs.length) { res.status(400).json({ ok: false }); return; }
+      var cwd = ctoday ? '일월화수목금토'[new Date(ctoday + 'T00:00:00Z').getUTCDay()] + '요일' : '';
+      var craw = await gemini(CHAT_SYS, 'today: ' + ctoday + ' ' + cwd + '\ncands: ' + JSON.stringify(cands) + '\n대화:\n' + msgs.join('\n'), CHAT_SCHEMA, 1100);
+      var cj; try { cj = JSON.parse(craw); } catch (e) { res.status(200).json({ ok: false, why: 'parse' }); return; }
+      var okc = {}; cands.forEach(function (c) { okc[c.id] = 1; });
+      var picks = (cj.picks || []).filter(function (id, i, a) { return okc[id] && a.indexOf(id) === i; }).slice(0, 3);
+      var cp = cleanParse(cj.parsed || {});
+      var reply = String(cj.reply || '').trim().slice(0, 400); if (!reply) { res.status(200).json({ ok: false, why: 'empty' }); return; }
+      res.status(200).json({ ok: true, reply: reply, picks: picks, ready: !!cj.ready, parsed: cp ? cp.r : null, model: USED }); return;
     }
     if (b.task === 'parse') {
       var pt = String(b.text || '').slice(0, 300), today = /^\d{4}-\d{2}-\d{2}$/.test(String(b.today || '')) ? b.today : '';

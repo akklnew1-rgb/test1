@@ -790,14 +790,78 @@
     });
   }
   $('inputNext').addEventListener('click', function () { readRequest($('reqText').value, $('inputNext')); });
-  $('askGo').addEventListener('click', function () {
-    var t = $('askText').value, n = $('askNote');
-    if (!t.trim()) { n.textContent = '여행 이야기를 한 줄 적어 주세요. 아래 예시를 눌러도 돼요.'; n.hidden = false; $('askText').focus(); return; }
-    n.hidden = true; readRequest(t, $('askGo'));
+  /* ---------- 도째비와 대화 (2026-10-22) — 대화는 인공지능이, 식당 후보와 조건 계산은 앱이. AI 는 앱이 준 후보(cands)의 id 만 고를 수 있어 없는 가게를 지어내지 못한다. ---------- */
+  var CH = { msgs: [], cond: null, busy: false };
+  function chatEl(cls, html) { var d = document.createElement('div'); d.className = 'bub ' + cls; d.innerHTML = html; $('chat').appendChild(d); try { d.scrollIntoView({ block: 'nearest' }); } catch (e) {} return d; }
+  function chatCands(text) {
+    var eats = TW.list('eat').filter(function (x) { return TW.hasPos(x); }), keys = [], i;
+    for (i = 0; i < MENU_GROUPS.length - 1; i++) if (MENU_GROUPS[i][0] !== 'bar' && MENU_GROUPS[i][2].test(text)) keys.push(MENU_GROUPS[i][0]);
+    var dongs = {}; eats.forEach(function (x) { dongs[x.dong] = 1; });
+    var hit = Object.keys(dongs).filter(function (d) { var n = d.slice(0, 2); return n.length >= 2 && text.indexOf(n) >= 0; });
+    var want = /맛집|식당|먹|밥|점심|저녁|회|국수|추천/.test(text) || keys.length;
+    if (!want) return [];
+    var pool = eats.filter(function (x) { return (!keys.length || keys.indexOf(menuOf(x)) >= 0) && (!hit.length || hit.indexOf(x.dong) >= 0); });
+    var by = {}; pool.forEach(function (x) { (by[x.area] = by[x.area] || []).push(x); });
+    var out = [], ks = Object.keys(by), k = 0;
+    while (out.length < 24 && ks.length) { var any = false; ks.forEach(function (a) { if (by[a][k] && out.length < 24) { out.push(by[a][k]); any = true; } }); if (!any) break; k++; }
+    return out;
+  }
+  function chatCard(x) {
+    var d = document.createElement('div'); d.className = 'bub-card';
+    d.innerHTML = '<b>' + esc(x.name) + '</b><span>' + esc((x.type || '') + ' · ' + (x.dong || '')) + '</span>';
+    var a = document.createElement('a'); a.href = TW.kakaoSearch(x.name); a.target = '_blank'; a.rel = 'noopener'; a.textContent = '지도에서 보기'; a.className = 'btn';
+    d.appendChild(a); return d;
+  }
+  function chatMerge(a) {
+    CH.cond = CH.cond || {};
+    if (!a) return;
+    ['date', 'train', 'how', 'foodWord'].forEach(function (k) { if (a[k] != null && a[k] !== '') CH.cond[k] = a[k]; });
+    if (a.end === 'donghae') CH.cond.end = 'donghae';
+    if (a.companions && a.companions.length) CH.cond.companions = a.companions;
+    ['interests'].forEach(function (k) { if (a[k] && a[k].length) CH.cond[k] = a[k]; });
+    ['knee', 'rain', 'food'].forEach(function (k) { if (a[k]) CH.cond[k] = true; });
+  }
+  function chatSend(text) {
+    text = String(text || '').trim(); if (!text || CH.busy) return;
+    var n = $('askNote'); n.hidden = true;
+    chatEl('me', esc(text)); CH.msgs.push({ role: 'user', text: text }); $('askText').value = '';
+    var typing = chatEl('bot typing', '도째비가 생각하고 있어요…'); CH.busy = true; $('askGo').disabled = true;
+    var all = CH.msgs.filter(function (m) { return m.role === 'user'; }).map(function (m) { return m.text; }).join(' ');
+    var cands = chatCands(text), byId = {}; cands.forEach(function (x) { byId[x.key] = x; });
+    aiCall({ task: 'chat', messages: CH.msgs.slice(-8), today: todayIso(), cands: cands.map(function (x) { return { id: x.key, name: x.name, menu: (MENU_GROUPS.filter(function (g) { return g[0] === menuOf(x); })[0] || ['', '', ''])[1], area: x.dong }; }) }, 10000).then(function (j) {
+      CH.busy = false; $('askGo').disabled = false; if (typing.parentNode) typing.parentNode.removeChild(typing);
+      if (j && j.reply) {
+        var b = chatEl('bot', esc(j.reply)); CH.msgs.push({ role: 'bot', text: j.reply });
+        (j.picks || []).forEach(function (id) { if (byId[id]) b.appendChild(chatCard(byId[id])); });
+        chatMerge(j.parsed);
+        var rule = AI.aiParseRequest(all, S.cond.arrive, todayIso()); CH.rule = rule;
+        if (j.ready || (CH.cond && CH.cond.date && ((CH.cond.companions && CH.cond.companions.length) || CH.cond.train != null))) $('chatMake').hidden = false;
+      } else {
+        var rule2 = AI.aiParseRequest(all, S.cond.arrive, todayIso()); CH.rule = rule2;
+        chatEl('bot', '연결이 고르지 않아 대화가 어려워요. 말씀하신 조건은 적어 뒀으니 아래 "코스 만들기"를 누르거나, 아래에서 직접 골라 주세요.');
+        $('chatMake').hidden = false;
+      }
+    });
+  }
+  $('chatMake').addEventListener('click', function () {
+    var all = CH.msgs.filter(function (m) { return m.role === 'user'; }).map(function (m) { return m.text; }).join(' ');
+    var r = AI.aiParseRequest(all, S.cond.arrive, todayIso()), a = CH.cond || {};
+    ['date', 'train', 'how'].forEach(function (k) { if (a[k] != null && a[k] !== '') r[k] = a[k]; });
+    if (a.date && ((P.dateInfo && !P.dateInfo(a.date)) || a.date < todayIso())) r.date = null;
+    if (a.end === 'donghae') r.end = 'donghae';
+    if (a.companions && a.companions.length) r.companions = a.companions;
+    (a.interests || []).forEach(function (v) { if (r.interests.indexOf(v) < 0) r.interests.push(v); });
+    r.knee = r.knee || !!a.knee; r.rain = r.rain || !!a.rain; r.food = r.food || !!a.food; if (a.foodWord) r.foodWord = a.foodWord;
+    applyParsed(r, '도째비와 나눈 이야기에서 알아들었어요.');
   });
+  $('askGo').addEventListener('click', function () {
+    var t = $('askText').value; if (!t.trim()) { var n = $('askNote'); n.textContent = '하실 말씀을 적어 주세요. 아래 예시를 눌러도 돼요.'; n.hidden = false; $('askText').focus(); return; }
+    chatSend(t);
+  });
+  $('askText').addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); $('askGo').click(); } });
   $('askMic').addEventListener('click', function () { $('goVoice').click(); });
-  Array.prototype.forEach.call(document.querySelectorAll('#ask .chip'), function (c) {
-    c.addEventListener('click', function () { $('askText').value = c.getAttribute('data-say'); $('askGo').click(); });
+  Array.prototype.forEach.call(document.querySelectorAll('#askChips .chip'), function (c) {
+    c.addEventListener('click', function () { chatSend(c.getAttribute('data-say')); });
   });
   $('runDemo').addEventListener('click', function () { runDemo('normal'); });
   $('runDemoMeal').addEventListener('click', function () { runDemo('meal'); });
