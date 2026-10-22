@@ -68,7 +68,7 @@ var COMPOSE_SYS = '너는 동해시 여행 앱 "도째비 길동무"의 코스 �
   '(4) knee 이거나 동행에 부모님이 있으면 stairs·trail 이 true 인 곳을 뺀다. rain 이면 rainAvoid 가 true 인 곳을 뺀다. 아이·친구·연인·혼자의 취향과 interests 를 tags 와 맞춰 고른다. must 는 반드시 넣는다. ' +
   '(5) 하루의 첫 장소는 도착 시각에, 마지막 장소는 돌아갈 시각 한 시간 전에 끝나게 시간을 가늠한다(visit 은 머무는 분). 너무 많이 넣어 서두르게 하지 않는다. ' +
   '(6) why 는 각 장소를 넣은 이유를 한 줄(30자 이내)로, places 에 적힌 사실(tags, visit, indoor, region, openText)과 동선 이유만 근거로 쓴다. "맛있다·유명하다·최고" 같은 평가와 추측은 쓰지 않는다. 쉬운 말로. ' +
-  '(7) summary 에는 이 코스를 왜 이렇게 짰는지 한두 문장(80자 이내)으로 쓴다.';
+  '(6-1) moves[A][B] 는 앱이 계산한 A에서 B까지 이동 분(걷기·버스·택시 중 실제 쓰는 방식)이고 fromStation[X] 는 출발역에서 X까지 분이다. 이 숫자를 그대로 쓰고 이동 시간을 짐작하지 않는다. 한 구간이 20분을 넘는 연결은 피하고, 하루 이동 합계가 90분을 넘지 않게 하며, 장소 머무는 시간(visit)+이동 분의 합이 days[i].window 안에 들어가게 곳 수를 줄인다. (7) summary 에는 이 코스를 왜 이렇게 짰는지 한두 문장(80자 이내)으로 쓴다.';
 var COMPOSE_SCHEMA = { type: 'OBJECT', properties: { days: { type: 'ARRAY', items: { type: 'OBJECT', properties: { ids: { type: 'ARRAY', items: { type: 'STRING' } }, why: { type: 'ARRAY', items: { type: 'STRING' } } }, required: ['ids'] } }, summary: { type: 'STRING' } }, required: ['days'] };
 var CHAT_SCHEMA = { type: 'OBJECT', properties: { reply: { type: 'STRING' }, picks: { type: 'ARRAY', items: { type: 'STRING' } }, choices: { type: 'ARRAY', items: { type: 'STRING' } }, ready: { type: 'BOOLEAN' }, must: { type: 'ARRAY', items: { type: 'STRING' } }, parsed: PARSE_SCHEMA }, required: ['reply'] };
 function cleanParse(raw) {
@@ -107,9 +107,9 @@ module.exports = async function handler(req, res) {
     if (b.task === 'compose') {
       var cdays = (Array.isArray(b.days) ? b.days : []).slice(0, 3).map(function (d) { return { date: String(d.date || '').slice(0, 10), window: String(d.window || '').slice(0, 20), count: String(d.count || '4~6').slice(0, 8), banned: (Array.isArray(d.banned) ? d.banned : []).slice(0, 40).map(String) }; });
       var cpl = (Array.isArray(b.places) ? b.places : []).slice(0, 60).map(function (p) { return { id: String(p.id), name: String(p.name || '').slice(0, 24), region: String(p.region || '').slice(0, 10), group: String(p.group || ''), visit: +p.visit || 0, indoor: !!p.indoor, stairs: !!p.stairs, trail: !!p.trail, rainAvoid: !!p.rainAvoid, tags: (Array.isArray(p.tags) ? p.tags : []).slice(0, 6).map(function (t) { return String(t).slice(0, 8); }), openText: String(p.openText || '').slice(0, 40) }; });
-      var cc = b.cond || {};
+      var cc = b.cond || {}; var mv = {}; var mvIn = (b.moves && typeof b.moves === 'object') ? b.moves : {}; Object.keys(mvIn).slice(0, 60).forEach(function (k) { var row = mvIn[k] || {}, o2 = {}; Object.keys(row).slice(0, 60).forEach(function (q) { var v = +row[q]; if (v >= 0 && v < 500) o2[q] = Math.round(v); }); mv[String(k).slice(0, 30)] = o2; }); var fs0 = {}; Object.keys(b.fromStation || {}).slice(0, 60).forEach(function (k) { var v = +b.fromStation[k]; if (v >= 0 && v < 500) fs0[String(k).slice(0, 30)] = Math.round(v); });
       if (!cdays.length || !cpl.length) { res.status(400).json({ ok: false }); return; }
-      var craw2 = await gemini(COMPOSE_SYS, '조건: ' + JSON.stringify({ how: cc.how, arrive: cc.arrive, back: cc.back, companions: cc.companions, knee: !!cc.knee, rain: !!cc.rain, interests: cc.interests, must: cc.must, stay: cc.stay }) + '\ndays: ' + JSON.stringify(cdays) + '\nplaces: ' + JSON.stringify(cpl), COMPOSE_SCHEMA, 1800, 12000);
+      var craw2 = await gemini(COMPOSE_SYS, '조건: ' + JSON.stringify({ how: cc.how, arrive: cc.arrive, back: cc.back, companions: cc.companions, knee: !!cc.knee, rain: !!cc.rain, interests: cc.interests, must: cc.must, stay: cc.stay }) + '\ndays: ' + JSON.stringify(cdays) + '\nplaces: ' + JSON.stringify(cpl) + '\nmoves: ' + JSON.stringify(mv) + '\nfromStation: ' + JSON.stringify(fs0), COMPOSE_SCHEMA, 1800, 14000);
       var cj2; try { cj2 = JSON.parse(craw2); } catch (e) { res.status(200).json({ ok: false, why: 'parse' }); return; }
       var okid = {}; cpl.forEach(function (p) { okid[p.id] = 1; });
       var BAN2 = /맛있|존맛|꿀맛|일품|유명|소문|대표|줄\s*서|1위|엄선|보증|실패\s*없|최고/, used = {};

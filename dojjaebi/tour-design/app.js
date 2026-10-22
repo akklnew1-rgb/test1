@@ -1215,7 +1215,9 @@
       var r = P.plan(D, oo), len = (oo.train - 15 - oo.now) / 60;
       days.push({ date: oo.date, window: toTimeValue(oo.now) + '~' + toTimeValue(Math.max(oo.now, oo.train - 15)), count: len >= 7 ? '5~6' : len >= 4 ? '4~5' : len >= 2.5 ? '3~4' : '2~3', banned: (r.skipped || []).map(function (x) { return x.id; }) });
     }
-    var body = { task: 'compose', cond: { how: c.how, arrive: toTimeValue(c.arrive), back: c.backTouched ? toTimeValue(c.back) : '', companions: c.companions, knee: !!c.knee, rain: !!c.rain, interests: c.interests, must: c.must || [], stay: n > 1 ? '묵호 쪽 숙소(앱이 정함)' : '' }, days: days,
+    var LG = P.makeLegger(base), moves = {}, st0 = D.stations[base.start] || D.stations.mukho, fromStn = {};
+    D.places.forEach(function (p) { var row = {}; D.places.forEach(function (q) { if (q.id === p.id) return; try { var l = LG.legAt(P.realPos(p), q, base.slow, 720); if (l && l.min != null) row[q.id] = Math.round(l.min); } catch (e) { /* 계산 못 하면 비움 */ } }); moves[p.id] = row; try { var s0 = LG.legAt(st0, p, base.slow, 720); if (s0 && s0.min != null) fromStn[p.id] = Math.round(s0.min); } catch (e2) { /* 무시 */ } });
+    var body = { task: 'compose', moves: moves, fromStation: fromStn, cond: { how: c.how, arrive: toTimeValue(c.arrive), back: c.backTouched ? toTimeValue(c.back) : '', companions: c.companions, knee: !!c.knee, rain: !!c.rain, interests: c.interests, must: c.must || [], stay: n > 1 ? '묵호 쪽 숙소(앱이 정함)' : '' }, days: days,
       places: D.places.map(function (p) { return { id: p.id, name: p.short || p.name, region: p.region, group: p.group || '', visit: p.visit, indoor: !!p.indoor, stairs: !!p.stairs, trail: !!p.trail, rainAvoid: !!p.rainAvoid, tags: p.tags || [], openText: p.openText || '' }; }) };
     return aiCall(body, 28000).then(function (j) {
       if (!j || !j.days || !j.days.length) return false;
