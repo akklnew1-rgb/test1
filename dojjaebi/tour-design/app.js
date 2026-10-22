@@ -791,19 +791,28 @@
   }
   $('inputNext').addEventListener('click', function () { readRequest($('reqText').value, $('inputNext')); });
   /* ---------- 도째비와 대화 (2026-10-22) — 대화는 인공지능이, 식당 후보와 조건 계산은 앱이. AI 는 앱이 준 후보(cands)의 id 만 고를 수 있어 없는 가게를 지어내지 못한다. ---------- */
-  var CH = { msgs: [], cond: null, busy: false, picks: [] };
+  var CH = { msgs: [], cond: null, busy: false, picks: [], kind: 'eat' };
   function chatEl(cls, html) { var d = document.createElement('div'); d.className = 'bub ' + cls; d.innerHTML = html; $('chat').appendChild(d); try { d.scrollIntoView({ block: 'nearest' }); } catch (e) {} return d; }
-  function chatCands(text) {
-    var eats = TW.list('eat').filter(function (x) { return TW.hasPos(x); }), keys = [], i;
-    for (i = 0; i < MENU_GROUPS.length - 1; i++) if (MENU_GROUPS[i][0] !== 'bar' && MENU_GROUPS[i][2].test(text)) keys.push(MENU_GROUPS[i][0]);
-    var dongs = {}; eats.forEach(function (x) { dongs[x.dong] = 1; });
+  var STAY_RE = /숙소|호텔|펜션|모텔|민박|리조트|숙박|잘 곳|게스트|콘도/, FOOD_RE = /맛집|식당|먹|밥|점심|저녁|회|국수|추천/;
+  function chatCands(text, last) {
+    // 숙소 이야기인지: 방금 말에 숙소 낱말이 있거나, 숙소 이야기 중이고 방금 말이 식당 이야기가 아닐 때
+    if (STAY_RE.test(last)) CH.kind = 'lodge'; else if (FOOD_RE.test(last) || MENU_GROUPS.some(function (g, i) { return i < MENU_GROUPS.length - 1 && g[2].test(last); })) CH.kind = 'eat';
+    var lodge = CH.kind === 'lodge';
+    var all = TW.list(lodge ? 'lodge' : 'eat').filter(function (x) { return TW.hasPos(x); }), keys = [], i;
+    var dongs = {}; all.forEach(function (x) { dongs[x.dong] = 1; });
     var hit = Object.keys(dongs).filter(function (d) { var n = d.slice(0, 2); return n.length >= 2 && text.indexOf(n) >= 0; });
-    var want = /맛집|식당|먹|밥|점심|저녁|회|국수|추천/.test(text) || keys.length;
-    if (!want) return [];
-    var pool = eats.filter(function (x) { return (!keys.length || keys.indexOf(menuOf(x)) >= 0) && (!hit.length || hit.indexOf(x.dong) >= 0); });
+    var pool;
+    if (lodge) {
+      var tk = ['호텔', '펜션', '모텔', '민박', '리조트', '콘도', '게스트', '호스텔'].filter(function (t) { return text.indexOf(t) >= 0; });
+      pool = all.filter(function (x) { return (!tk.length || tk.some(function (t) { return (x.type + x.name).indexOf(t) >= 0; })) && (!hit.length || hit.indexOf(x.dong) >= 0); });
+    } else {
+      for (i = 0; i < MENU_GROUPS.length - 1; i++) if (MENU_GROUPS[i][0] !== 'bar' && MENU_GROUPS[i][2].test(text)) keys.push(MENU_GROUPS[i][0]);
+      if (!(FOOD_RE.test(text) || keys.length)) return [];
+      pool = all.filter(function (x) { return (!keys.length || keys.indexOf(menuOf(x)) >= 0) && (!hit.length || hit.indexOf(x.dong) >= 0); });
+    }
     var by = {}; pool.forEach(function (x) { (by[x.area] = by[x.area] || []).push(x); });
     var out = [], ks = Object.keys(by), k = 0;
-    while (out.length < 24 && ks.length) { var any = false; ks.forEach(function (a) { if (by[a][k] && out.length < 24) { out.push(by[a][k]); any = true; } }); if (!any) break; k++; }
+    while (out.length < 24 && ks.length) { var any = false; ks.forEach(function (a2) { if (by[a2][k] && out.length < 24) { out.push(by[a2][k]); any = true; } }); if (!any) break; k++; }
     return out;
   }
   function chatCard(x) {
@@ -827,8 +836,8 @@
     chatEl('me', esc(text)); CH.msgs.push({ role: 'user', text: text }); $('askText').value = '';
     var typing = chatEl('bot typing', '도째비가 생각하고 있어요…'); CH.busy = true; $('askGo').disabled = true;
     var all = CH.msgs.filter(function (m) { return m.role === 'user'; }).map(function (m) { return m.text; }).join(' ');
-    var cands = chatCands(all), byId = {}; cands.forEach(function (x) { byId[x.key] = x; });
-    aiCall({ task: 'chat', messages: CH.msgs.slice(-8), today: todayIso(), cands: cands.map(function (x) { return { id: x.key, name: x.name, menu: (MENU_GROUPS.filter(function (g) { return g[0] === menuOf(x); })[0] || ['', '', ''])[1], area: x.dong }; }) }, 22000).then(function (j) {
+    var cands = chatCands(all, text), byId = {}; cands.forEach(function (x) { byId[x.key] = x; });
+    aiCall({ task: 'chat', messages: CH.msgs.slice(-8), today: todayIso(), cands: cands.map(function (x) { return { id: x.key, name: x.name, menu: x.kind === 'lodge' ? (x.type || '숙소') : (MENU_GROUPS.filter(function (g) { return g[0] === menuOf(x); })[0] || ['', '', ''])[1], area: x.dong }; }) }, 22000).then(function (j) {
       CH.busy = false; $('askGo').disabled = false; if (typing.parentNode) typing.parentNode.removeChild(typing);
       if (j && j.reply) {
         var b = chatEl('bot', esc(j.reply)); CH.msgs.push({ role: 'bot', text: j.reply });
@@ -848,7 +857,7 @@
   function renderPicks() {
     var box = $('pickBox'); if (!box) return;
     if (!CH.picks.length) { box.hidden = true; return; }
-    box.hidden = false; box.innerHTML = '<b class="pick-t">도째비가 이야기 중에 추천한 식당</b><span class="pick-s">점심·저녁 시간에 들러 보세요. 공공데이터라 평점은 몰라요.</span>';
+    box.hidden = false; box.innerHTML = '<b class="pick-t">도째비가 이야기 중에 알려 준 곳</b><span class="pick-s">식당·숙소는 공공데이터라 평점·후기는 몰라요. 메뉴판과 지도를 보고 정해 주세요.</span>';
     CH.picks.forEach(function (x) { box.appendChild(chatCard(x)); });
   }
   $('chatMake').addEventListener('click', function () {
