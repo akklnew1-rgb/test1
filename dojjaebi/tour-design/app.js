@@ -773,7 +773,7 @@
     var r = AI.aiParseRequest(txt, S.cond.arrive, todayIso());
     if (!aiUrl() || !txt.trim()) { applyParsed(r, '말씀하신 내용이에요.'); return; }
     var old = btn.textContent; btn.disabled = true; btn.textContent = '도째비가 읽고 있어요…';
-    aiCall({ task: 'parse', text: txt, today: todayIso() }, 8000).then(function (j) {
+    aiCall({ task: 'parse', text: txt, today: todayIso() }, 12000).then(function (j) {
       btn.disabled = false; btn.textContent = old;
       var a = j && j.parsed, lead = '연결이 고르지 않아 기본 방식으로 읽었어요.';
       if (a) {
@@ -828,7 +828,7 @@
     var typing = chatEl('bot typing', '도째비가 생각하고 있어요…'); CH.busy = true; $('askGo').disabled = true;
     var all = CH.msgs.filter(function (m) { return m.role === 'user'; }).map(function (m) { return m.text; }).join(' ');
     var cands = chatCands(all), byId = {}; cands.forEach(function (x) { byId[x.key] = x; });
-    aiCall({ task: 'chat', messages: CH.msgs.slice(-8), today: todayIso(), cands: cands.map(function (x) { return { id: x.key, name: x.name, menu: (MENU_GROUPS.filter(function (g) { return g[0] === menuOf(x); })[0] || ['', '', ''])[1], area: x.dong }; }) }, 10000).then(function (j) {
+    aiCall({ task: 'chat', messages: CH.msgs.slice(-8), today: todayIso(), cands: cands.map(function (x) { return { id: x.key, name: x.name, menu: (MENU_GROUPS.filter(function (g) { return g[0] === menuOf(x); })[0] || ['', '', ''])[1], area: x.dong }; }) }, 22000).then(function (j) {
       CH.busy = false; $('askGo').disabled = false; if (typing.parentNode) typing.parentNode.removeChild(typing);
       if (j && j.reply) {
         var b = chatEl('bot', esc(j.reply)); CH.msgs.push({ role: 'bot', text: j.reply });
