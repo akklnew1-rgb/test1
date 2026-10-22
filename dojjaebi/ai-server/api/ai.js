@@ -4,7 +4,7 @@
  *   POST { task:'explain', facts:{...} }                                           → { ok, text }
  * 모델이 지어낸 장소 id 는 places 목록과 대조해서 버린다. 실패하면 { ok:false } — 앱이 알아서 규칙 방식으로 돌아간다. */
 var USED = '', MODEL = process.env.GEMINI_MODEL || 'gemini-flash-latest';
-var ALLOW = (process.env.ALLOW_ORIGINS || 'https://akklnew1-rgb.github.io,https://dojjaebi-gildongmu.vercel.app,http://localhost:8765').split(',');
+var ALLOW = (process.env.ALLOW_ORIGINS || 'https://akklnew1-rgb.github.io,https://dojjaebi-gildongmu.vercel.app,https://test1-tour-design.vercel.app,http://localhost:8765').split(',');
 var TYPES = ['remove', 'add', 'removeMeal', 'addMeal', 'addTheme', 'indoor', 'slower', 'longer', 'shorter', 'first', 'last', 'unknown'];
 var hits = {}; // 아주 단순한 속도 제한(주소별 분당 20번) — 시연 중 남용 방지
 function limited(ip) { var m = Math.floor(Date.now() / 60000), h = hits[ip] || (hits[ip] = { m: m, n: 0 }); if (h.m !== m) { h.m = m; h.n = 0; } return ++h.n > 20; }
