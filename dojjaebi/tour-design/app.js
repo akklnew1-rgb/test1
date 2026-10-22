@@ -768,26 +768,36 @@
   $('ticketFile').addEventListener('change', handleTicketFile);
   if ($('ticketFile2')) $('ticketFile2').addEventListener('change', handleTicketFile); // 2026-10-22: 2단계("지금" 흐름)에서도 같은 승차권 사진 기능을 쓸 수 있게
   $('goVoice').addEventListener('click', function () { $('reqText').value = ''; show('s-input'); initMic(); });
-  $('inputNext').addEventListener('click', function () {
-    var txt = $('reqText').value, r = AI.aiParseRequest(txt, S.cond.arrive, todayIso()), btn = $('inputNext');
+  /* 한 문장 → 조건: 인공지능이 읽고(규칙 결과를 바탕으로 AI 가 확실히 뽑은 칸만 덮어씀), 답이 없으면 규칙 결과 그대로. 둘 다 마지막 확인 화면에서 사람이 고친다. */
+  function readRequest(txt, btn, noteEl) {
+    var r = AI.aiParseRequest(txt, S.cond.arrive, todayIso());
     if (!aiUrl() || !txt.trim()) { applyParsed(r, '말씀하신 내용이에요.'); return; }
-    // 인공지능이 문장에서 조건을 뽑는다 — 규칙 결과를 바탕으로, AI 가 확실히 뽑은 칸만 덮어쓴다(틀리면 마지막 확인 화면에서 고친다). 답이 없으면 규칙 결과 그대로.
     var old = btn.textContent; btn.disabled = true; btn.textContent = '도째비가 읽고 있어요…';
-    aiCall({ task: 'parse', text: txt, today: todayIso() }, 9000).then(function (j) {
+    aiCall({ task: 'parse', text: txt, today: todayIso() }, 5000).then(function (j) {
       btn.disabled = false; btn.textContent = old;
-      var a = j && j.parsed, lead = '말씀하신 내용이에요.';
+      var a = j && j.parsed, lead = '연결이 고르지 않아 기본 방식으로 읽었어요.';
       if (a) {
         ['date', 'train', 'how'].forEach(function (k) { if (a[k] != null && a[k] !== '') r[k] = a[k]; });
         if (a.date && !(P.dateInfo && P.dateInfo(a.date))) r.date = null;
         if (a.date && a.date < todayIso()) r.date = null;
         if (a.end === 'donghae') r.end = 'donghae';
         if (a.companions && a.companions.length) r.companions = a.companions;
-        ['interests'].forEach(function (k) { (a[k] || []).forEach(function (v) { if (r[k].indexOf(v) < 0) r[k].push(v); }); });
+        (a.interests || []).forEach(function (v) { if (r.interests.indexOf(v) < 0) r.interests.push(v); });
         r.knee = r.knee || a.knee; r.rain = r.rain || a.rain; r.food = r.food || a.food; if (a.foodWord) r.foodWord = a.foodWord;
         lead = '인공지능(제미나이)이 말씀을 읽었어요.';
       }
       applyParsed(r, lead);
     });
+  }
+  $('inputNext').addEventListener('click', function () { readRequest($('reqText').value, $('inputNext')); });
+  $('askGo').addEventListener('click', function () {
+    var t = $('askText').value, n = $('askNote');
+    if (!t.trim()) { n.textContent = '여행 이야기를 한 줄 적어 주세요. 아래 예시를 눌러도 돼요.'; n.hidden = false; $('askText').focus(); return; }
+    n.hidden = true; readRequest(t, $('askGo'));
+  });
+  $('askMic').addEventListener('click', function () { $('goVoice').click(); });
+  Array.prototype.forEach.call(document.querySelectorAll('#ask .chip'), function (c) {
+    c.addEventListener('click', function () { $('askText').value = c.getAttribute('data-say'); $('askGo').click(); });
   });
   $('runDemo').addEventListener('click', function () { runDemo('normal'); });
   $('runDemoMeal').addEventListener('click', function () { runDemo('meal'); });

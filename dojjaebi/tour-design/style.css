@@ -1537,3 +1537,18 @@ body.big #s-start .qs-card{ min-height:56px; }
 .why-t p{ margin:.2em 0; }
 .why-src{ font-size:.82em; color:var(--muted); }
 .simchip.ai{ background:#0f4c81; color:#fff; }
+
+/* 2026-10-22 인공지능 입구 */
+.ask{margin:0 0 14px}
+.ask-h{font-size:1.2rem;margin:0 0 8px;font-weight:800}
+#askText{width:100%;box-sizing:border-box;min-height:84px;padding:12px;border:2px solid var(--line);border-radius:14px;font:inherit;font-size:1rem;line-height:1.5;background:#fff;color:var(--ink);resize:none}
+#askText:focus{outline:3px solid var(--brand);border-color:var(--brand)}
+.ask-row{display:flex;gap:8px;margin:8px 0}
+.ask-row .btn{min-height:52px;flex:1}
+.ask-row .btn.primary{flex:2}
+.ask-note{margin:0 0 8px;color:var(--brand-dark);font-weight:700}
+.ask-chips{display:flex;flex-wrap:wrap;gap:8px}
+.ask-chips .chip{min-height:48px}
+.ask-or{display:flex;align-items:center;gap:10px;margin:14px 0 4px;color:var(--muted);font-size:.9rem}
+.ask-or::before,.ask-or::after{content:"";flex:1;height:1px;background:var(--line)}
+@media (prefers-color-scheme: dark){#askText{background:var(--soft);color:var(--ink);border-color:var(--line)}#askText::placeholder{color:var(--muted)}}
