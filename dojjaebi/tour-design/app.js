@@ -148,7 +148,7 @@
     S.screen = id;
     stopSpeak();
     if ($('backTown')) $('backTown').hidden = !(id === 's-map' && S.fromTown);
-    var ttl = { 's-start': '여행 준비', 's-input': '여행 준비', 's-prep': '여행 준비', 's-course': '오늘 코스', 's-map': '코스 지도', 's-report': '동네 소식', 's-stay': '동네', 's-card': '기록', 's-watch': '시청 화면' }[id] || '';
+    var ttl = { 's-start': '여행 준비', 's-input': '여행 준비', 's-prep': '여행 준비', 's-course': '오늘 코스', 's-map': '코스 지도', 's-report': '동해 추천', 's-stay': '동네', 's-card': '기록', 's-watch': '시청 화면' }[id] || '';
     if ($('scrTitle')) $('scrTitle').textContent = ttl;
     if ($('toMapTop')) $('toMapTop').hidden = !(id === 's-course' && S.plan);
     var inTab = !!S.plan && TAB_SCREENS.indexOf(id) >= 0;
@@ -1952,8 +1952,7 @@
       var seen = !!S.storySeen[it.id];
       return '<button type="button" class="sitem' + (seen ? ' seen' : '') + (S.changed[it.id] ? ' changed' : '') + '" data-story="' + k + '" aria-label="' + (k + 1) + '장 ' + esc(it.place.name) + ' 이야기 보기' + (seen ? ' (본 이야기)' : '') + '">' +
         '<span class="ring"><span>' + ART.svg(it.id) + '</span></span><span class="nb" aria-hidden="true">' + (k + 1) + '</span><span class="sl">' + esc(it.place.short) + '</span></button>';
-    }).join('') +
-      '<button type="button" class="sitem add" data-storyadd="1" aria-label="현장 제보 남기기"><span class="ring"><span>' + ico('plus') + '</span></span><span class="sl">+ 제보</span></button>';
+    }).join('');
   }
   var SV = { list: [], i: 0, opener: null };
   function openStory(k, opener) {
@@ -2012,7 +2011,7 @@
   });
   if ($('stories')) $('stories').addEventListener('click', function (ev) {
     var b = ev.target.closest('button'); if (!b) return;
-    if (b.hasAttribute('data-storyadd')) { openReport(); return; }
+    if (b.hasAttribute('data-storyadd')) { openRec(); return; }
     if (b.hasAttribute('data-story')) openStory(+b.getAttribute('data-story'), b);
   });
   function renderMapList() {
@@ -2578,7 +2577,7 @@
   }
   $('muteBtn').addEventListener('click', function () { S.muteAuto = !S.muteAuto; lsSet('tour-mute', S.muteAuto ? '1' : '0'); muteUi(); if (S.muteAuto) stopSpeak(); flash(S.muteAuto ? '자동 음성을 껐어요' : '자동 음성을 켰어요'); });
   muteUi();
-  $('toReport').addEventListener('click', function () { openReport(); });
+  $('toReport').addEventListener('click', function () { openRec(); });
 
   /* 막차·하룻밤 비교 */
   function summarize(pl) {
@@ -3681,6 +3680,91 @@
     var mp = ev.target.closest('[data-live-map]');
     if (mp) { var q = PLACE[mp.getAttribute('data-live-map')]; if (q) { S.fromTown = false; openMapAt({ lat: q.lat, lng: q.lng }, { eat: true, focusName: (q.short || q.name) + ' 근처' }); } }
   });
+
+  /* ---------- 추천·좋아요 탭 (2026-10-23): 안 알려진 곳 추천 + ♥ + 친구에게 보내기. 이 폰에만 저장되는 시연 ---------- */
+  var K_REC = 'dojjaebi.rec.v1', REC_MAX = 12;
+  var REC_SEED = [
+    { id: 'seed-gamchusa', seed: true, name: '감추사', line: '계단을 내려가면 바위 틈에 작은 절이 앉아 있어요', photo: '사진캐시/2735620.jpg', likes: 6, ts: 3, tags: ['혼자', '연인'] },
+    { id: 'seed-byeoryu', seed: true, name: '무릉별유천지', line: '석회석 광산이 에메랄드빛 호수가 된 곳이에요', photo: '사진캐시/2820546.jpg', likes: 9, ts: 2, tags: ['친구', '연인'] },
+    { id: 'seed-suibyeon', seed: true, name: '묵호항수변공원', line: '방파제를 따라 걷다 해돋이도 볼 수 있어요', photo: '사진캐시/2774728.jpg', likes: 4, ts: 1, tags: ['부모님', '혼자'] }
+  ];
+  var RS = { sort: 'like', st: null };
+  function recState() { var s = jget(K_REC, null); if (!s || typeof s !== 'object') s = {}; s.posts = Array.isArray(s.posts) ? s.posts : []; s.liked = s.liked && typeof s.liked === 'object' ? s.liked : {}; return s; }
+  function recSave(s) { try { lsSet(K_REC, JSON.stringify(s)); return true; } catch (e) { return false; } }
+  function recAll() { var s = recState(); RS.st = s; return REC_SEED.concat(s.posts); }
+  function recLikes(p, s) { return (p.likes || 0) + (s.liked[p.id] ? 1 : 0); }
+  function recRender() {
+    var s = recState(), all = recAll();
+    all.sort(function (x, y) { return RS.sort === 'new' ? (y.ts || 0) - (x.ts || 0) : recLikes(y, s) - recLikes(x, s) || (y.ts || 0) - (x.ts || 0); });
+    $('recList').innerHTML = all.map(function (p) {
+      var n = recLikes(p, s), on = !!s.liked[p.id];
+      return '<li class="rec-card" data-rid="' + esc(p.id) + '">' +
+        (p.photo ? '<img class="rec-img" src="' + esc(p.photo) + '" alt="' + esc(p.name) + ' 사진" loading="lazy">' : '<div class="rec-img rec-noimg" aria-hidden="true">🌊</div>') +
+        '<div class="rec-body"><h3>' + esc(p.name) + (p.seed ? ' <span class="rec-ex">예시</span>' : '') + '</h3>' +
+        '<p class="rec-line">' + esc(p.line) + '</p>' +
+        (p.tags && p.tags.length ? '<p class="rec-tags">' + p.tags.map(function (t) { return '#' + esc(t) + '에게'; }).join(' ') + '</p>' : '') +
+        '<div class="rec-act"><button type="button" class="rec-like" data-rc="like" aria-pressed="' + on + '" aria-label="' + esc(p.name) + ' 좋아요 ' + n + '개' + (on ? ', 눌렀어요' : '') + '"><span aria-hidden="true">' + (on ? '♥' : '♡') + '</span> ' + n + '</button>' +
+        '<button type="button" class="rec-share" data-rc="share"><svg class="ic" aria-hidden="true"><use href="#i-share"/></svg><span>친구에게 보내기</span></button>' +
+        (p.seed ? '' : '<button type="button" class="rec-del" data-rc="del">삭제</button>') + '</div></div></li>';
+    }).join('');
+  }
+  function openRec() { recRender(); show('s-report'); }
+  function recShow(on) { var sh = $('recSheet'); sh.hidden = !on; if (on) { document.body.classList.add('no-scroll'); try { $('recCard').focus(); } catch (e) { /* 무시 */ } } else document.body.classList.remove('no-scroll'); }
+  var recPhotoData = '', recTagSel = [];
+  function recCheck() { var ok = $('recName').value.trim().length >= 2 && $('recLine').value.trim().length >= 4; $('recGo').disabled = !ok; }
+  function recTagsRender() { $('recTags').innerHTML = COMPS.map(function (n) { return '<button type="button" class="chip" data-rc="tag" data-v="' + esc(n) + '" aria-pressed="' + (recTagSel.indexOf(n) >= 0) + '">' + esc(n) + '</button>'; }).join(''); }
+  function recShrink(file, cb) { // 사진을 작게 줄여 다시 그린다(위치·촬영 정보가 지워지고, 폰 저장 공간도 아낀다)
+    var fr = new FileReader();
+    fr.onerror = function () { cb(''); };
+    fr.onload = function () {
+      var im = new Image();
+      im.onerror = function () { cb(''); };
+      im.onload = function () {
+        var m = 900, sc = Math.min(1, m / Math.max(im.width, im.height)), cv = document.createElement('canvas');
+        cv.width = Math.round(im.width * sc); cv.height = Math.round(im.height * sc);
+        cv.getContext('2d').drawImage(im, 0, 0, cv.width, cv.height);
+        var out = ''; try { out = cv.toDataURL('image/jpeg', 0.7); } catch (e) { out = ''; }
+        cb(out);
+      };
+      im.src = fr.result;
+    };
+    fr.readAsDataURL(file);
+  }
+  function recOpenSheet() { recPhotoData = ''; recTagSel = []; $('recName').value = ''; $('recLine').value = ''; $('recPhoto').value = ''; $('recPrev').hidden = true; $('recMsg').hidden = true; recTagsRender(); recCheck(); recShow(true); }
+  $('recAdd').addEventListener('click', recOpenSheet);
+  $('recName').addEventListener('input', recCheck); $('recLine').addEventListener('input', recCheck);
+  $('recPhoto').addEventListener('change', function () {
+    var f = this.files && this.files[0]; if (!f) { recPhotoData = ''; $('recPrev').hidden = true; return; }
+    recShrink(f, function (d) { recPhotoData = d; var pv = $('recPrev'); if (d) { pv.src = d; pv.hidden = false; } else { pv.hidden = true; var m = $('recMsg'); m.textContent = '사진을 읽지 못했어요. 다른 사진으로 해 보세요.'; m.hidden = false; } });
+  });
+  $('recSheet').addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-rc]'); if (!t) return; var k = t.getAttribute('data-rc');
+    if (k === 'close') { recShow(false); return; }
+    if (k === 'tag') { var v = t.getAttribute('data-v'), i = recTagSel.indexOf(v); if (i >= 0) recTagSel.splice(i, 1); else recTagSel.push(v); recTagsRender(); }
+  });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && !$('recSheet').hidden) recShow(false); });
+  $('recGo').addEventListener('click', function () {
+    var s = recState(), name = $('recName').value.trim().slice(0, 20), line = $('recLine').value.trim().slice(0, 60), m = $('recMsg');
+    if (s.posts.length >= REC_MAX) { m.textContent = '추천은 ' + REC_MAX + '개까지 남길 수 있어요. 하나를 지우고 다시 올려 주세요.'; m.hidden = false; return; }
+    s.posts.unshift({ id: 'u' + Date.now().toString(36), name: name, line: line, photo: recPhotoData || '', likes: 0, ts: Date.now(), tags: recTagSel.slice() });
+    if (!recSave(s)) { s.posts.shift(); m.textContent = '폰 저장 공간이 모자라 올리지 못했어요. 사진 없이 다시 해 보세요.'; m.hidden = false; return; }
+    recShow(false); RS.sort = 'new'; Array.prototype.forEach.call(document.querySelectorAll('#recSort .chip'), function (c) { c.setAttribute('aria-pressed', c.getAttribute('data-rs') === 'new' ? 'true' : 'false'); }); recRender(); flash('추천을 남겼어요 (이 폰에만 저장돼요)');
+  });
+  $('recSort').addEventListener('click', function (ev) { var b = ev.target.closest('[data-rs]'); if (!b) return; RS.sort = b.getAttribute('data-rs'); Array.prototype.forEach.call(document.querySelectorAll('#recSort .chip'), function (c) { c.setAttribute('aria-pressed', c === b ? 'true' : 'false'); }); recRender(); });
+  $('recList').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-rc]'); if (!b) return; var li = b.closest('[data-rid]'), id = li && li.getAttribute('data-rid'), s = recState(), k = b.getAttribute('data-rc');
+    if (k === 'like') { if (s.liked[id]) delete s.liked[id]; else s.liked[id] = 1; recSave(s); recRender(); var nb = document.querySelector('#recList [data-rid="' + id + '"] .rec-like'); if (nb) { try { nb.focus(); } catch (e) { /* 무시 */ } } return; }
+    if (k === 'del') {
+      if (b.getAttribute('data-sure') !== '1') { b.setAttribute('data-sure', '1'); b.textContent = '정말 삭제'; return; }
+      s.posts = s.posts.filter(function (p) { return p.id !== id; }); delete s.liked[id]; recSave(s); recRender(); flash('삭제했어요'); return;
+    }
+    if (k === 'share') {
+      var p = recAll().filter(function (q) { return q.id === id; })[0]; if (!p) return;
+      var text = '동해 숨은 명소: ' + p.name + ' — ' + p.line + ' (도째비 길동무)', url = 'https://test1-tour-design.vercel.app';
+      if (navigator.share) { navigator.share({ title: p.name, text: text, url: url }).catch(function () { /* 취소 */ }); return; }
+      try { navigator.clipboard.writeText(text + ' ' + url).then(function () { flash('글을 복사했어요. 친구에게 붙여 넣어 보내 보세요'); }, function () { flash('복사하지 못했어요'); }); } catch (e) { flash('복사하지 못했어요'); }
+    }
+  });
   function openReport() {
     $('repResult').hidden = true; renderNews();
     renderRepLoc(); renderRepPlaces();
@@ -4220,7 +4304,7 @@
     else if (h === 'demo-couple') runDemo('couple');
     else if (h === 'demo-tour') runDemo('tour');
     else if (h === 'demo-1bak') runDemo('1bak');
-    else if (h === 'report') openReport();
+    else if (h === 'report') openRec();
     else if (h === 'watch') show('s-watch');
   }
   window.addEventListener('hashchange', route);

@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=11">
+<link rel="stylesheet" href="style.css?v=12">
 </head>
 <body>
 <a class="skip" href="#app">본문으로 건너뛰기</a>
@@ -458,10 +458,8 @@
       <label class="field">여행 날짜 (장날·쉬는 요일을 따져요)
         <span class="inline"><input type="date" id="simDate"><button type="button" class="btn" id="simDateApply">적용</button></span>
       </label>
-      <p class="note">제보는 코스를 자동으로 바꾸지 않아요. 서로 다른 기기 2대가 60분 안에 같은 곳을 알리면 근처 여행자에게 알림이 가고, 다시 짤지는 본인이 골라요. 알림은 마지막 제보 60분 뒤(시연 시계 기준) 사라져요.</p>
       <div class="actions tight">
-        <a class="btn" href="index.html#report" target="_blank" rel="noopener">다른 창에서 제보 보내기</a>
-        <button type="button" class="btn ghost" id="resetAll">제보·기록 지우기</button>
+        <button type="button" class="btn ghost" id="resetAll">기록 지우기</button>
       </div>
     </div>
   </details>
@@ -493,7 +491,20 @@
 </section>
 
 <!-- 3. 현장 제보 -->
-<section id="s-report" class="screen" hidden aria-labelledby="h-report">
+<section id="s-report" class="screen" hidden aria-labelledby="h-rec">
+  <!-- 2026-10-23: 현장 제보 화면을 '추천·좋아요' 화면으로 교체. 예전 제보 화면은 코드가 id 를 찾으므로 숨긴 채 남겨 둔다 -->
+  <div id="recBox">
+    <h2 id="h-rec">동해 추천</h2>
+    <p class="lead">남들이 잘 모르는 동해의 좋은 곳을 남기고, 마음에 드는 곳엔 ♥를 눌러요. 친구에게 보내 줄 수도 있어요.</p>
+    <p class="note">이 폰에만 저장되는 <b>시연</b>이에요. '예시' 표시가 붙은 글과 숫자는 시연용이에요. 사람 얼굴이 나온 사진은 올리지 말아 주세요.</p>
+    <button type="button" class="btn primary cta" id="recAdd">＋ 숨은 명소 추천하기</button>
+    <div class="chips" id="recSort" role="group" aria-label="정렬 고르기">
+      <button type="button" class="chip" data-rs="like" aria-pressed="true">♥ 좋아요 많은 순</button>
+      <button type="button" class="chip" data-rs="new" aria-pressed="false">최신 순</button>
+    </div>
+    <ul class="rec-list" id="recList"></ul>
+  </div>
+  <div id="oldRep" hidden>
   <h2 id="h-report">동네 소식</h2>
   <p class="lead" id="repLead">본 것을 알려 주면 근처 여행자에게 알림으로 가요. 다시 짤지는 본인이 골라요.</p>
   <div class="group nfeed" id="newsBox">
@@ -556,6 +567,7 @@
     <button type="button" class="btn ghost" id="repBack">돌아가기</button>
   </div>
   <div class="panel" id="repResult" hidden></div>
+</div>
 </section>
 
 <!-- 4. 동네 (식당 · 숙소 · 더 머물면) -->
@@ -618,7 +630,7 @@
 <nav class="tabs" id="tabs" aria-label="아래 메뉴" hidden>
   <button type="button" class="tab" id="tabHome" data-tab="s-course"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>홈</span></button>
   <button type="button" class="tab" id="tabMap" data-tab="s-map"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg><span>지도</span></button>
-  <button type="button" class="tab plus" id="toReport" data-tab="s-report" aria-label="동네 소식 보기와 남기기"><span class="pbtn"><svg class="ic" aria-hidden="true"><use href="#i-plus"/></svg></span><span>소식</span></button>
+  <button type="button" class="tab plus" id="toReport" data-tab="s-report" aria-label="추천과 좋아요"><span class="pbtn"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg></span><span>추천</span></button>
   <button type="button" class="tab" id="toStay" data-tab="s-stay" aria-label="동네 (식당과 숙소)"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg><span>동네</span></button>
   <button type="button" class="tab" id="toCard" data-tab="s-card"><svg class="ic" aria-hidden="true"><use href="#i-mark"/></svg><span>기록</span></button>
 </nav>
@@ -668,6 +680,27 @@
       <p class="cf-why" id="cfWhy" role="status" hidden></p>
       <button type="button" class="btn primary cta" id="cfGo">✨ 이대로 코스 짜 주세요</button>
     </div>
+  </div>
+</div>
+<div id="recSheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="recT" hidden>
+  <div class="sh-back" data-rc="close"></div>
+  <div class="sh-card" id="recCard" tabindex="-1">
+    <div class="sh-head"><h3 id="recT">숨은 명소 추천하기</h3><button type="button" class="eb" data-rc="close" aria-label="닫기"><span aria-hidden="true">✕</span> 닫기</button></div>
+    <label class="field">장소 이름
+      <input type="text" id="recName" maxlength="20" placeholder="예) 감추사" autocomplete="off">
+    </label>
+    <label class="field">한 줄로 적어 주세요
+      <textarea id="recLine" rows="2" maxlength="60" placeholder="예) 계단을 내려가면 바위 틈에 작은 절이 있어요"></textarea>
+    </label>
+    <label class="field">사진 <small>(있으면 더 눈에 띄어요)</small>
+      <input type="file" id="recPhoto" accept="image/*">
+    </label>
+    <img id="recPrev" alt="고른 사진 미리 보기" hidden>
+    <p class="note">누구에게 좋을까요? (선택)</p>
+    <div class="chips" id="recTags" role="group" aria-label="누구에게 좋은 곳인가요"></div>
+    <p class="note">올리면 사진의 위치·촬영 정보는 지워져요. 사람 얼굴이 나온 사진은 올리지 말아 주세요.</p>
+    <p class="cf-why" id="recMsg" role="status" hidden></p>
+    <button type="button" class="btn primary cta" id="recGo" disabled>추천 올리기</button>
   </div>
 </div>
 <div id="ttSheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="ttT" hidden>
@@ -772,6 +805,6 @@
 <script src="ai-config.js"></script>
 <script src="ai.js?v=3"></script>
 <script src="art.js"></script>
-<script src="app.js?v=27"></script>
+<script src="app.js?v=28"></script>
 </body>
 </html>

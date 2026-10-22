@@ -1612,3 +1612,20 @@ body.big #s-start .qs-card{ min-height:56px; }
 .cf-lb{display:block;width:100%;margin:6px 0 2px;font-size:.9rem;color:var(--muted)}
 
 .ai-note{margin:8px var(--gut);padding:10px 12px;border-radius:12px;background:var(--soft);border:1px solid var(--line);font-size:.95rem;line-height:1.5}
+
+/* 추천·좋아요 탭 */
+.rec-list{list-style:none;margin:12px 0 0;padding:0;display:grid;gap:16px}
+.rec-card{border:1px solid var(--line);border-radius:18px;overflow:hidden;background:var(--paper)}
+.rec-img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;background:var(--soft)}
+.rec-noimg{display:flex;align-items:center;justify-content:center;font-size:3rem}
+.rec-body{padding:12px 14px 14px}
+.rec-body h3{margin:0 0 4px;font-size:1.25rem}
+.rec-ex{display:inline-block;margin-left:6px;padding:1px 8px;border-radius:10px;border:1px solid var(--line);font-size:.75rem;font-weight:700;color:var(--muted);vertical-align:middle}
+.rec-line{margin:0 0 6px;font-size:1.05rem;line-height:1.5}
+.rec-tags{margin:0 0 8px;font-size:.9rem;color:var(--muted)}
+.rec-act{display:flex;flex-wrap:wrap;gap:8px}
+.rec-act button{min-height:48px;padding:6px 14px;border-radius:14px;border:1px solid var(--line);background:var(--soft);color:var(--ink);font:inherit;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;touch-action:manipulation}
+.rec-like[aria-pressed="true"]{background:#fde8ee;border-color:#e0587a;color:#b0123a}
+.rec-del{margin-left:auto}
+#recPrev{max-width:100%;max-height:200px;border-radius:12px;margin:6px 0;object-fit:cover}
+@media (prefers-color-scheme: dark){.rec-like[aria-pressed="true"]{background:#3a1a25;border-color:#ff7a9a;color:#ff9ab3}}
