@@ -1373,3 +1373,6 @@ body.big .nt{font-size:19px}body.big .nh,body.big .nbad,body.big .nleft,body.big
 .ncard.n-view{border-left-color:#4a5568}.ncard.n-food{border-left-color:#d9480f}.ncard.n-cafe{border-left-color:#0b7f6f}
 body.big .nact,body.big .nhelp{font-size:18px;min-height:56px}
 @media (max-width:380px){.nact-row{grid-template-columns:1fr}}
+
+.eat-warn{margin:8px 0 0;padding:10px 12px;border:1.5px solid #d9480f;background:#fff4e6;color:#7a2e00;border-radius:8px;font-size:15px;line-height:1.5}
+body.big .eat-warn{font-size:18px}

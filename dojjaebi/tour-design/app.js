@@ -1148,7 +1148,8 @@
     else b.push('<span class="tag good">#계단없음</span>');
     if (p.dayRule) b.push('<span class="tag warn">#장날(3·8일)만</span>');
     if (p.trail) b.push('<span class="tag warn">#걷는길이길어요</span>');
-    b.push('<span class="tag' + (p.확인필요 ? ' warn' : '') + '">#' + (p.확인필요 ? '운영대략' : '운영시간관광공사자료') + '</span>');
+    if (p.townEat) b.push('<span class="tag warn">#운영시간은가게에확인</span>');
+    else b.push('<span class="tag' + (p.확인필요 ? ' warn' : '') + '">#' + (p.확인필요 ? '운영대략' : '운영시간관광공사자료') + '</span>');
     if (s.wait) b.push('<span class="tag warn">#열때까지' + s.wait + '분기다림</span>');
     if (s.delay) b.push('<span class="tag bad">#붐빔제보 #기다림' + s.delay + '분</span>');
     if (S.fx && S.fx.view[p.id]) b.push('<span class="tag good">#풍경좋다는제보</span>');
@@ -1258,7 +1259,7 @@
       '<div class="answer" hidden data-ans="' + p.id + '" aria-live="polite"></div></div>' +
       '<div class="p-cap"><div class="cl"><b>도째비</b>' + esc(st.text) + '</div></div>' +
       '<p class="p-src">출처: ' + esc(st.source) + '</p>' +
-      '<p class="tags">' + (extra ? '<span class="tag warn">#내일일출(예시시각)</span>' : placeTags(s)) + '</p>' + (extra ? '' : crowdBody(s)) +
+      '<p class="tags">' + (extra ? '<span class="tag warn">#내일일출(예시시각)</span>' : placeTags(s)) + '</p>' + (!extra && p.townEat ? '<p class="eat-warn" role="note"><b>운영 시간을 몰라요.</b> 가시기 전에 가게에 꼭 확인해 주세요. 문을 닫았을 수 있어요.</p>' : '') + (extra ? '' : crowdBody(s)) +
       '<div class="p-hours note"><div class="note-h">여행자 수첩</div><dl>' +
       '<div><dt>이동</dt><dd>' + mvHtml(s, mv, extra) + '</dd></div>' +
       (extra ? '' : '<div><dt>머무는 시간</dt><dd>약 ' + p.visit + '분</dd></div><div><dt>운영 시간</dt><dd>' + esc(p.openText) + '</dd></div>' + (p.restText ? '<div><dt>쉬는 날</dt><dd>' + esc(p.restText) + '</dd></div>' : '')) +
