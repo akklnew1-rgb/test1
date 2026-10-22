@@ -1564,3 +1564,6 @@ body.big #s-start .qs-card{ min-height:56px; }
 .bub-card .btn{margin-top:6px;min-height:44px;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center}
 #chatMake{margin:0 0 10px}
 @media (prefers-color-scheme: dark){.bub.me{color:#fff}.bub-card{background:var(--paper);border-color:var(--line)}}
+
+.bub-choices{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.bub-choices .chip{min-height:44px}
+.pick{margin:10px 0;display:grid;gap:6px}.pick-t{font-size:1.05rem}.pick-s{color:var(--muted);font-size:.9rem}

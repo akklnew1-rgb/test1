@@ -162,7 +162,7 @@
     if (id === 's-map') { renderMapList(); renderPoiUi(); setTimeout(function () { if (mapApi && mapApi.resize) mapApi.resize(); drawMap(); }, 60); }
     if (id === 's-start') { loadTrains(); renderStart(); renderWx(); var ns = S.nextStep; S.nextStep = null; setStep(ns != null ? ns : 0, { focus: ns != null }); }
     if (id === 's-stay') renderTownTab();
-    if (id === 's-course') ovKakaoEnsure();
+    if (id === 's-course') { ovKakaoEnsure(); renderPicks(); }
     if (id === 's-watch') renderWatch();
     if (id === 's-prep') renderPrep();
   }
@@ -791,7 +791,7 @@
   }
   $('inputNext').addEventListener('click', function () { readRequest($('reqText').value, $('inputNext')); });
   /* ---------- 도째비와 대화 (2026-10-22) — 대화는 인공지능이, 식당 후보와 조건 계산은 앱이. AI 는 앱이 준 후보(cands)의 id 만 고를 수 있어 없는 가게를 지어내지 못한다. ---------- */
-  var CH = { msgs: [], cond: null, busy: false };
+  var CH = { msgs: [], cond: null, busy: false, picks: [] };
   function chatEl(cls, html) { var d = document.createElement('div'); d.className = 'bub ' + cls; d.innerHTML = html; $('chat').appendChild(d); try { d.scrollIntoView({ block: 'nearest' }); } catch (e) {} return d; }
   function chatCands(text) {
     var eats = TW.list('eat').filter(function (x) { return TW.hasPos(x); }), keys = [], i;
@@ -827,12 +827,13 @@
     chatEl('me', esc(text)); CH.msgs.push({ role: 'user', text: text }); $('askText').value = '';
     var typing = chatEl('bot typing', '도째비가 생각하고 있어요…'); CH.busy = true; $('askGo').disabled = true;
     var all = CH.msgs.filter(function (m) { return m.role === 'user'; }).map(function (m) { return m.text; }).join(' ');
-    var cands = chatCands(text), byId = {}; cands.forEach(function (x) { byId[x.key] = x; });
+    var cands = chatCands(all), byId = {}; cands.forEach(function (x) { byId[x.key] = x; });
     aiCall({ task: 'chat', messages: CH.msgs.slice(-8), today: todayIso(), cands: cands.map(function (x) { return { id: x.key, name: x.name, menu: (MENU_GROUPS.filter(function (g) { return g[0] === menuOf(x); })[0] || ['', '', ''])[1], area: x.dong }; }) }, 10000).then(function (j) {
       CH.busy = false; $('askGo').disabled = false; if (typing.parentNode) typing.parentNode.removeChild(typing);
       if (j && j.reply) {
         var b = chatEl('bot', esc(j.reply)); CH.msgs.push({ role: 'bot', text: j.reply });
-        (j.picks || []).forEach(function (id) { if (byId[id]) b.appendChild(chatCard(byId[id])); });
+        (j.picks || []).forEach(function (id) { if (byId[id]) { b.appendChild(chatCard(byId[id])); if (!CH.picks.some(function (q) { return q.key === id; })) CH.picks.push(byId[id]); } });
+        if (j.choices && j.choices.length) { var cw = document.createElement('div'); cw.className = 'bub-choices'; j.choices.forEach(function (t) { var cb = document.createElement('button'); cb.type = 'button'; cb.className = 'chip'; cb.textContent = t; cb.addEventListener('click', function () { cw.parentNode && cw.parentNode.removeChild(cw); chatSend(t); }); cw.appendChild(cb); }); b.appendChild(cw); }
         chatMerge(j.parsed);
         var rule = AI.aiParseRequest(all, S.cond.arrive, todayIso()); CH.rule = rule;
         if (j.ready || (CH.cond && CH.cond.date && ((CH.cond.companions && CH.cond.companions.length) || CH.cond.train != null))) $('chatMake').hidden = false;
@@ -842,6 +843,13 @@
         $('chatMake').hidden = false;
       }
     });
+  }
+  /* 도째비가 대화에서 추천한 식당을 코스 화면에도 보여 준다(코스 계산에는 넣지 않는다 — 시간 계산은 점심·저녁 칸으로 이미 잡혀 있어서) */
+  function renderPicks() {
+    var box = $('pickBox'); if (!box) return;
+    if (!CH.picks.length) { box.hidden = true; return; }
+    box.hidden = false; box.innerHTML = '<b class="pick-t">도째비가 이야기 중에 추천한 식당</b><span class="pick-s">점심·저녁 시간에 들러 보세요. 공공데이터라 평점은 몰라요.</span>';
+    CH.picks.forEach(function (x) { box.appendChild(chatCard(x)); });
   }
   $('chatMake').addEventListener('click', function () {
     var all = CH.msgs.filter(function (m) { return m.role === 'user'; }).map(function (m) { return m.text; }).join(' ');

@@ -57,11 +57,11 @@ var PARSE_SYS = '너는 동해시 여행 앱의 "여행 이야기 → 조건" �
 var PARSE_SCHEMA = { type: 'OBJECT', properties: { date: { type: 'STRING' }, back: { type: 'STRING' }, how: { type: 'STRING' }, end: { type: 'STRING' }, companions: { type: 'ARRAY', items: { type: 'STRING' } }, interests: { type: 'ARRAY', items: { type: 'STRING' } }, knee: { type: 'BOOLEAN' }, rain: { type: 'BOOLEAN' }, food: { type: 'BOOLEAN' }, foodWord: { type: 'STRING' }, count: { type: 'INTEGER' }, reply: { type: 'STRING' } } };
 
 var CHAT_SYS = '너는 동해시 여행 앱 "도째비 길동무"의 대화 도우미 도째비다. 한국어 존댓말로 따뜻하고 짧게(2~3문장) 말한다. 어려운 한자어·영어는 쓰지 않는다. 동해시 여행 이야기만 한다(다른 주제는 "동해 여행 이야기만 도와 드려요"라고 부드럽게 돌려 말한다). ' +
-  '식당 추천: 반드시 cands 목록의 id 만 picks 에 최대 3개 담는다. 목록에 없는 가게 이름을 지어내지 않는다. 이 자료는 공공데이터라 평점·후기·인기는 모른다는 점을 한 번은 솔직히 말하고, 메뉴와 동네 기준으로 골랐다고 말한다. cands 가 비어 있으면 식당은 추천하지 않는다. ' +
+  '식당 추천 순서: 사용자가 "맛집"만 말하고 메뉴(회·국밥·면·고기·중식 등)도 동네도 아직 말하지 않았다면 picks 는 비우고, 먼저 메뉴나 동네 중 궁금한 것 하나를 가볍게 되묻고 choices 에 눌러 답할 짧은 보기 3~5개(예: 회·해산물, 국밥·탕, 면·분식, 고기·구이, 묵호, 천곡)를 담는다. 메뉴나 동네 중 하나라도 말했으면 바로 추천하되, 어떤 기준(메뉴·동네)을 반영했는지 한 마디 말하고, 이어서 다른 메뉴나 동네로 바꿀지 가볍게 묻는다. 대화 전체(이전 말)에서 말한 메뉴·동네를 함께 고려한다. 추천할 때는 반드시 cands 목록의 id 만 picks 에 최대 3개 담는다. 목록에 없는 가게 이름을 지어내지 않는다. 이 자료는 공공데이터라 평점·후기·인기는 모른다는 점을 한 번은 솔직히 말하고, 메뉴와 동네 기준으로 골랐다고 말한다. cands 가 비어 있으면 식당은 추천하지 않는다. ' +
   '조건 모으기: parsed 에는 지금까지 대화 전체에서 알게 된 여행 조건을 넣는다(말하지 않은 칸은 비움, 짐작 금지). date 는 YYYY-MM-DD(today 기준), back 은 돌아갈 시각 24시간 HH:MM, how 는 car·bus·train, companions 는 부모님·아이·연인·친구·혼자, interests 는 사진·먹거리, knee·rain·food·foodWord·count·end 는 말한 것만. ' +
   '질문: 코스를 짜는 데 꼭 필요한 정보(날짜 → 누구와 → 돌아갈 시각 순)가 비었으면 한 번에 하나만 가볍게 묻는다. 식당만 물었으면 먼저 식당을 알려 주고 그다음에 "코스도 짜 드릴까요?"처럼 이어 간다. ' +
   'ready: 날짜를 알고, 누구와 또는 돌아갈 시각 중 하나 이상을 알면 true, 아니면 false. 시각·휴무 같은 계산은 앱이 하니 네가 말하지 않는다.';
-var CHAT_SCHEMA = { type: 'OBJECT', properties: { reply: { type: 'STRING' }, picks: { type: 'ARRAY', items: { type: 'STRING' } }, ready: { type: 'BOOLEAN' }, parsed: PARSE_SCHEMA }, required: ['reply'] };
+var CHAT_SCHEMA = { type: 'OBJECT', properties: { reply: { type: 'STRING' }, picks: { type: 'ARRAY', items: { type: 'STRING' } }, choices: { type: 'ARRAY', items: { type: 'STRING' } }, ready: { type: 'BOOLEAN' }, parsed: PARSE_SCHEMA }, required: ['reply'] };
 function cleanParse(raw) {
   var j = raw; if (typeof raw === 'string') { try { j = JSON.parse(raw); } catch (e) { return null; } } if (!j || typeof j !== 'object') return null;
   var r = { date: null, train: null, how: null, end: 'mukho', companions: [], interests: [], knee: !!j.knee, rain: !!j.rain, food: !!j.food, foodWord: '', count: null };
@@ -106,7 +106,7 @@ module.exports = async function handler(req, res) {
       var picks = (cj.picks || []).filter(function (id, i, a) { return okc[id] && a.indexOf(id) === i; }).slice(0, 3);
       var cp = cleanParse(cj.parsed || {});
       var reply = String(cj.reply || '').trim().slice(0, 400); if (!reply) { res.status(200).json({ ok: false, why: 'empty' }); return; }
-      res.status(200).json({ ok: true, reply: reply, picks: picks, ready: !!cj.ready, parsed: cp ? cp.r : null, model: USED }); return;
+      res.status(200).json({ ok: true, reply: reply, picks: picks, choices: (cj.choices || []).map(function (c) { return String(c).slice(0, 14); }).filter(Boolean).slice(0, 5), ready: !!cj.ready, parsed: cp ? cp.r : null, model: USED }); return;
     }
     if (b.task === 'parse') {
       var pt = String(b.text || '').slice(0, 300), today = /^\d{4}-\d{2}-\d{2}$/.test(String(b.today || '')) ? b.today : '';
