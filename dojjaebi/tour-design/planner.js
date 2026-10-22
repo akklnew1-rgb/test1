@@ -40,6 +40,12 @@
   /* opt: { car: 자가용 이동(걷기 10분 이내는 걸어서, 아니면 자동차 시간 + 주차 5분), walkMax: 걷기 허용 분(아이 20분) } */
   var CAR_WALK_MAX = 10, PARK_MIN = 5;
   function leg(a, b, slow, routes, opt) {
+    var acc = (a && b && a.group && a.group === b.group) ? 0 : ((a && a.accessMin) || 0) + ((b && b.accessMin) || 0); // 주차장에서 걸어 들어가야 하는 곳(삼화사 약 10분)은 이동에 더한다
+    var res = legCore(a, b, slow, routes, opt);
+    if (acc && res) { res = Object.assign({}, res); res.min += acc; res.text = (res.text ? res.text + ' + ' : '') + '주차장에서 걸어서 ' + acc + '분'; res.accessMin = acc; }
+    return res;
+  }
+  function legCore(a, b, slow, routes, opt) {
     opt = opt || {};
     if (a && a.entry) a = Object.assign({}, a, a.entry); if (b && b.entry) b = Object.assign({}, b, b.entry); // 차가 못 들어가는 곳(무릉계곡 용추폭포)은 입구 좌표로 이동을 계산
     var km = hav(a, b) * 1.3;
