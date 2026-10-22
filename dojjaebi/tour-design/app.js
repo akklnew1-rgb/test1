@@ -1612,9 +1612,37 @@
     }
   });
 
+  /* ---------- 인공지능 호출 (2026-10-22) — 열쇠는 앱에 없고 중계 함수(ai-server)가 갖고 있다. 주소가 비었거나 4.5초 안에 답이 없으면 null → 기존 규칙 방식으로 복귀 ---------- */
+  function aiUrl() { return String(window.DOJJAEBI_AI_URL || '').trim(); }
+  function aiCall(body, ms) {
+    var url = aiUrl(); if (!url || !window.fetch) return Promise.resolve(null);
+    var ctl = window.AbortController ? new AbortController() : null, t = setTimeout(function () { if (ctl) ctl.abort(); }, ms || 4500);
+    return fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body), signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { return r.json(); }).then(function (j) { return j && j.ok ? j : null; }).catch(function () { return null; })
+      .then(function (v) { clearTimeout(t); return v; });
+  }
+  function whyFacts() {
+    var c = S.cond, pl = S.plan; if (!pl) return null;
+    var stops = allStops().filter(function (s) { return s.place && !s.place.slot; }).map(function (s) { return { name: s.place.short || s.place.name, at: hhmm(s.startVisit), stay: Math.round((s.leave - s.startVisit)) + '분', indoor: !!s.place.indoor }; });
+    return { how: HOW_NAME[c.how], arrive: toTimeValue(c.arrive), back: toTimeValue(c.back), backHow: HOW_NAME[c.backHow], with: (c.companions || []).join(', ') || '정하지 않음', count: c.count || 1, days: nDays(c), rainy: !!c.rain, weather: S.wx ? (S.wx.main || S.wx.text || '') : '', stops: stops.slice(0, 12), lunchDinner: !!pl.meal };
+  }
+  function whyFallback(f) {
+    var n = f.stops.length; if (!n) return '아직 코스가 없어요.';
+    return (f.how || '기차') + '로 ' + f.arrive + '에 도착하고 ' + f.back + '에 돌아가는 시간에 맞춰, ' + f.stops[0].name + '부터 ' + n + '곳을 이어 짰어요.' + (f.with && f.with !== '정하지 않음' ? ' 함께 가는 분(' + f.with + ')을 생각해 걷는 길을 맞췄어요.' : '') + (f.rainy ? ' 비 소식이 있어 실내를 먼저 넣었어요.' : '') + ' 고치고 싶으면 코스 고치기를 눌러 보세요.';
+  }
+  $('whyBtn').addEventListener('click', function () {
+    var box = $('whyText'), btn = $('whyBtn');
+    if (!box.hidden) { box.hidden = true; btn.setAttribute('aria-expanded', 'false'); return; }
+    var f = whyFacts(); if (!f) return;
+    btn.setAttribute('aria-expanded', 'true'); box.hidden = false; box.textContent = '도째비가 생각하는 중이에요…';
+    aiCall({ task: 'explain', facts: f }, 7000).then(function (j) {
+      box.innerHTML = '<p>' + esc(j ? j.text : whyFallback(f)) + '</p><p class="why-src">' + (j ? '인공지능(제미나이)이 코스 자료를 보고 쓴 설명이에요' : '코스 자료로 만든 안내예요') + '</p>';
+    });
+  });
+
   /* ---------- 말로 고치기 (시연 모드: ai.js aiEditIntent 규칙. 본선: Claude API 도구 쓰기로 교체) ---------- */
   function edPlaceList() { return D.places.map(function (p) { return { id: p.id, name: p.name, short: p.short }; }); }
-  function nlShow(res, intents) {
+  function nlShow(res, intents, src, reply) {
     var box = $('nlResult'), d = res.diff, rows = [];
     if (d.removed.length) rows.push('<p><b class="nl-k out">빠짐</b> ' + d.removed.map(esc).join(', ') + '</p>');
     if (d.added.length) rows.push('<p><b class="nl-k in">들어감</b> ' + d.added.map(esc).join(', ') + '</p>');
@@ -1623,7 +1651,7 @@
     res.msgs.forEach(function (m) { rows.push('<p class="nl-m">' + esc(m) + '</p>'); });
     if (res.ok && res.issues.length) rows.push('<p class="nl-m bad">이렇게 바꾸면: ' + esc(res.issues[0].text) + ' — 바꾼 뒤에 위쪽 안내에서 고칠 방법을 고를 수 있어요</p>');
     if (!res.ok && !rows.length) rows.push('<p class="nl-m">바뀌는 게 없어요.</p>');
-    box.innerHTML = '<p class="nl-h"><b>이렇게 바꿀까요?</b> <span class="simchip">시연</span></p>' + rows.join('') +
+    box.innerHTML = '<p class="nl-h"><b>이렇게 바꿀까요?</b> ' + (src === 'ai' ? '<span class="simchip ai">AI</span>' : '<span class="simchip">' + (aiUrl() ? '규칙' : '시연') + '</span>') + '</p>' + (src === 'ai' && reply ? '<p class="nl-m">' + esc(reply) + '</p>' : '') + rows.join('') +
       (res.ok ? '<div class="nl-act"><button type="button" class="btn primary" id="nlOk">이대로 바꾸기</button><button type="button" class="btn" id="nlNo">그만두기</button></div>' : '<div class="nl-act"><button type="button" class="btn" id="nlNo">닫기</button></div>');
     box.hidden = false;
   }
@@ -1631,9 +1659,18 @@
     if (!S.ed) return;
     var t = $('nlText').value.trim(), r = AI.aiEditIntent(t, { places: edPlaceList() });
     if (!t) { var b0 = $('nlResult'); b0.innerHTML = '<p class="nl-m">부탁할 말을 적어 주세요. ' + esc(r.help) + '</p>'; b0.hidden = false; return; }
-    var res = ED.applyIntents(edEnv(), S.ed.hist.cur, r.intents);
-    S.ed.nl = res; nlShow(res, r.intents);
-    var o = $('nlResult'); if (o.scrollIntoView) o.scrollIntoView({ block: 'nearest' });
+    function finish(intents, src, reply) {
+      if (!S.ed) return;
+      var res = ED.applyIntents(edEnv(), S.ed.hist.cur, intents);
+      S.ed.nl = res; nlShow(res, intents, src, reply);
+      var o = $('nlResult'); if (o.scrollIntoView) o.scrollIntoView({ block: 'nearest' });
+    }
+    if (!aiUrl()) { finish(r.intents, 'rule'); return; }
+    var go = $('nlGo'); go.disabled = true; var box = $('nlResult'); box.innerHTML = '<p class="nl-m">도째비가 말씀을 듣고 있어요…</p>'; box.hidden = false;
+    aiCall({ task: 'edit', text: t, places: edPlaceList() }, 4500).then(function (j) {
+      go.disabled = false;
+      if (j && j.intents && j.intents.length) finish(j.intents, 'ai', j.reply); else finish(r.intents, 'rule');
+    });
   });
   $('nlText').addEventListener('keydown', function (ev) { if (ev.key === 'Enter') { ev.preventDefault(); $('nlGo').click(); } });
   $('nlResult').addEventListener('click', function (ev) {

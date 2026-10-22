@@ -1532,3 +1532,8 @@ body.big #s-start .qs-card{ min-height:56px; }
 /* 간결화: 코스 고치기 단추가 두 개(칩+아래 큰 단추)였던 것을 큰 단추 하나로 */
 #editBtn{ display:none; }
 .tmap{ display:none !important; }  /* 위 막대의 "지도" 단추는 아래 탭과 겹치고 제목을 가려서 뺌 */
+.why{ margin:8px 0 0; }
+.why-t{ margin-top:8px; padding:10px 14px; border:1px solid var(--line); border-radius:14px; background:var(--soft); }
+.why-t p{ margin:.2em 0; }
+.why-src{ font-size:.82em; color:var(--muted); }
+.simchip.ai{ background:#0f4c81; color:#fff; }
