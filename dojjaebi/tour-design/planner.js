@@ -570,8 +570,11 @@
     var stay = o.stay || { id: LODGE_BASE_ID, name: '묵호역 근처 숙소', lat: D.stations.mukho.lat, lng: D.stations.mukho.lng };
     var howIn = o.how || 'train', carBoth = howIn === 'car' && (o.backHow || howIn) === 'car';
     var dayLegOpt = carBoth ? { car: true } : null; // 둘째 날 새벽 이동도 makeLegger 와 같은 규칙(오고 갈 때 모두 자가용이면 차)
-    var chuamCluster = D.places.filter(function (p) { return p.group === 'chuam'; });
-    var wantSun = !!o.sunrise && n >= 2 && !o.rain; // 비 오면 새벽 일출 빼기(앱이 안 막아도 여기서 한 번 더). 동행별 켜고 끄기는 앱이 정한다
+    // 2026-10-22: 일출 장소는 추암 고정이 아니라 동쪽 바다를 보는 곳 중 숙소에서 가장 가까운 곳(묵호에 묵는데 추암까지 가던 문제). 데이터에 일출 표시가 없어 이름 목록으로 어림한다
+    var SUN_SPOTS = ['lighthouse', 'nolgol', 'eodal', 'chuam', 'mangsang'], sunSpot = null, sunBest = 1e9;
+    SUN_SPOTS.forEach(function (id) { var q = D.places.filter(function (x) { return x.id === id; })[0]; if (!q) return; var lq = leg(stay, q, false, routes, dayLegOpt); if (lq.min < sunBest) { sunBest = lq.min; sunSpot = q; } });
+    var chuamCluster = sunSpot ? D.places.filter(function (p) { return p.id === sunSpot.id || (sunSpot.group && p.group === sunSpot.group); }) : [];
+    var wantSun = !!o.sunrise && n >= 2 && !o.rain && !!sunSpot && sunBest <= 25; // 숙소에서 25분 넘게 걸리는 곳뿐이면 새벽 일출을 넣지 않는다 // 비 오면 새벽 일출 빼기(앱이 안 막아도 여기서 한 번 더). 동행별 켜고 끄기는 앱이 정한다
     var days = [], avoid = (o.avoid || []).slice(), sunDone = false;
     for (var i = 0; i < n; i++) {
       var last = i === n - 1, date = addDays(o.date, i);
@@ -586,7 +589,7 @@
       if (i === 0) { base.mode = 'late'; if (wantSun) base.avoid = base.avoid.concat(chuamCluster.map(function (p) { return p.id; })); }
       var sun = null, brk = null, pl = null;
       if (i === 1 && wantSun && !sunDone) { // 둘째 날 새벽 추암 일출 + 아침 한 끼
-        var ch = chuamCluster.filter(function (p) { return p.id === 'chuam'; })[0] || chuamCluster[0];
+        var ch = sunSpot || chuamCluster[0];
         var sm = sunriseApprox(date) || (toMin(D.sunrise.time)), l1 = leg(stay, ch, false, routes, dayLegOpt), arr = sm - 30, dep = arr - l1.min;
         var f1 = { id: ch.id, place: ch, legMin: l1.min, mode: l1.mode, moveText: l1.text, path: l1.path, tour: null, real: !!l1.real, fare: l1.fare, transfers: l1.transfers, arrive: arr, wait: 0, delay: 0, startVisit: arr, leave: arr + 40 + 30 }; // 일출 30분 전 도착, 해 뜬 뒤 40분
         var seed = [f1], bf = o.meal === false ? null : breakfastStop(D, base, ch, f1.leave, routes, dayLegOpt);
@@ -597,7 +600,7 @@
         else { base.fixed = []; base.now = DAY2_START; pl = null; }
       }
       if (!pl) pl = plan(D, base);
-      pl.stops.forEach(function (s) { if (s.done) { delete s.done; s.pre = true; } s.day = i; avoid.push(s.id); if (s.place && s.place.group && s.place.group === 'chuam') chuamCluster.forEach(function (p) { if (avoid.indexOf(p.id) < 0) avoid.push(p.id); }); });
+      pl.stops.forEach(function (s) { if (s.done) { delete s.done; s.pre = true; } s.day = i; avoid.push(s.id); if (s.place && s.place.group && sunSpot && s.place.group === sunSpot.group) chuamCluster.forEach(function (p) { if (avoid.indexOf(p.id) < 0) avoid.push(p.id); }); });
       days.push({ n: i + 1, date: date, label: (i + 1) + '일차 · ' + dateLabel(date), plan: pl, sunrise: sun, breakfast: brk, stay: last ? null : stay });
     }
     var first = days[0].plan, lastPl = days[n - 1].plan;

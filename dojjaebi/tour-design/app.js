@@ -1342,7 +1342,7 @@
     if (S.fx && S.fx.news[p.id]) b.push('<span class="tag good">#새볼거리제보</span>');
     if (s.done) b.push('<span class="tag good">#도착함</span>');
     b.push(edTags(s));
-    if (s.pre && p.id === 'chuam') b.push('<span class="tag good">#새벽일출(어림시각)</span>');
+    if (s.pre && S.plan && S.plan.multi && S.plan.days.some(function (d) { return d.sunrise && d.sunrise.place && d.sunrise.place.id === p.id; })) b.push('<span class="tag good">#새벽일출(어림시각)</span>');
     return b.join('');
   }
   /* 이동 글: planner 가 만든 moveText("걸어서 12분(실제 길)" · "버스 21-1번 18분 · 환승 0회" · "택시 약 9분(어림)"). 없으면 예전 글. */
@@ -1358,7 +1358,7 @@
   function dayHeadHtml(d) {
     var pl = d.plan, sub;
     if (d.n === 1) sub = hhmm(pl.start) + ' ' + pl.startStation.name + '에서 출발';
-    else if (d.sunrise) sub = '새벽 ' + hhmm(d.sunrise.depart) + ' 숙소 출발 · 추암 일출 ' + hhmm(d.sunrise.sunrise) + ' (계산한 어림값, 확인필요)';
+    else if (d.sunrise) sub = '새벽 ' + hhmm(d.sunrise.depart) + ' 숙소 출발 · ' + (d.sunrise.place.short || d.sunrise.place.name) + ' 일출 ' + hhmm(d.sunrise.sunrise) + ' (계산한 어림값, 확인필요)';
     else sub = hhmm(pl.start) + ' ' + (d.n > 1 ? '숙소' : pl.startStation.name) + '에서 출발';
     return '<li class="dayhead"><div role="heading" aria-level="2" class="dh-t"><b>' + esc(d.label) + '</b><span>' + esc(sub) + '</span></div>' + (LV && !S.editing ? '<button type="button" class="eb daylive" data-live="' + (d.n - 1) + '" aria-label="' + esc(d.label) + ' 여행 길안내">이 날 여행 길안내</button>' : '') + '</li>';
   }
@@ -2538,7 +2538,7 @@
   function renderStayInner() {
     if (S.plan && S.plan.multi) { // 여러 날 여행: 날마다 묵는 곳 안내
       var sy = S.plan.stay;
-      $('stayOpts').innerHTML = '<div class="opt on"><b>' + esc(S.plan.label) + ' 코스예요</b><p>날마다 새로 짜서, 밤에는 숙소 앞에서 마쳐요. 둘째 날 새벽에는 추암 일출로 시작할 수 있어요(비 오는 날·아이·부모님과는 뺌).</p>' +
+      $('stayOpts').innerHTML = '<div class="opt on"><b>' + esc(S.plan.label) + ' 코스예요</b><p>날마다 새로 짜서, 밤에는 숙소 앞에서 마쳐요. 둘째 날 새벽에는 숙소에서 가까운 바다 쪽 일출 자리로 시작할 수 있어요(비 오는 날·아이·부모님과는 뺌).</p>' +
         (sy && sy.examples && sy.examples.length ? '<p>숙소 예' + (sy.area ? '(' + esc(sy.area) + ' 권역)' : S.stayPick ? '' : '(묵호역에서 가까운 순)') + ': ' + sy.examples.map(esc).join(' · ') + '</p><p class="note">출처: ' + esc(sy.source) + ' · 모텔·펜션은 자료에 없어요 · 별점·광고 없음 · 예약·요금은 직접 확인</p>' : '<p class="note">숙박업소 자료가 없어 묵호역 둘레로 잡았어요.</p>') + // 2026-10-21: "가까운 순"은 기본값(묵호역 둘레)일 때만 맞는 말이라, 권역 추천·손으로 고른 숙소일 땐 다르게 보여줌
         '<p class="note">막차·하룻밤 비교는 하루 여행에서만 보여요.</p></div>';
       return;
