@@ -1166,15 +1166,23 @@
   }
   /* 코스 카드(2026-10-21 시안): 사진은 늘 보이고, 그 아래 [종류 색 번호 핀 · 시각 · 종류] · 장소 이름(누르면 자세히) · 100×100 · 이동 줄.
      번호 핀은 사진 위에 얹지 않는다(공공누리 제3유형 사진 위에는 글·배지를 두지 않는 규칙). 자세한 내용(이야기·묻기·태그·운영 시간)은 p-body 에 접어 둔다 */
+  // 2026-10-22(Fable 5.1 독립 검토로 찾은 문제): "꼭 갈 곳" 표는 접힌 카드엔 하나도 안 보이고 "자세히 보기"를 펼쳐야만,
+  // 그것도 해시태그 줄(#묵호 #야외 #계단없음 사이)에 섞여서만 보여서 — 실제로는 반영됐어도 사용자 눈엔 "반영 안 됨"으로 보이던 원인.
+  // 그래서 접힌 머리에도(다른 배지들과 같은 자리) 바로 보이는 ⭐ 배지를 추가한다.
+  function mustBadgeHtml(p) {
+    if (S.cond.must && S.cond.must.indexOf(p.id) >= 0) return '<span class="must-badge">⭐ 꼭 갈 곳</span>';
+    if (S.mustFoodNear && S.mustFoodNear[p.id]) return '<span class="must-badge">⭐ 근처: ' + esc(S.mustFoodNear[p.id].join('·')) + '</span>';
+    return '';
+  }
   function foldHead(p, i, when, s, tomorrow, changed, num, open) {
     var mode = s && s.mode && MVIC[s.mode] ? s.mode : 'walk';
     var mv = tomorrow ? '' : '<span class="p-mv"><svg class="ic mvic" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + MVIC[mode] + '</svg><span>' + esc(mvShort(s)) + '</span></span>';
-    var ck = CAT[catOf(p)], n = num || i + 1;
+    var ck = CAT[catOf(p)], n = num || i + 1, mustBadge = mustBadgeHtml(p);
     return '<div class="c-meta"><span class="c-pin" style="background:' + ck.c + '" aria-hidden="true"><span>' + n + '</span></span><span class="c-when">' + esc(when) + ' · ' + esc(ck.n) + '</span>' + (tomorrow ? '' : crowdHtml(s)) + '</div>' +
       '<h3 class="p-h"><button type="button" class="p-head p-tog" data-fold="' + i + '" aria-expanded="' + (open ? 'true' : 'false') + '" aria-controls="pb-' + i + '">' +
       '<span class="pt"><span class="p-t"><span class="visually-hidden">' + n + '장 · </span>' + esc(p.name) + '</span><span class="p-sub">자세히 보기</span></span>' +
       '<svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button></h3>' +
-      ((PK.has(p.id) || changed) ? '<div class="c-badges">' + pickHtml(p) + (changed ? '<span class="new-badge">방금 바뀜</span>' : '') + '</div>' : '') + mv;
+      ((PK.has(p.id) || changed || mustBadge) ? '<div class="c-badges">' + pickHtml(p) + (changed ? '<span class="new-badge">방금 바뀜</span>' : '') + mustBadge + '</div>' : '') + mv;
   }
   /* 접힌 장은 사용자가 다시 누를 때까지 열린 채로 둔다: 여러 개를 동시에 열 수 있고, 다시 그려도(날씨·시간표·길안내·미리 보기·날짜 탭) 열린 장은 S.openFold 에서 되살린다 */
   function foldSet(li, open) {
@@ -1290,7 +1298,9 @@
   var K_EDLAST = 'tour.edit.last.v2', ED_KEY = 'tour.edit.v2.'; // v2: 식당 장 없앤 뒤(10/18) — 예전 v1 고친 코스는 읽지 않는다
   var EDSTORE = { get: lsGet, set: lsSet, del: lsDel };
   S.ed = null; S.editing = false;
-  function edSig() { var c = S.cond; return ED.sigOf({ date: c.date, backDate: c.backDate, arrive: c.arrive, back: c.back, noLimit: c.noLimit, how: c.how, backHow: c.backHow, end: c.end, companions: c.companions, knee: c.knee, interests: c.interests, rain: c.rain, food: c.food, foodWord: c.foodWord, loop: !!S.tourLoop, stay: S.stayPick ? S.stayPick.name : '' }); }
+  // 2026-10-22(Fable 5.1 독립 검토로 찾은 문제): must(꼭 갈 곳)가 서명에 없어서, 전에 고쳐 둔 코스가 있으면 같은 날짜·시간·동행 조건이라고 보고
+  // edRestore() 가 must 없는 옛 코스를 그대로 되살려 버려 — 방금 고른 맛집·카페가 반영 안 된 것처럼 보이던 또 다른 원인. must 도 서명에 넣어 막는다.
+  function edSig() { var c = S.cond; return ED.sigOf({ date: c.date, backDate: c.backDate, arrive: c.arrive, back: c.back, noLimit: c.noLimit, how: c.how, backHow: c.backHow, end: c.end, companions: c.companions, knee: c.knee, interests: c.interests, rain: c.rain, food: c.food, foodWord: c.foodWord, loop: !!S.tourLoop, stay: S.stayPick ? S.stayPick.name : '', must: (c.must || []).join(',') }); }
   function edEnv() { return { D: D, o: planOpts(), frame: S.ed.frame }; }
   function edRetimed() { return ED.retime(edEnv(), S.ed.hist.cur); }
   function edDirty() { return !!S.ed && JSON.stringify(S.ed.hist.cur) !== JSON.stringify(ED.fromPlan(S.ed.frame)); }
