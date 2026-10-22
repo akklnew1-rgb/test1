@@ -1325,6 +1325,29 @@
     setTimeout(function () { foldOpen(pid, true); }, 30);
     return true;
   }
+  /* 식당(카페 말고)을 넣을 때: 코스에 이미 있는 점심·저녁 시간 줄 하나를 그 식당으로 바꾼다(식사가 두 번 잡히지 않게). 줄이 없으면 그냥 넣는다. */
+  function eatAdd(pid, cafe) {
+    if (cafe) return spotAdd(pid);
+    if (!S.plan || !PLACE[pid]) return false;
+    if (courseIds()[pid]) { flash('이미 코스에 있어요'); return false; }
+    edStart(); if (!S.ed) return false;
+    var spec = S.ed.hist.cur, env = edEnv(), best = null;
+    spec.days.forEach(function (d, di) {
+      d.items.forEach(function (it) {
+        if (it.kind !== 'meal' || it.breakfast) return;
+        var rm = ED.removeItem(spec, it.id); if (!rm) return; rm.noMeal = spec.noMeal; // 다른 끼니 줄은 그대로 두기
+        var b = ED.bestInsert(env, rm, di, pid, P.slotKindOf(it.id) === 'dinner' ? 18 * 60 : 12 * 60 + 30);
+        if (b && b.r && b.r.spec && (!best || b.sc < best.b.sc)) best = { b: b, sid: it.id, di: di };
+      });
+    });
+    if (!best) return spotAdd(pid);
+    S.poiSel = null;
+    edApply(best.b.r.spec, PLACE[pid].short + ' 넣고 ' + slotName(best.sid) + ' 시간은 뺐어요' + (best.b.r.blocked ? ' · 시간이 빠듯해요. 코스 고치기에서 확인해 주세요' : ''), [pid]);
+    if (S.plan.multi) S.dayTab = best.di;
+    show('s-course');
+    setTimeout(function () { foldOpen(pid, true); }, 30);
+    return true;
+  }
   function kmapHtml(s) {
     if (!LV || !s || !s.place) return '';
     var prev = prevPlaceOf(s); if (!prev) return '';
@@ -3693,7 +3716,7 @@
   function addEatToCourse(x) {
     var st = townAddState(x); if (!st.ok) { townSay(st.why, true); return; }
     var id = eatPlaceFrom(x); townSay('');
-    if (spotAdd(id)) flash(x.name + ' 넣었어요 · 운영 시간은 가게에 확인해 주세요');
+    if (eatAdd(id, isCafe(x))) flash(x.name + ' 넣었어요 · 운영 시간은 가게에 확인해 주세요');
   }
   function townAdd(x) {
     var st = townAddState(x); if (!st.ok) { townSay(st.why, true); return; }
