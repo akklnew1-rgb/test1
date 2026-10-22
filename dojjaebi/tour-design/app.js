@@ -727,7 +727,7 @@
       else box.innerHTML = ART.svg(id);
     });
   }
-  function applyParsed(r, leadText) {
+  function applyParsed(r, leadText, direct) {
     var c = S.cond;
     if (r.how) {
       c.how = r.how;
@@ -739,6 +739,8 @@
     if (r.companions && r.companions.length) c.companions = r.companions.indexOf('혼자') >= 0 ? ['혼자'] : r.companions.filter(function (n) { return COMPS.indexOf(n) >= 0; });
     c.knee = !!r.knee; c.interests = r.interests.slice(); c.rain = !!r.rain || (S.wxRain && c.rain); c.food = !!r.food; c.foodWord = r.foodWord || ''; c.count = r.count;
     c.date = r.date || c.date || todayIso();
+    if (r.arrive != null) { c.arrive = r.arrive; c.arriveTouched = true; }
+    if (r.must && r.must.length) c.must = r.must.slice();
     syncBack(c);
     if (r.train != null) { c.back = r.train; c.backTouched = true; }
     var found = [];
@@ -756,6 +758,7 @@
     S.nextStep = 3; // 알아들은 내용을 마지막 단계에서 확인
     S.startNote = leadText + (found.length ? ' 알아들은 것: ' + found.join(' · ') + '.' : '') + ' 맞는지 보고 아래 단추를 눌러 주세요.';
     loadTrains();
+    if (direct) { setStep(6, { focus: false }); if (stepBlock()) { show('s-start'); return; } var fut = S.cond.branch !== 'now' && S.cond.date > todayIso(); makeCourse(false, false, fut ? 's-prep' : 's-course'); return; }
     show('s-start');
   }
   function handleTicketFile(ev) {
@@ -824,7 +827,7 @@
   function chatMerge(a) {
     CH.cond = CH.cond || {};
     if (!a) return;
-    ['date', 'train', 'how', 'foodWord'].forEach(function (k) { if (a[k] != null && a[k] !== '') CH.cond[k] = a[k]; });
+    ['date', 'arrive', 'train', 'how', 'foodWord'].forEach(function (k) { if (a[k] != null && a[k] !== '') CH.cond[k] = a[k]; });
     if (a.end === 'donghae') CH.cond.end = 'donghae';
     if (a.companions && a.companions.length) CH.cond.companions = a.companions;
     ['interests'].forEach(function (k) { if (a[k] && a[k].length) CH.cond[k] = a[k]; });
@@ -833,19 +836,19 @@
   function chatSend(text) {
     text = String(text || '').trim(); if (!text || CH.busy) return;
     var n = $('askNote'); n.hidden = true;
-    chatEl('me', esc(text)); CH.msgs.push({ role: 'user', text: text }); $('askText').value = '';
+    $('chatMake').hidden = true; chatEl('me', esc(text)); CH.msgs.push({ role: 'user', text: text }); $('askText').value = '';
     var typing = chatEl('bot typing', '도째비가 생각하고 있어요…'); CH.busy = true; $('askGo').disabled = true;
     var all = CH.msgs.filter(function (m) { return m.role === 'user'; }).map(function (m) { return m.text; }).join(' ');
     var cands = chatCands(all, text), byId = {}; cands.forEach(function (x) { byId[x.key] = x; });
-    aiCall({ task: 'chat', messages: CH.msgs.slice(-8), today: todayIso(), cands: cands.map(function (x) { return { id: x.key, name: x.name, menu: x.kind === 'lodge' ? (x.type || '숙소') : (MENU_GROUPS.filter(function (g) { return g[0] === menuOf(x); })[0] || ['', '', ''])[1], area: x.dong }; }) }, 22000).then(function (j) {
+    aiCall({ task: 'chat', messages: CH.msgs.slice(-8), today: todayIso(), places: D.places.map(function (p) { return { id: p.id, name: p.short || p.name }; }), cands: cands.map(function (x) { return { id: x.key, name: x.name, menu: x.kind === 'lodge' ? (x.type || '숙소') : (MENU_GROUPS.filter(function (g) { return g[0] === menuOf(x); })[0] || ['', '', ''])[1], area: x.dong }; }) }, 22000).then(function (j) {
       CH.busy = false; $('askGo').disabled = false; if (typing.parentNode) typing.parentNode.removeChild(typing);
       if (j && j.reply) {
         var b = chatEl('bot', esc(j.reply)); CH.msgs.push({ role: 'bot', text: j.reply });
         (j.picks || []).forEach(function (id) { if (byId[id]) { b.appendChild(chatCard(byId[id])); if (!CH.picks.some(function (q) { return q.key === id; })) CH.picks.push(byId[id]); } });
         if (j.choices && j.choices.length) { var cw = document.createElement('div'); cw.className = 'bub-choices'; j.choices.forEach(function (t) { var cb = document.createElement('button'); cb.type = 'button'; cb.className = 'chip'; cb.textContent = t; cb.addEventListener('click', function () { cw.parentNode && cw.parentNode.removeChild(cw); chatSend(t); }); cw.appendChild(cb); }); b.appendChild(cw); }
-        chatMerge(j.parsed);
+        chatMerge(j.parsed); if (j.must && j.must.length) CH.cond.must = j.must; CH.direct = !!j.ready;
         var rule = AI.aiParseRequest(all, S.cond.arrive, todayIso()); CH.rule = rule;
-        if (j.ready || (CH.cond && CH.cond.date && ((CH.cond.companions && CH.cond.companions.length) || CH.cond.train != null))) $('chatMake').hidden = false;
+        $('chatMake').hidden = !j.ready;
       } else {
         var rule2 = AI.aiParseRequest(all, S.cond.arrive, todayIso()); CH.rule = rule2;
         chatEl('bot', '연결이 고르지 않아 대화가 어려워요. 말씀하신 조건은 적어 뒀으니 아래 "코스 만들기"를 누르거나, 아래에서 직접 골라 주세요.');
@@ -863,13 +866,14 @@
   $('chatMake').addEventListener('click', function () {
     var all = CH.msgs.filter(function (m) { return m.role === 'user'; }).map(function (m) { return m.text; }).join(' ');
     var r = AI.aiParseRequest(all, S.cond.arrive, todayIso()), a = CH.cond || {};
-    ['date', 'train', 'how'].forEach(function (k) { if (a[k] != null && a[k] !== '') r[k] = a[k]; });
+    ['date', 'arrive', 'train', 'how'].forEach(function (k) { if (a[k] != null && a[k] !== '') r[k] = a[k]; });
+    if (a.must && a.must.length) r.must = a.must;
     if (a.date && ((P.dateInfo && !P.dateInfo(a.date)) || a.date < todayIso())) r.date = null;
     if (a.end === 'donghae') r.end = 'donghae';
     if (a.companions && a.companions.length) r.companions = a.companions;
     (a.interests || []).forEach(function (v) { if (r.interests.indexOf(v) < 0) r.interests.push(v); });
     r.knee = r.knee || !!a.knee; r.rain = r.rain || !!a.rain; r.food = r.food || !!a.food; if (a.foodWord) r.foodWord = a.foodWord;
-    applyParsed(r, '도째비와 나눈 이야기에서 알아들었어요.');
+    applyParsed(r, '도째비와 나눈 이야기에서 알아들었어요.', CH.direct);
   });
   $('askGo').addEventListener('click', function () {
     var t = $('askText').value; if (!t.trim()) { var n = $('askNote'); n.textContent = '하실 말씀을 적어 주세요. 아래 예시를 눌러도 돼요.'; n.hidden = false; $('askText').focus(); return; }
