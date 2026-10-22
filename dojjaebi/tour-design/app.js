@@ -532,8 +532,10 @@
   /* ---------- 시작 화면 단계 (S.step: 0 인사 · 1 올 때 · 2 돌아갈 때 · 3 누구와) — 한 화면에 한 가지씩 ---------- */
   function backEarly(c) { var eff = c.backHow === 'car' && c.noLimit ? 22 * 60 : c.back; return c.backDate === c.date && eff < c.arrive; }
   function setHdr() { var t = $('top'); if (t) document.documentElement.style.setProperty('--hdr', t.offsetHeight + 'px'); }
+  function skip5() { return !isMulti() && compOf(S.cond) === '혼자'; } // 혼자 당일치기: 숙소도 인원도 물을 게 없으니 5단계를 건너뜀
   function setStep(n, opt) {
     opt = opt || {};
+    if (n === 5 && skip5()) { S.cond.count = 1; n = 6; }
     S.step = n;
     $('s-start').setAttribute('data-step', String(n));
     for (var i = 0; i <= 6; i++) $('st' + i).hidden = (i !== n);
@@ -569,11 +571,14 @@
   $('stNext3').addEventListener('click', function () { setStep(4); });
   $('stNext4').addEventListener('click', function () { setStep(5); });
   $('stNext5').addEventListener('click', function () { setStep(6); });
-  [1, 2, 3, 4, 5, 6].forEach(function (n) { $('stBack' + n).addEventListener('click', function () { setStep(n - 1); }); });
+  [1, 2, 3, 4, 5, 6].forEach(function (n) { $('stBack' + n).addEventListener('click', function () { setStep(n === 6 && skip5() ? 4 : n - 1); }); });
   /* ---------- 5단계: 숙소 예약 여부 + 인원수 (2026-10-21, 사용자 요청: "누구랑 와서 어디서 잘지도 추천해 주기 편하지 않니") ---------- */
   function stayUi() { Array.prototype.forEach.call(document.querySelectorAll('#chipStay [data-stay]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-stay') === S.cond.stayBooked ? 'true' : 'false'); }); $('stayNote').hidden = S.cond.stayBooked !== 'none'; /* 2026-10-22(Fable 리뷰): 이 글은 "숙소 자리를 추천해 드려요" 라는 내용 — 아직 안 잡았을 때(none)만 맞는 말이라 조건이 거꾸로였음 */ }
   function renderStayUi() {
     stayUi();
+    var alone = compOf(S.cond) === '혼자';
+    if (alone) S.cond.count = 1; // 혼자인데 인원이 2명으로 남아 있던 모순 방지
+    if ($('countBlock')) $('countBlock').hidden = alone;
     $('countN').textContent = (S.cond.count || 1) + '명';
     var multi = isMulti();
     if ($('stayQBlock')) $('stayQBlock').hidden = !multi; // 2026-10-22: 당일치기는 묵을 숙소가 없으니 이 질문을 안 보임
@@ -670,7 +675,7 @@
     // 2026-10-22: 당일치기는 숙소를 안 물어보니(stayBooked 가 null) "안 물어봤어요"가 아니라 인원수만 보여줌
     var stayLabel = isMulti() ? '숙소·인원' : '인원';
     var stayTxt = isMulti() ? (c.stayBooked === 'booked' ? '벌써 잡았어요' : c.stayBooked === 'none' ? '아직이에요 (도째비가 추천해요)' : '안 물어봤어요') + ' · ' + (c.count || 1) + '명' : (c.count || 1) + '명';
-    $('confirmList').innerHTML = editRow('올 때', whenTxt, 1) + editRow('돌아갈 때', backTxt, 2) + editRow('누구와', compTxt, 3) + editRow('꼭 갈 곳', mvTxt, 4) + editRow(stayLabel, stayTxt, 5);
+    $('confirmList').innerHTML = editRow('올 때', whenTxt, 1) + editRow('돌아갈 때', backTxt, 2) + editRow('누구와', compTxt, 3) + editRow('꼭 갈 곳', mvTxt, 4) + (skip5() ? '' : editRow(stayLabel, stayTxt, 5));
   }
   document.addEventListener('click', function (ev) { var b = ev.target.closest('[data-editstep]'); if (!b) return; setStep(+b.getAttribute('data-editstep'), { focus: false }); });
   /* 인사 화면: 대표 사진 여러 장이 천천히 바뀐다(공공누리 제1유형만 — 칸에 꽉 채워 잘라 쓰므로). 4.5초마다 · 점 · 1/6 · 좌우로 밀기 · 손대는 동안·탭이 가려지면 멈춤 · 움직임 줄이기면 자동으로 안 넘김 */
