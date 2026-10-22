@@ -1590,3 +1590,10 @@ body.big #s-start .qs-card{ min-height:56px; }
   .cf-in{background:var(--soft);color:var(--ink);border-color:var(--line)}
 }
 #cfSheet .eb{white-space:nowrap}#cfSheet .sh-head h3{margin:0}
+/* 대화가 시작되면 채팅 영역을 넓히고 입력부는 작게 */
+.ask.talking .chat{max-height:none;height:calc(100dvh - 400px);min-height:230px}
+.ask.talking #askChips{display:none}
+.ask.talking #askText{min-height:52px;height:52px}
+.ask-row .btn span{white-space:nowrap}
+.ask.talking .ask-row{margin:6px 0 0}
+.ask.talking .bub-card{padding:10px 12px}

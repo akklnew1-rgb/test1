@@ -795,7 +795,7 @@
   $('inputNext').addEventListener('click', function () { readRequest($('reqText').value, $('inputNext')); });
   /* ---------- 도째비와 대화 (2026-10-22) — 대화는 인공지능이, 식당 후보와 조건 계산은 앱이. AI 는 앱이 준 후보(cands)의 id 만 고를 수 있어 없는 가게를 지어내지 못한다. ---------- */
   var CH = { msgs: [], cond: null, busy: false, picks: [], kind: 'eat' };
-  function chatEl(cls, html) { var d = document.createElement('div'); d.className = 'bub ' + cls; d.innerHTML = html; $('chat').appendChild(d); try { d.scrollIntoView({ block: 'nearest' }); } catch (e) {} return d; }
+  function chatEl(cls, html) { var d = document.createElement('div'); d.className = 'bub ' + cls; d.innerHTML = html; $('chat').appendChild(d); var c = $('chat'); try { c.scrollTop = cls.indexOf('bot') >= 0 ? Math.max(0, d.offsetTop - c.offsetTop - 4) : c.scrollHeight; } catch (e) {} return d; }
   var STAY_RE = /숙소|호텔|펜션|모텔|민박|리조트|숙박|잘 곳|게스트|콘도/, FOOD_RE = /맛집|식당|먹|밥|점심|저녁|회|국수|추천/;
   function chatCands(text, last) {
     // 숙소 이야기인지: 방금 말에 숙소 낱말이 있거나, 숙소 이야기 중이고 방금 말이 식당 이야기가 아닐 때
@@ -836,7 +836,7 @@
   function chatSend(text) {
     text = String(text || '').trim(); if (!text || CH.busy) return;
     var n = $('askNote'); n.hidden = true;
-    $('chatMake').hidden = true; chatEl('me', esc(text)); CH.msgs.push({ role: 'user', text: text }); $('askText').value = '';
+    $('ask').classList.add('talking'); $('chatMake').hidden = true; chatEl('me', esc(text)); CH.msgs.push({ role: 'user', text: text }); $('askText').value = '';
     var typing = chatEl('bot typing', '도째비가 생각하고 있어요…'); CH.busy = true; $('askGo').disabled = true;
     var all = CH.msgs.filter(function (m) { return m.role === 'user'; }).map(function (m) { return m.text; }).join(' ');
     var cands = chatCands(all, text), byId = {}; cands.forEach(function (x) { byId[x.key] = x; });
