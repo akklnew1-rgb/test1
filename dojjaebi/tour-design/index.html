@@ -452,6 +452,7 @@
 <!-- 2b. 지도 -->
 <section id="s-map" class="screen" hidden aria-labelledby="h-map">
   <h2 id="h-map">오늘 걷는 길</h2>
+  <button type="button" class="btn back-town" id="backTown" hidden>← 동네 목록으로 돌아가기</button>
   <div class="facbar laybar" role="group" aria-label="지도에 보기"><span class="fb-l">지도 보기</span><button type="button" class="chip" id="layCourse" aria-pressed="true">코스</button><button type="button" class="chip" id="layEat" data-k="eat" aria-pressed="false">식당</button><button type="button" class="chip" id="layCafe" data-k="cafe" aria-pressed="false">카페</button><button type="button" class="chip" id="layLodge" data-k="lodge" aria-pressed="false">숙소</button><button type="button" class="chip" id="laySpot" data-k="spot" aria-pressed="false">볼거리</button></div>
   <div class="facbar" role="group" aria-label="지도에 같이 보기"><span class="fb-l">같이 보기</span><button type="button" class="chip" id="facWc" aria-pressed="false">화장실</button><button type="button" class="chip" id="facInfo" aria-pressed="false">관광안내소</button></div>
   <div class="mapbox">
@@ -528,8 +529,8 @@
   <div id="tourBox" class="tourbox" hidden></div>
   <div id="townBox">
     <label class="visually-hidden" for="townQ">이름으로 찾기</label>
-    <input type="text" id="townQ" placeholder="이름·종류로 찾기 (예: 물회, 칼국수)" autocomplete="off" enterkeyhint="search">
-    <button type="button" class="chip" id="townNear" aria-pressed="false">가까운 순으로</button>
+    <div class="tq-wrap"><input type="text" id="townQ" placeholder="이름·종류로 찾기 (예: 물회, 칼국수)" autocomplete="off" enterkeyhint="search"><button type="button" class="tq-x" id="townClear" hidden aria-label="검색어 지우기">지우기</button></div>
+    <button type="button" class="chip" id="townNear" aria-pressed="false">내 위치에서 가까운 순</button>
     <div class="chips town-chips" id="townChips" role="group" aria-label="동네 고르기"></div>
     <p class="note" id="townCount" aria-live="polite"></p>
     <p class="note warnline" id="townMsg" role="status" aria-live="polite" hidden></p>

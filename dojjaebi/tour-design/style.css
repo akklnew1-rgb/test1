@@ -1043,7 +1043,7 @@ button.ovn-b{ cursor:pointer; }
 /* 지도 식당·숙소 묶음(클러스터): 멀리서는 숫자 동그라미, 가까이서만 낱개 */
 .kclu{ min-width:44px; min-height:44px; padding:0; border:0; background:transparent; display:flex; align-items:center; justify-content:center; cursor:pointer; touch-action:manipulation; }
 .kclu i{ display:flex; align-items:center; justify-content:center; min-width:36px; height:36px; padding:0 6px; border-radius:18px; border:3px solid #fff; box-shadow:0 1px 5px rgba(0,0,0,.4); color:#fff; font-style:normal; font-weight:800; font-size:14px; line-height:1; font-variant-numeric:tabular-nums; }
-.kclu.eat i{ background:#b35c00; } .kclu.cafe i{ background:#0d8a6b; } .kclu.lodge i{ background:#5f3dc4; }
+.kclu.eat i{ background:#d9480f; } .kclu.cafe i{ background:#0b7f6f; } .kclu.lodge i{ background:#1d3b66; }
 .kclu.big i{ min-width:46px; height:46px; border-radius:23px; font-size:15px; }
 .poi-src{ margin:6px 0 0; font-size:.78em; color:var(--muted); }
 
@@ -1097,7 +1097,7 @@ button.ovn-b{ cursor:pointer; }
 .near-btn .ic{ width:18px; height:18px; }
 .near-btn:active{ background:var(--wz-soft); }
 .kpoi.spot i,.poi-ic.spot{ background:#2b7a3d; }
-.kclu.spot i{ background:#2b7a3d; }
+.kclu.spot i{ background:#4a5568; }
 .poi-add{ margin-top:8px; background:var(--wz); border-color:var(--wz); color:#fff; }
 .sh-chips{ display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 2px; }
 .sh-chips .chip{ min-height:44px; padding:6px 14px; font-size:.95em; }
@@ -1143,7 +1143,7 @@ button.ovn-b{ cursor:pointer; }
 .kd-pin{ position:absolute; left:0; top:0; width:34px; height:34px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); background:#121212; border:3px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.3); display:flex; align-items:center; justify-content:center; box-sizing:border-box; }
 .kd-pin i{ transform:rotate(45deg); font-style:normal; color:#fff; font-weight:800; font-size:15px; line-height:1; }
 .kd-name{ position:absolute; left:38px; top:6px; padding:2px 7px; border-radius:6px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.2); font-size:12px; font-weight:800; color:#121212; white-space:nowrap; }
-.kpoi.spot i,.poi-ic.spot,.kclu.spot i{ background:#5f6672; }
+.kpoi.spot i,.poi-ic.spot,.kclu.spot i{ background:#4a5568; }
 /* 아래 고정 바 */
 .cbar{ position:sticky; bottom:calc(var(--tabh) + var(--safe-b, 0px)); z-index:30; margin-top:12px; padding:10px var(--gut); display:flex; flex-direction:column; gap:8px; background:rgba(255,255,255,.97); border-top:1px solid var(--line); backdrop-filter:saturate(1.4) blur(8px); }
 .cbar-stay{ display:flex; align-items:center; gap:10px; min-height:44px; padding:8px 12px; border:0; border-radius:12px; background:var(--wz-soft); color:var(--wz-ink); font:inherit; font-size:.9em; line-height:1.4; text-align:left; cursor:pointer; }
@@ -1325,3 +1325,11 @@ body{ background:#f9f8f6; }
 .town-seg .chip .ic{ width:22px; height:22px; }
 body.big .town-seg{ grid-template-columns:repeat(2,minmax(0,1fr)); }
 body.big .town-seg .chip{ flex-direction:row; gap:8px; font-size:1em; min-height:60px; }
+
+/* UX: 동네로 돌아가기 · 닫기 글자 · 검색어 지우기 */
+.back-town{ width:100%; min-height:52px; margin:4px 0 10px; background:var(--brand); border-color:var(--brand); color:#fff; font-weight:800; }
+.poi-x{ display:inline-flex; align-items:center; gap:4px; min-width:76px; min-height:48px; padding:0 12px; border-radius:12px; background:#e9e6df; color:var(--brand-dark); font-weight:800; font-size:.95em; }
+.poi-x svg{ width:18px; height:18px; }
+.tq-wrap{ position:relative; }
+.tq-wrap #townQ{ width:100%; padding-right:84px; box-sizing:border-box; }
+.tq-x{ position:absolute; right:6px; top:50%; transform:translateY(-50%); min-width:72px; min-height:44px; border:0; border-radius:10px; background:#e9e6df; color:var(--brand-dark); font-weight:800; font:inherit; font-weight:800; }

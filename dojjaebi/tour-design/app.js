@@ -144,8 +144,10 @@
   function show(id) {
     closeStory(true); closeSheet(true); ttClose(true); closeImage(); hideSnack();
     SCREENS.forEach(function (s) { $(s).hidden = (s !== id); });
+    if (id !== 's-map') S.fromTown = false;
     S.screen = id;
     stopSpeak();
+    if ($('backTown')) $('backTown').hidden = !(id === 's-map' && S.fromTown);
     var ttl = { 's-start': '여행 준비', 's-input': '여행 준비', 's-prep': '여행 준비', 's-course': '오늘 코스', 's-map': '코스 지도', 's-report': '현장 제보', 's-stay': '동네', 's-card': '기록', 's-watch': '시청 화면' }[id] || '';
     if ($('scrTitle')) $('scrTitle').textContent = ttl;
     if ($('toMapTop')) $('toMapTop').hidden = !(id === 's-course' && S.plan);
@@ -2498,13 +2500,13 @@
     if (sel && sel.kind === 'spot') {
       var sp = PLACE[sel.pid];
       card.hidden = false;
-      card.innerHTML = '<div class="poi-h"><span class="poi-ic spot">' + poiSvg('spot') + '</span><div class="poi-t"><b>' + esc(sel.name) + '</b>' + pickHtml(sp, 'poi-b') + '<span>' + esc(sel.type) + (sel.m != null ? ' · 중심에서 약 ' + (sel.m >= 1000 ? (Math.round(sel.m / 100) / 10) + 'km' : (FU ? FU.round10(sel.m) : sel.m) + 'm') : '') + '</span></div><button type="button" class="poi-x" data-poi-x="1" aria-label="닫기">' + ico('close') + '</button></div>' +
+      card.innerHTML = '<div class="poi-h"><span class="poi-ic spot">' + poiSvg('spot') + '</span><div class="poi-t"><b>' + esc(sel.name) + '</b>' + pickHtml(sp, 'poi-b') + '<span>' + esc(sel.type) + (sel.m != null ? ' · 중심에서 약 ' + (sel.m >= 1000 ? (Math.round(sel.m / 100) / 10) + 'km' : (FU ? FU.round10(sel.m) : sel.m) + 'm') : '') + '</span></div><button type="button" class="poi-x" data-poi-x="1" aria-label="닫기">' + ico('close') + '<span>닫기</span></button></div>' +
         '<p class="poi-a">운영 ' + esc(sp.openText || '') + (sp.restText ? ' · 쉬는 날 ' + esc(sp.restText) : '') + '</p>' +
         (S.plan ? '<button type="button" class="btn poi-go poi-add" data-spot-add="' + esc(sp.id) + '">코스에 넣기</button><p class="poi-s">가장 덜 돌아가는 자리에 넣어요 · 돌아갈 시각은 지켜요</p>' : '') +
         '<p class="poi-s">출처: 한국관광공사 관광정보' + (PK.has(sp.id) ? ' · 100×100: 한국관광공사 「대한민국 명소발굴 100×100」' : '') + '</p>';
     } else if (sel) {
       card.hidden = false;
-      card.innerHTML = '<div class="poi-h"><span class="poi-ic ' + sel.kind + '">' + poiSvg(sel.kind) + '</span><div class="poi-t"><b>' + esc(sel.name) + '</b><span>' + esc(sel.type) + (sel.m != null ? ' · 중심에서 약 ' + (sel.m >= 1000 ? (Math.round(sel.m / 100) / 10) + 'km' : (FU ? FU.round10(sel.m) : sel.m) + 'm') : '') + '</span></div><button type="button" class="poi-x" data-poi-x="1" aria-label="닫기">' + ico('close') + '</button></div>' +
+      card.innerHTML = '<div class="poi-h"><span class="poi-ic ' + sel.kind + '">' + poiSvg(sel.kind) + '</span><div class="poi-t"><b>' + esc(sel.name) + '</b><span>' + esc(sel.type) + (sel.m != null ? ' · 중심에서 약 ' + (sel.m >= 1000 ? (Math.round(sel.m / 100) / 10) + 'km' : (FU ? FU.round10(sel.m) : sel.m) + 'm') : '') + '</span></div><button type="button" class="poi-x" data-poi-x="1" aria-label="닫기">' + ico('close') + '<span>닫기</span></button></div>' +
         (sel.addr ? '<p class="poi-a">' + esc(sel.addr) + '</p>' : '') + (sel.prec ? '<p class="poi-a"><small>' + (sel.prec === 'k' ? '이름으로 찾은 위치' : '주소로 찾은 대략 위치(건물 기준)') + '</small></p>' : '') + (sel.tel ? '<p class="poi-a"><a href="tel:' + esc(sel.tel.replace(/[^0-9]/g, '')) + '">' + esc(sel.tel) + '</a></p>' : '') +
         '<a class="btn poi-go" href="' + esc(TW.kakaoSearch(sel.name)) + '" target="_blank" rel="noopener">카카오맵에서 보기</a><p class="poi-s">출처: 공공데이터포털 · 한국관광공사 · 영업 여부는 방문 전 확인 · 별점·광고 없음</p>';
     } else { card.hidden = true; card.innerHTML = ''; }
@@ -3559,9 +3561,10 @@
     var more = $('townMore'); more.hidden = list.length <= shown.length; more.textContent = '더 보기 (' + (list.length - shown.length) + '곳 남음)';
     $('townSrc').textContent = '출처: ' + ((TW.src && TW.src[k === 'lodge' ? 'lodging' : 'eats']) || '') + (k === 'cafe' ? ' · 업태가 "카페"로 적힌 곳 + 이름에 카페·커피가 들어간 곳(완벽하진 않아요)' : '') + ' · 가게 소개·메뉴·별점은 자료에 없어요 · 영업 여부와 예약은 직접 확인 · 광고 없음';
   }
+  $('backTown').addEventListener('click', function () { var y = TN.sy || 0; show('s-stay'); setTimeout(function () { window.scrollTo(0, y); }, 40); });
   $('townSeg').addEventListener('click', function (ev) {
     var b = ev.target.closest('[data-tk]'); if (!b) return;
-    TN.kind = b.getAttribute('data-tk'); TN.area = ''; TN.pages = 1; $('townQ').value = TN.q = ''; townSay(''); renderTownTab();
+    TN.kind = b.getAttribute('data-tk'); TN.area = ''; TN.pages = 1; $('townQ').value = TN.q = ''; $('townClear').hidden = true; townSay(''); renderTownTab();
   });
   $('townChips').addEventListener('click', function (ev) { var b = ev.target.closest('[data-area]'); if (!b) return; TN.area = b.getAttribute('data-area'); TN.pages = 1; renderTown(); });
   /* 2026-10-21: "가나다 순보다는 거리순, 혹은 목적지 부근 가까운 순" — 위치를 이미 쓰고 있으면 바로, 아니면 제보 화면과 같은 위치 동의 창을 띄움 */
@@ -3571,11 +3574,12 @@
     if (fix) { TN.near = fix; $('townNear').setAttribute('aria-pressed', 'true'); TN.pages = 1; renderTown(); return; }
     openLoc(function () { var f = curFix(); if (f) { TN.near = f; $('townNear').setAttribute('aria-pressed', 'true'); TN.pages = 1; renderTown(); } });
   });
-  $('townQ').addEventListener('input', function () { clearTimeout(townT); var v = this.value; townT = setTimeout(function () { TN.q = v.trim(); TN.pages = 1; renderTown(); }, 160); });
+  $('townClear').addEventListener('click', function () { var q = $('townQ'); q.value = ''; TN.q = ''; TN.pages = 1; $('townClear').hidden = true; renderTown(); q.focus(); });
+  $('townQ').addEventListener('input', function () { clearTimeout(townT); var v = this.value; $('townClear').hidden = !v; townT = setTimeout(function () { TN.q = v.trim(); TN.pages = 1; renderTown(); }, 160); });
   $('townMore').addEventListener('click', function () { TN.pages++; renderTown(); });
   $('townList').addEventListener('click', function (ev) {
     var m = ev.target.closest('[data-onmap]');
-    if (m) { var k2 = m.getAttribute('data-onmap'), y = TW.list('eat').filter(function (z) { return z.key === k2; })[0]; if (y && TW.hasPos(y)) openMapAt({ lat: y.lat, lng: y.lng }, { eat: true, focusName: y.name }); return; }
+    if (m) { var k2 = m.getAttribute('data-onmap'), y = TW.list('eat').filter(function (z) { return z.key === k2; })[0]; if (y && TW.hasPos(y)) { TN.sy = window.pageYOffset || 0; S.fromTown = true; } if (y && TW.hasPos(y)) openMapAt({ lat: y.lat, lng: y.lng }, { eat: true, focusName: y.name }); return; }
     var b = ev.target.closest('[data-add]'); if (!b || b.disabled) return;
     var key = b.getAttribute('data-add'), x = TW.list('lodge').filter(function (y) { return y.key === key; })[0];
     if (x) townAdd(x);
