@@ -172,15 +172,16 @@
       <img src="사진캐시/129000.jpg" alt="추암 촛대바위" loading="lazy" decoding="async" referrerpolicy="no-referrer">
       <span class="st-art-credit">추암 촛대바위 — 사진: 한국관광공사 · 공공누리 제3유형</span>
     </div>
+    <!-- 2026-10-22(사용자 요청): "여기 빼고 사진 하나 더 넣어도 될듯" — 빨리 고르기 칩(오늘 오후·오늘 저녁·아직 몰라요)은 바로 밑 시각 입력칸과 하는 일이 겹쳐서 빼고, 그 자리에 사진을 한 장 더 넣음(가로로 안 쪼개고 아래 큰 줄로) -->
+    <div class="st-art st-art-photo">
+      <img src="사진캐시/125713.jpg" alt="망상해수욕장" loading="lazy" decoding="async" referrerpolicy="no-referrer">
+      <span class="st-art-credit">망상해수욕장 — 사진: 한국관광공사 · 공공누리 제1유형</span>
+    </div>
     <div class="st-body q-out" id="qOut">
       <p class="st-tag">돌아가는 날</p>
       <h2 id="hs2" tabindex="-1">언제까지 동해에 있을 수 있어요?</h2>
-      <div class="seg3" id="nowBackSeg" role="group" aria-label="빨리 고르기" hidden>
-        <button type="button" class="chip" data-nowback="pm">오늘 오후</button>
-        <button type="button" class="chip" data-nowback="eve">오늘 저녁</button>
-        <button type="button" class="chip" data-nowback="unknown">아직 몰라요</button>
-      </div>
-      <!-- 2026-10-22(사용자 요청): "당일치기에 하루 자고 가요는 빼고, 그냥 갈 시간 넣는 걸로" — 칩 4개 중 "하루 자고 가요"(1박)는 당일치기 흐름과 안 맞아 빼고, 대신 정확한 시·분을 바로 적을 수 있게 함(1단계 달력 밑 twCalB 와 같은 모양). .dt 는 2단 grid 라 시간칸만 넣음(폰 좁은 화면에서 옆에 단추를 더 붙이면 좁아져서 아래 줄로 따로 뺌) -->
+      <!-- 2026-10-22(사용자 요청): "당일치기에 하루 자고 가요는 빼고, 그냥 갈 시간 넣는 걸로" — 칩 4개 중 "하루 자고 가요"(1박)는 당일치기 흐름과 안 맞아 뺐고,
+           이번엔 남은 세 칩(오늘 오후·오늘 저녁·아직 몰라요)도 바로 밑 시각 입력칸과 하는 일이 겹쳐 통째로 빼고, 정확한 시·분을 직접 적는 입력(twNowB)만 남김 -->
       <div class="dt" id="nowBackTimeWrap" hidden>
         <div class="f tf"><span class="tf-l" id="nowBTimeLb">떠날 시각(대략)</span>
           <div class="tmw" id="twNowB" role="group" aria-labelledby="nowBTimeLb">

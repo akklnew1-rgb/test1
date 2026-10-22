@@ -1174,9 +1174,6 @@ button.ovn-b{ cursor:pointer; }
 .seg2.branch-cta{ display:flex; flex-direction:column; gap:10px; }
 .seg2.branch-cta .btn{ width:100%; min-height:56px; }
 .seg2.branch-cta .ghost2{ background:var(--paper); border:2px solid var(--brand); color:var(--brand); }
-#nowBackSeg{ margin:10px 0; grid-template-columns:repeat(2,minmax(0,1fr)); }
-#nowBackSeg[hidden]{ display:none !important; }
-#nowBackSeg .chip{ font-size:.98em; }
 /* 숙박 앱처럼 두 번 탭으로 오는 날·가는 날 고르는 달력(2026-10-21, 당일치기/1박2일/2박3일 칩을 대신함) */
 .cal{ margin:10px 0 4px; padding:10px 0; border:1.5px solid var(--ql,var(--line)); border-radius:16px; background:var(--paper); }
 .cal-hd,.cal-dow{ padding:0 6px; }

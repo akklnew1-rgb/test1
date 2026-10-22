@@ -345,8 +345,7 @@
     if ($('nowArriveNote')) $('nowArriveNote').hidden = c.branch !== 'now';
     if ($('calBox')) { $('calBox').hidden = c.branch === 'now'; if (c.branch !== 'now') renderCal(); }
     if ($('calBackTimeWrap')) $('calBackTimeWrap').hidden = c.branch === 'now'; // 2026-10-22: 달력과 같이 보이고 같이 숨음(지금 branch 는 날짜 자체를 안 물으니 떠날 시각도 여기선 안 물음, 2단계에서 물음)
-    if ($('nowBackSeg')) $('nowBackSeg').hidden = c.branch !== 'now';
-    if ($('nowBackTimeWrap')) $('nowBackTimeWrap').hidden = c.branch !== 'now'; // 2026-10-22: "지금" 흐름의 떠날 시각 직접 입력
+    if ($('nowBackTimeWrap')) $('nowBackTimeWrap').hidden = c.branch !== 'now'; // 2026-10-22: "지금" 흐름의 떠날 시각 직접 입력(빨리 고르기 칩은 뺌 — 이 칸과 하는 일이 겹침)
     if ($('nowTicketWrap')) $('nowTicketWrap').hidden = c.branch !== 'now'; // 2026-10-22: "지금" 흐름의 승차권 사진 단추
     if ($('howSeg')) $('howSeg').hidden = c.branch === 'now'; // 지금 branch 는 "올 때 이동수단"(기차·버스·자가용) 대신 "동해에서 이용할 교통수단"을 물음
     if ($('howSegNow')) $('howSegNow').hidden = c.branch !== 'now';
@@ -435,12 +434,6 @@
     else if (b.hasAttribute('data-cdate')) { c.date = b.getAttribute('data-cdate'); c.backDate = c.date; c.backDateTouched = true; c.backDateExplicit = true; CAL.picking = 'out'; syncBack(c); } // 더 한산한 날로 바꾸기
     else if (b.hasAttribute('data-cal')) { calTap(b.getAttribute('data-cal')); }
     else if (b.hasAttribute('data-calnav')) { S.calView = calShiftMonth(S.calView || calMonthOf(c.date || todayIso()), +b.getAttribute('data-calnav')); }
-    else if (b.hasAttribute('data-nowback')) {
-      // 2026-10-22: "하루 자고 가요"(stay1) 칩은 당일치기 흐름과 안 맞아 빼고, 대신 twNowB(정확한 시·분)로 직접 적게 함
-      var nb = b.getAttribute('data-nowback');
-      c.backHow = c.how; c.backHowTouched = true;
-      c.backDate = c.date; c.backDateTouched = true; c.backDateExplicit = true; backEdited(nb === 'pm' ? 15 * 60 : nb === 'eve' ? 19 * 60 : 18 * 60);
-    }
     else if (b.hasAttribute('data-nolimit')) { c.noLimit = !c.noLimit; }
     else if (b.hasAttribute('data-comp')) { toggleComp(c, b.getAttribute('data-comp')); }
     else if (b.hasAttribute('data-knee')) { c.knee = !c.knee; }
@@ -471,11 +464,19 @@
   function twAdvance(txt) { var t = String(txt || ''); return t.length >= 2 || (t.length === 1 && +t >= 3); } // 두 자리를 적었거나 3~9 한 자리면 분 칸으로
   /*TW-END*/
   var TWS = {}; // srcId -> [widget, ...] (2026-10-22: 같은 hidden input 을 공유하는 위젯이 둘 이상일 수 있음 — 1단계 달력 밑 "떠날 시각(대략)" 과 2단계 "출발 시각"이 같은 #bTime 값을 같이 씀)
+  // 2026-10-22(사용자 요청): "니가 선택 미리 해놓으니까 (헷갈려요), 먼저 선택하지 말자" — 아직 사용자가 직접 안 고른 시각은
+  // 미리 고른 것처럼 숫자·오전/오후가 채워져 보이지 않게(빈 칸 + 둘 다 안 눌린 상태)로 시작. 속값(S.cond.arrive/back)은 그대로 둬서
+  // 계산은 평소처럼 되고, 눈에만 "아직 안 골랐다"고 보이게 함.
+  var TW_TOUCHED_KEY = { sTime: 'arriveTouched', bTime: 'backTouched' };
   function twInit(wid, srcId) {
     var w = $(wid), src = $(srcId); if (!w || !src) return;
     var st = { w: w, src: src, h: w.querySelector('.tmw-h'), m: w.querySelector('.tmw-m'), btns: w.querySelectorAll('.tmw-b'), pm: false };
     (TWS[srcId] = TWS[srcId] || []).push(st);
     st.setPm = function (pm) { st.pm = pm; Array.prototype.forEach.call(st.btns, function (b) { b.setAttribute('aria-checked', (b.getAttribute('data-ap') === 'pm') === pm ? 'true' : 'false'); }); };
+    // 2026-10-22(버그 고침): 아직 커밋 안 된(한창 입력 중인) 상태에서도 twSync 가 다시 불릴 수 있는데(오전/오후 먼저 누르거나, 시만 적고 포커스를 옮기는 등),
+    // 그때 Touched 가 아직 false 면 twSync 가 "안 고른 것"으로 보고 방금 입력한 걸 빈 칸으로 되돌려 버려 — 오전/오후가 안 눌리고 시각도 안 적히는 것처럼 보이던 원인.
+    // 그래서 이 위젯을 처음 만지는 순간(포커스·버튼 누름) 바로 Touched 를 켜서, 그 뒤로는 twSync 가 실제 값을 보여 주게 함.
+    function markTouched() { var tk = TW_TOUCHED_KEY[srcId]; if (tk) S.cond[tk] = true; }
     function commit(force) {
       var h = twHour(st.h.value), m = twMinute(st.m.value);
       if (!h || m === null) return false;
@@ -493,17 +494,13 @@
     });
     st.m.addEventListener('input', function () { var v = digits(st.m); if (v.length === 2) { if (+v > 59) st.m.value = '59'; commit(false); } });
     [st.h, st.m].forEach(function (el) {
-      el.addEventListener('focus', function () { try { el.select(); } catch (e) { /* 무시 */ } });
+      el.addEventListener('focus', function () { markTouched(); try { el.select(); } catch (e) { /* 무시 */ } });
       el.addEventListener('blur', function () { if (!commit(true)) twSync(srcId); });
     });
     st.m.addEventListener('keydown', function (ev) { if (ev.key === 'Backspace' && !st.m.value) { ev.preventDefault(); st.h.focus(); } });
-    Array.prototype.forEach.call(st.btns, function (b) { b.addEventListener('click', function () { if (b.disabled) return; st.setPm(b.getAttribute('data-ap') === 'pm'); if (st.h.value && st.m.value) commit(true); else twSync(srcId); }); });
+    Array.prototype.forEach.call(st.btns, function (b) { b.addEventListener('click', function () { if (b.disabled) return; markTouched(); st.setPm(b.getAttribute('data-ap') === 'pm'); if (st.h.value && st.m.value) commit(true); else twSync(srcId); }); });
     twSync(srcId);
   }
-  // 2026-10-22(사용자 요청): "니가 선택 미리 해놓으니까 (헷갈려요), 먼저 선택하지 말자" — 아직 사용자가 직접 안 고른 시각은
-  // 미리 고른 것처럼 숫자·오전/오후가 채워져 보이지 않게(빈 칸 + 둘 다 안 눌린 상태)로 시작. 속값(S.cond.arrive/back)은 그대로 둬서
-  // 계산은 평소처럼 되고, 눈에만 "아직 안 골랐다"고 보이게 함 — 사용자가 손대는 순간(twInit 의 change 로 Touched=true) 바로 실제 값이 보임.
-  var TW_TOUCHED_KEY = { sTime: 'arriveTouched', bTime: 'backTouched' };
   function twSync(srcId) { // 눈에 안 보이는 type=time 값 → 보이는 칸(같은 값을 쓰는 위젯이 여럿이면 전부)
     var list = TWS[srcId]; if (!list) return;
     var tk = TW_TOUCHED_KEY[srcId], touched = tk ? !!S.cond[tk] : true;
@@ -632,8 +629,11 @@
           pid = (ok || cands[0]) ? (ok || cands[0]).item.id : null;
         }
       }
-      if (pid && !seen[pid]) {
-        seen[pid] = 1; out.push(pid);
+      // 2026-10-22(버그 고침): "맛집·카페 반영 안 됨" — 서로 다른 맛집/카페 두 곳이 같은 가까운 볼거리로 묶이면(흔함),
+      // !seen[pid] 에 걸려 두 번째로 고른 가게 이름이 아예 통째로 사라지던 문제. pid 는 한 번만 must 목록에 넣되(중복 고정 방지),
+      // 가게 이름은 같은 볼거리에 묶인 것마다 전부 쌓는다(둘 다 "#꼭갈곳 · 근처 가게1·가게2" 로 보이게).
+      if (pid) {
+        if (!seen[pid]) { seen[pid] = 1; out.push(pid); }
         if (foodName) (S.mustFoodNear[pid] = S.mustFoodNear[pid] || []).push(foodName);
       }
     });
