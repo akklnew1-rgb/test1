@@ -1567,3 +1567,26 @@ body.big #s-start .qs-card{ min-height:56px; }
 
 .bub-choices{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.bub-choices .chip{min-height:44px}
 .pick{margin:10px 0;display:grid;gap:6px}.pick-t{font-size:1.05rem}.pick-s{color:var(--muted);font-size:.9rem}
+
+/* 확인 시트 */
+.no-scroll{overflow:hidden}
+.cf-list{display:grid;gap:8px;margin-top:6px}
+.cf-item{display:grid;gap:6px}
+.cf-row{display:grid;grid-template-columns:1fr auto;grid-template-areas:"l pill" "v pill";gap:2px 10px;align-items:center;width:100%;min-height:64px;padding:10px 14px;border:1px solid var(--line);border-radius:16px;background:var(--paper);color:var(--ink);font:inherit;text-align:left;cursor:pointer;touch-action:manipulation}
+.cf-row:focus-visible{outline:3px solid var(--brand);outline-offset:2px}
+.cf-l{grid-area:l;font-size:.9rem;color:var(--muted)}.cf-l em{font-style:normal;font-weight:800;color:#b23c0a;margin-left:6px}
+.cf-v{grid-area:v;font-size:1.15rem;font-weight:800;line-height:1.35;word-break:keep-all}
+.cf-pill{grid-area:pill;min-width:64px;min-height:44px;display:flex;align-items:center;justify-content:center;border:1px solid var(--line);border-radius:12px;background:var(--soft);font-weight:700;padding:0 10px}
+.cf-row.miss{border:2px dashed #d9480f;background:#fff4e6}
+.cf-row.miss .cf-v{color:#b23c0a}
+.cf-item.open .cf-row{border-color:var(--brand)}
+.cf-ed{display:flex;flex-wrap:wrap;gap:8px;padding:4px 4px 8px}
+.cf-ed .chip{min-height:48px}
+.cf-in{width:100%;min-height:52px;padding:8px 12px;font:inherit;font-size:1.15rem;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);box-sizing:border-box}
+.cf-foot{position:sticky;bottom:0;margin-top:12px;padding-top:8px;background:var(--paper)}
+.cf-why{margin:0 0 8px;font-weight:800;color:#b23c0a;text-align:center}
+@media (prefers-color-scheme: dark){
+  .cf-row.miss{background:#332514;border-color:#ff9270}.cf-row.miss .cf-v,.cf-l em,.cf-why{color:#ff9270}
+  .cf-in{background:var(--soft);color:var(--ink);border-color:var(--line)}
+}
+#cfSheet .eb{white-space:nowrap}#cfSheet .sh-head h3{margin:0}

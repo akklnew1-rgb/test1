@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=4">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <a class="skip" href="#app">본문으로 건너뛰기</a>
@@ -98,7 +98,7 @@
         <div class="chat" id="chat" role="log" aria-live="polite" aria-label="도째비와 대화">
           <div class="bub bot">안녕하세요, 도째비예요. 동해 여행을 편하게 말씀해 주세요. 맛집이 궁금하면 물어보셔도 돼요.</div>
         </div>
-        <button type="button" class="btn primary cta" id="chatMake" hidden>✨ 이대로 코스 짜 주세요</button>
+        <button type="button" class="btn primary cta" id="chatMake" hidden>✨ 조건 확인하고 코스 짜기</button>
         <label for="askText" class="visually-hidden">도째비에게 할 말</label>
         <textarea id="askText" rows="2" placeholder="예) 23일에 부모님이랑 가는데 물회 맛집 알려 주세요"></textarea>
         <div class="ask-row">
@@ -653,6 +653,19 @@
 </div>
 
 <!-- 시티투어 시간표(코스의 시티투어 줄에서 열림) -->
+<!-- 2026-10-22: 대화로 모은 조건을 마지막으로 확인·고치는 시트. 줄을 누르면 그 항목만 바꿀 수 있다 -->
+<div id="cfSheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="cfT" hidden>
+  <div class="sh-back" data-cf="close"></div>
+  <div class="sh-card" id="cfCard" tabindex="-1">
+    <div class="sh-head"><h3 id="cfT">도째비가 알아들은 내용이에요</h3><button type="button" class="eb" data-cf="close" aria-label="확인 창 닫기"><span aria-hidden="true">✕</span> 닫기</button></div>
+    <p class="note" id="cfSub">틀린 곳이 있으면 눌러서 바꿔 주세요.</p>
+    <div class="cf-list" id="cfList"></div>
+    <div class="cf-foot">
+      <p class="cf-why" id="cfWhy" role="status" hidden></p>
+      <button type="button" class="btn primary cta" id="cfGo">✨ 이대로 코스 짜 주세요</button>
+    </div>
+  </div>
+</div>
 <div id="ttSheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="ttT" hidden>
   <div class="sh-back" data-tt="close"></div>
   <div class="sh-card" id="ttCard" tabindex="-1">
@@ -755,6 +768,6 @@
 <script src="ai-config.js"></script>
 <script src="ai.js?v=3"></script>
 <script src="art.js"></script>
-<script src="app.js?v=12"></script>
+<script src="app.js?v=14"></script>
 </body>
 </html>

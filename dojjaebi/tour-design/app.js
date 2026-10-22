@@ -848,11 +848,11 @@
         if (j.choices && j.choices.length) { var cw = document.createElement('div'); cw.className = 'bub-choices'; j.choices.forEach(function (t) { var cb = document.createElement('button'); cb.type = 'button'; cb.className = 'chip'; cb.textContent = t; cb.addEventListener('click', function () { cw.parentNode && cw.parentNode.removeChild(cw); chatSend(t); }); cw.appendChild(cb); }); b.appendChild(cw); }
         chatMerge(j.parsed); if (j.must && j.must.length) CH.cond.must = j.must; CH.direct = !!j.ready;
         var rule = AI.aiParseRequest(all, S.cond.arrive, todayIso()); CH.rule = rule;
-        $('chatMake').hidden = !j.ready;
+        $('chatMake').hidden = !j.ready; if (j.ready) setTimeout(cfOpen, 400);
       } else {
         var rule2 = AI.aiParseRequest(all, S.cond.arrive, todayIso()); CH.rule = rule2;
-        chatEl('bot', '연결이 고르지 않아 대화가 어려워요. 말씀하신 조건은 적어 뒀으니 아래 "이대로 코스 짜 주세요"를 누르거나, 아래에서 직접 골라 주세요.');
-        $('chatMake').hidden = false;
+        chatEl('bot', '연결이 고르지 않아 대화가 어려워요. 말씀하신 조건을 정리했으니 확인하고 빠진 곳만 눌러서 정해 주세요.');
+        $('chatMake').hidden = false; setTimeout(cfOpen, 400);
       }
     });
   }
@@ -863,7 +863,9 @@
     box.hidden = false; box.innerHTML = '<b class="pick-t">도째비가 이야기 중에 알려 준 곳</b><span class="pick-s">식당·숙소는 공공데이터라 평점·후기는 몰라요. 메뉴판과 지도를 보고 정해 주세요.</span>';
     CH.picks.forEach(function (x) { box.appendChild(chatCard(x)); });
   }
-  $('chatMake').addEventListener('click', function () {
+  /* ---------- 마지막 확인 시트 (2026-10-22) ---------- */
+  var CF = { r: null, open: '' };
+  function chatBuildR() {
     var all = CH.msgs.filter(function (m) { return m.role === 'user'; }).map(function (m) { return m.text; }).join(' ');
     var r = AI.aiParseRequest(all, S.cond.arrive, todayIso()), a = CH.cond || {};
     ['date', 'arrive', 'train', 'how'].forEach(function (k) { if (a[k] != null && a[k] !== '') r[k] = a[k]; });
@@ -873,17 +875,70 @@
     if (a.companions && a.companions.length) r.companions = a.companions;
     (a.interests || []).forEach(function (v) { if (r.interests.indexOf(v) < 0) r.interests.push(v); });
     r.knee = r.knee || !!a.knee; r.rain = r.rain || !!a.rain; r.food = r.food || !!a.food; if (a.foodWord) r.foodWord = a.foodWord;
-    if (!r.how) { // 이동수단을 말한 적이 없으면 기본값(기차)으로 넘기지 않고 눌러서 고르게 한다 (AI 가 안 될 때도 같다)
-      var b = chatEl('bot', '무엇을 타고 오세요?'), cw = document.createElement('div'); cw.className = 'bub-choices';
-      [['기차', 'train'], ['버스', 'bus'], ['자가용', 'car']].forEach(function (h) {
-        var cb = document.createElement('button'); cb.type = 'button'; cb.className = 'chip'; cb.textContent = h[0];
-        cb.addEventListener('click', function () { CH.cond = CH.cond || {}; CH.cond.how = h[1]; if (cw.parentNode) cw.parentNode.removeChild(cw); chatEl('me', esc(h[0])); $('chatMake').click(); });
-        cw.appendChild(cb);
-      });
-      b.appendChild(cw); $('chatMake').hidden = true; return;
-    }
-    applyParsed(r, '도째비와 나눈 이야기에서 알아들었어요.', CH.direct);
+    if (r.arrive === undefined) r.arrive = null;
+    r.must = r.must || [];
+    return r;
+  }
+  function cfMissing(r) {
+    if (!r.date) return '여행 날짜를 정해 주세요';
+    if (!r.companions || !r.companions.length) return '누구와 가는지 골라 주세요';
+    if (!r.how) return '무엇을 타고 오는지 골라 주세요';
+    if (r.arrive == null) return '도착 시각을 정해 주세요';
+    if (r.train == null) return '돌아갈 시각을 정해 주세요';
+    if (r.train <= r.arrive) return '돌아갈 시각이 도착 시각보다 뒤여야 해요';
+    return '';
+  }
+  function cfRow(key, ico, label, val, miss, editor) {
+    var open = CF.open === key;
+    return '<div class="cf-item' + (open ? ' open' : '') + '"><button type="button" class="cf-row' + (miss ? ' miss' : '') + '" data-cf="row" data-k="' + key + '" aria-expanded="' + open + '">' +
+      '<span class="cf-l"><span aria-hidden="true">' + ico + '</span> ' + label + (miss ? ' <em>확인이 필요해요</em>' : '') + '</span>' +
+      '<span class="cf-v">' + (miss ? '아직 안 정했어요' : val) + '</span><span class="cf-pill" aria-hidden="true">' + (open ? '접기' : (miss ? '정하기' : '바꾸기')) + '</span></button>' +
+      (open ? '<div class="cf-ed">' + editor + '</div>' : '') + '</div>';
+  }
+  function cfChip(grp, v, label, on) { return '<button type="button" class="chip" data-cf="' + grp + '" data-v="' + esc(v) + '" aria-pressed="' + on + '">' + esc(label) + '</button>'; }
+  function cfRender() {
+    var r = CF.r; if (!r) return;
+    var HOWN = { train: '기차', bus: '버스', car: '자가용' }, comp = (r.companions || []).join(' · ');
+    var mustN = (r.must || []).map(function (id) { var p = D.places.filter(function (q) { return q.id === id; })[0]; return p ? (p.short || p.name) : ''; }).filter(Boolean);
+    var rows = '';
+    rows += cfRow('date', '📅', '여행 날짜', r.date ? esc(P.dateLabel(r.date)) : '', !r.date, '<input type="date" class="cf-in" id="cfDate" min="' + todayIso() + '" value="' + esc(r.date || '') + '" aria-label="여행 날짜">');
+    rows += cfRow('comp', '👥', '누구와', esc(comp), !comp, COMPS.map(function (n) { return cfChip('comp', n, n, (r.companions || []).indexOf(n) >= 0); }).join(''));
+    rows += cfRow('how', '🚆', '오는 교통', r.how ? HOWN[r.how] : '', !r.how, [['train', '기차'], ['bus', '버스'], ['car', '자가용']].map(function (h) { return cfChip('how', h[0], h[1], r.how === h[0]); }).join(''));
+    rows += cfRow('arrive', '🕐', '동해에 도착', r.arrive != null ? hhmm(r.arrive) : '', r.arrive == null, '<input type="time" class="cf-in" id="cfArrive" value="' + (r.arrive != null ? toTimeValue(r.arrive) : '') + '" aria-label="도착 시각">');
+    rows += cfRow('back', '🕑', r.how === 'car' ? '떠날 시각' : '돌아갈 시각', r.train != null ? hhmm(r.train) : '', r.train == null, '<input type="time" class="cf-in" id="cfBack" value="' + (r.train != null ? toTimeValue(r.train) : '') + '" aria-label="돌아갈 시각">');
+    rows += cfRow('must', '📍', '꼭 가고 싶은 곳', mustN.length ? esc(mustN.join(' · ')) : '없어요 — 도째비가 골라요', false, D.places.map(function (p) { return cfChip('must', p.id, p.short || p.name, (r.must || []).indexOf(p.id) >= 0); }).join(''));
+    $('cfList').innerHTML = rows;
+    var why = cfMissing(r); $('cfWhy').textContent = why; $('cfWhy').hidden = !why; $('cfGo').disabled = !!why;
+  }
+  function cfShow(on) {
+    var sh = $('cfSheet'); sh.hidden = !on;
+    if (on) { document.body.classList.add('no-scroll'); try { $('cfCard').focus(); } catch (e) {} } else document.body.classList.remove('no-scroll');
+  }
+  function cfOpen() { CF.r = chatBuildR(); CF.open = ''; cfRender(); cfShow(true); }
+  $('cfSheet').addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-cf]'); if (!t) return; var k = t.getAttribute('data-cf'), r = CF.r;
+    if (k === 'close') { cfShow(false); return; }
+    if (k === 'row') { var key = t.getAttribute('data-k'); CF.open = CF.open === key ? '' : key; cfRender(); return; }
+    var v = t.getAttribute('data-v');
+    if (k === 'comp') { var c = r.companions || (r.companions = []), ix = c.indexOf(v); if (v === '혼자') r.companions = ix >= 0 ? [] : ['혼자']; else { r.companions = c.filter(function (n) { return n !== '혼자'; }); ix = r.companions.indexOf(v); if (ix >= 0) r.companions.splice(ix, 1); else r.companions.push(v); } }
+    else if (k === 'how') { r.how = v; CF.open = ''; }
+    else if (k === 'must') { var m = r.must || (r.must = []), mi = m.indexOf(v); if (mi >= 0) m.splice(mi, 1); else m.push(v); }
+    cfRender();
   });
+  $('cfSheet').addEventListener('change', function (ev) {
+    var r = CF.r, id = ev.target.id; if (!r) return;
+    if (id === 'cfDate') { r.date = ev.target.value && ev.target.value >= todayIso() ? ev.target.value : null; }
+    else if (id === 'cfArrive') { r.arrive = ev.target.value ? P.toMin(ev.target.value) : null; }
+    else if (id === 'cfBack') { r.train = ev.target.value ? P.toMin(ev.target.value) : null; }
+    else return;
+    cfRender();
+  });
+  document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && !$('cfSheet').hidden) cfShow(false); });
+  $('cfGo').addEventListener('click', function () {
+    if (!CF.r || cfMissing(CF.r)) return;
+    cfShow(false); applyParsed(CF.r, '도째비와 나눈 이야기에서 알아들었어요.', true);
+  });
+  $('chatMake').addEventListener('click', cfOpen);
   $('askGo').addEventListener('click', function () {
     var t = $('askText').value; if (!t.trim()) { var n = $('askNote'); n.textContent = '하실 말씀을 적어 주세요. 아래 예시를 눌러도 돼요.'; n.hidden = false; $('askText').focus(); return; }
     chatSend(t);
