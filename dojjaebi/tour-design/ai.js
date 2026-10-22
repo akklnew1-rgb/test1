@@ -67,7 +67,7 @@
     if (has(t, /아이|아기|애들|아들|딸|초등/)) r.companions.push('아이');
     if (has(t, /연인|애인|남자친구|여자친구|남친|여친|커플|데이트|신혼/)) r.companions.push('연인');
     if (has(t, /친구/) && !has(t, /남자친구|여자친구/)) r.companions.push('친구');
-    if (has(t, /자가용|자동차|차로|운전|렌터카|내 차/)) r.how = 'car'; else if (has(t, /버스/)) r.how = 'bus'; else if (has(t, /기차|열차|KTX|ktx/)) r.how = 'train';
+    if ((has(t, /자가용|자동차|운전|렌터카|내 차/) || /(^|[^기열])차로/.test(t))) r.how = 'car'; else if (has(t, /버스/)) r.how = 'bus'; else if (has(t, /기차|열차|KTX|ktx/)) r.how = 'train';
     if (has(t, /혼자/)) r.companions.push('혼자');
     if (has(t, /무릎|계단|힘들|다리|관절|허리/)) r.knee = true;
     if (has(t, /사진|인생샷|노을|일몰|풍경|뷰/)) r.interests.push('사진');
