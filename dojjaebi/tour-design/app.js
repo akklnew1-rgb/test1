@@ -1204,7 +1204,7 @@
   }
   /* 무릉계곡 용추폭포: 좌표는 폭포 자리(입구에서 약 2.5km 안쪽)라 차·택시는 입구(삼화사 쪽)까지만 간다. 이동은 입구 좌표로 계산하고, 걷는 시간은 머무는 시간(100분)에 들어 있다(출처: 한국관광공사 — 제1코스 3.1km·왕복 1시간 30분) */
   (function () { var y = D.places.filter(function (p) { return p.id === 'yongchu'; })[0], s = D.places.filter(function (p) { return p.id === 'samhwasa'; })[0]; if (y && s) y.entry = { id: s.id, lat: s.lat, lng: s.lng }; if (s) s.accessMin = 10; })(); // 삼화사: 주차장에서 걸어서 약 10분(사용자가 현장 경험으로 알려 준 값)
-  var PLACE_NOTE = { samhwasa: '주차장에서 절까지 걸어서 약 10분 들어간다(이동 분에 더해 둠).', yongchu: '차는 무릉계곡 입구(삼화사 쪽)까지만 간다. 입구에서 폭포까지 걸어서 왕복 약 1시간 30분이고 visit 100분은 그 걷기를 포함한 값이다.' };
+  var PLACE_NOTE = { lighthouse: '주차 자리가 거의 없어 자가용이면 멀리 세우고 걸어 올라가야 할 수 있다(현장 경험). 자가용 일행이면 가능하면 다른 곳과 걸어서 묶는다.', samhwasa: '주차장에서 절까지 걸어서 약 10분 들어간다(이동 분에 더해 둠).', yongchu: '차는 무릉계곡 입구(삼화사 쪽)까지만 간다. 입구에서 폭포까지 걸어서 왕복 약 1시간 30분이고 visit 100분은 그 걷기를 포함한 값이다.' };
   /* ---------- AI 가 코스를 짠다 (2026-10-22): 장소 고르기·순서·이유는 AI, 시간·마감·휴무·이동 계산과 검증은 앱(planner)이 한다 ---------- */
   var AIP = null; // { key, days:[{ids, why:{id:글}}], summary }
   function aiKey() { var c = S.cond; return [c.date, c.backDate || c.date, (c.companions || []).slice().sort().join(','), c.how, c.knee ? 1 : 0, c.rain ? 1 : 0].join('|'); }
@@ -1400,6 +1400,7 @@
     if (S.fx && S.fx.view[p.id]) b.push('<span class="tag good">#풍경좋다는제보</span>');
     if (S.fx && S.fx.news[p.id]) b.push('<span class="tag good">#새볼거리제보</span>');
     if (s.done) b.push('<span class="tag good">#도착함</span>');
+    if (p.id === 'lighthouse' && S.cond.how === 'car') b.push('<span class="tag warn">#주차 자리가 거의 없어요(자가용이면 멀리 세우고 걸어야 할 수 있어요)</span>');
     if (p.id === 'samhwasa') b.push('<span class="tag warn">#주차장에서 걸어서 약 10분</span>');
     if (p.id === 'yongchu') b.push('<span class="tag warn">#입구에서 왕복 약 1시간 30분 걷는 길(관광공사 안내)</span>');
     var ap2 = aiActive(), aw = ap2 && ap2.days.reduce(function (t, d) { return t || d.why[p.id]; }, ''); if (aw) b.push('<span class="tag good">🤖 ' + esc(aw) + '</span>');
