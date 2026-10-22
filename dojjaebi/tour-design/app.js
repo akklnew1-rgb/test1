@@ -3295,7 +3295,8 @@
     { id: 'lx3', cat: 'view', pid: 'mangsang', ago: 120, text: '오늘 해변이 한적하고 파도가 잔잔해요.', help: 4 },
     { id: 'lx4', cat: 'cafe', pid: 'chuambeach', ago: 200, text: '추암 해변 근처 바다 보이는 카페 소식이에요(예시).', help: 2 }
   ];
-  var liveFilter = 'all';
+  var liveFilter = 'all', liveSort = 'near';
+  function liveBase() { var c = courseCenter(); if (c) return { pt: c, name: '내 코스' }; if (TN.near) return { pt: TN.near, name: TN.nearKind === 'me' ? '내 위치' : '기준 위치' }; return null; }
   function renderNews() {
     var ul = $('newsList'); if (!ul) return;
     var hide = jget(K_HIDE, {}), helped = jget(K_HELP, {}), now = Date.now(), items = [], inCourse = S.plan ? courseIds() : {};
@@ -3305,7 +3306,12 @@
       items.push({ id: r.id, cat: 'view', pid: r.placeId, ago: ago, text: r.text || '풍경이 좋아요.', help: 0, mine: r.dev === myDev(), ex: false });
     });
     LIVE_EX.forEach(function (e) { if (PLACE[e.pid]) items.push({ id: e.id, cat: e.cat, pid: e.pid, ago: e.ago, text: e.text, help: e.help, mine: false, ex: true }); });
-    items = items.filter(function (i) { return !hide[i.id] && (liveFilter === 'all' || i.cat === liveFilter); }).sort(function (x, y) { return x.ago - y.ago; });
+    items = items.filter(function (i) { return !hide[i.id] && (liveFilter === 'all' || i.cat === liveFilter); });
+    var base = liveBase(), srt = liveSort;
+    items.forEach(function (i) { var q = PLACE[i.pid]; i.dm = base && FU && isFinite(q.lat) ? FU.dist(base.pt.lat, base.pt.lng, q.lat, q.lng) : null; i.hc = i.help + (helped[i.id] ? 1 : 0); });
+    if (srt === 'near' && !base) srt = 'new';
+    items.sort(function (x, y) { return srt === 'near' ? (x.dm - y.dm) || (x.ago - y.ago) : srt === 'help' ? (y.hc - x.hc) || (x.ago - y.ago) : x.ago - y.ago; });
+    $('liveBasis').textContent = liveSort === 'near' ? (base ? base.name + ' 가운데에서 가까운 순이에요.' : '코스를 짜면 내 코스에서 가까운 순으로 보여 드려요. 지금은 최신 순이에요.') : liveSort === 'help' ? '도움돼요를 많이 받은 순이에요.' : '새로 올라온 순이에요.';
     if (!items.length) { ul.innerHTML = '<li class="nempty">이 종류의 소식은 아직 없어요.</li>'; return; }
     ul.innerHTML = items.map(function (i) {
       var p = PLACE[i.pid], agoT = i.ago < 1 ? '방금' : i.ago < 60 ? i.ago + '분 전' : Math.floor(i.ago / 60) + '시간 전', left = LIVE_LIFE - i.ago, leftT = left >= 120 ? Math.round(left / 60) + '시간 뒤' : left + '분 뒤';
@@ -3315,7 +3321,7 @@
       return '<li class="ncard n-' + i.cat + '">' + artFig(p) +
         '<div class="nh"><span class="ntag">' + LIVE_CAT[i.cat] + '</span>' + (i.ex ? '<span class="nex">예시</span>' : i.mine ? '<span class="nme">내 소식</span>' : '<span class="nme">여행자</span>') + '<span class="nago">' + agoT + '</span></div>' +
         '<p class="nt"><b>' + esc(p.name) + '</b> · ' + esc(i.text) + '</p>' +
-        '<p class="nleft">' + leftT + ' 사라져요</p>' +
+        '<p class="nleft">' + (i.dm != null ? (i.dm < 1000 ? '약 ' + Math.max(50, Math.round(i.dm / 50) * 50) + 'm' : '약 ' + (i.dm / 1000).toFixed(1) + 'km') + ' · ' : '') + leftT + ' 사라져요</p>' +
         '<div class="nact-row"><button type="button" class="btn nhelp" data-live-help="' + esc(i.id) + '" aria-pressed="' + (h1 ? 'true' : 'false') + '">도움돼요 ' + (i.help + h1) + '</button>' + act + '</div>' +
         '<button type="button" class="nbad" data-nhide="' + esc(i.id) + '">광고·거짓이에요</button></li>';
     }).join('');
@@ -3323,6 +3329,11 @@
   $('liveFilter').addEventListener('click', function (ev) {
     var b = ev.target.closest('[data-lf]'); if (!b) return; liveFilter = b.getAttribute('data-lf');
     Array.prototype.forEach.call($('liveFilter').querySelectorAll('[data-lf]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+    renderNews();
+  });
+  $('liveSort').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-ls]'); if (!b) return; liveSort = b.getAttribute('data-ls');
+    Array.prototype.forEach.call($('liveSort').querySelectorAll('[data-ls]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
     renderNews();
   });
   $('newsList').addEventListener('click', function (ev) {
