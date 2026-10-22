@@ -1341,3 +1341,6 @@ body.big .town-seg .chip{ flex-direction:row; gap:8px; font-size:1em; min-height
 .facbar .chip.cap{ border-radius:999px; background:#fff; border:2px solid var(--brand-dark); color:var(--brand-dark); font-weight:800; }
 .facbar .chip.cap[aria-pressed="true"]{ background:var(--brand-dark); color:#fff; }
 .facbar .chip.cap{ flex:1 1 0; min-width:0; padding:6px 8px; font-size:.9em; white-space:nowrap; }
+
+#townCourse,#townNear{ margin:0 6px 8px 0; }
+#townCourse[aria-pressed="true"],#townNear[aria-pressed="true"]{ background:var(--brand); border-color:var(--brand); color:#fff; }

@@ -3537,6 +3537,8 @@
   }
   function townSay(msg, bad) { var el = $('townMsg'); el.textContent = msg; el.hidden = !msg; el.classList.toggle('bad', !!bad); if (msg) { try { el.scrollIntoView({ block: 'nearest' }); } catch (e) { /* 무시 */ } } }
   function renderTownTab() {
+    if (TN.kind === 'lodge' && !TN.autoLodge && !TN.near && courseCenter()) { TN.autoLodge = true; TN.near = courseCenter(); TN.nearKind = 'course'; }
+    nearUi();
     Array.prototype.forEach.call($('townSeg').querySelectorAll('[data-tk]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-tk') === TN.kind ? 'true' : 'false'); });
     var tour = TN.kind === 'tour'; $('townBox').hidden = tour; $('tourBox').hidden = !tour;
     if (tour) { $('tourBox').innerHTML = CT ? OV.ttTabHtml(CT, P, ovMaps(), todayIso()) : '<p class="note">시티투어 자료가 없어요.</p>'; return; }
@@ -3549,7 +3551,7 @@
     var shown = TW.page(list, TN.pages);
     $('townChips').innerHTML = '<button type="button" class="chip" data-area="" aria-pressed="' + (!TN.area) + '">전체 ' + all.length + '</button>' +
       TW.areas(k === 'cafe' ? 'eat' : k).filter(function (a) { return cnt[a.area]; }).map(function (a) { return '<button type="button" class="chip" data-area="' + esc(a.area) + '" aria-pressed="' + (TN.area === a.area) + '">' + esc(a.area) + ' ' + cnt[a.area] + '</button>'; }).join('');
-    $('townCount').textContent = (TN.area || '동해시 전체') + (TN.q ? ' · “' + TN.q + '”' : '') + ' ' + list.length + '곳' + (list.length > shown.length ? ' 중 ' + shown.length + '곳 보여요' : '') + (list.length ? '' : ' — 찾는 곳이 없어요. 다른 낱말로 찾아 보세요.') + (TN.near ? ' · 가까운 순' : '');
+    $('townCount').textContent = (TN.area || '동해시 전체') + (TN.q ? ' · “' + TN.q + '”' : '') + ' ' + list.length + '곳' + (list.length > shown.length ? ' 중 ' + shown.length + '곳 보여요' : '') + (TN.near ? (TN.nearKind === 'course' ? ' · 코스 가운데에서 가까운 순' : ' · 내 위치에서 가까운 순') : '') + (list.length ? '' : ' — 찾는 곳이 없어요. 다른 낱말로 찾아 보세요.');
     $('townList').innerHTML = shown.map(function (x) {
       var st = townAddState(x), lod = x.kind === 'lodge', noPos = !TW.hasPos(x), tk = lod ? 'lodge' : (k === 'cafe' ? 'cafe' : 'eat');
       return '<li class="tw tw-' + tk + '" data-key="' + x.key + '"><div class="tw-main"><span class="poi-ic ' + tk + '" aria-hidden="true">' + poiSvg(tk) + '</span><b class="tw-n">' + esc(x.name) + '</b><span class="tw-t">' + esc(x.type) + (x._m != null ? ' · ' + (FU ? FU.round10(x._m) : Math.round(x._m)) + 'm' : '') + '</span></div>' +
@@ -3568,11 +3570,22 @@
   });
   $('townChips').addEventListener('click', function (ev) { var b = ev.target.closest('[data-area]'); if (!b) return; TN.area = b.getAttribute('data-area'); TN.pages = 1; renderTown(); });
   /* 2026-10-21: "가나다 순보다는 거리순, 혹은 목적지 부근 가까운 순" — 위치를 이미 쓰고 있으면 바로, 아니면 제보 화면과 같은 위치 동의 창을 띄움 */
+  function courseCenter() { // 오늘 코스 장소들의 한가운데(위치 허락 없이 쓰는 거리 기준)
+    var st = allStops().filter(function (s) { return s.place && !s.place.slot && s.place.lat && s.place.lng; }); if (!st.length) return null;
+    var la = 0, ln = 0; st.forEach(function (s) { la += s.place.lat; ln += s.place.lng; });
+    return { lat: la / st.length, lng: ln / st.length };
+  }
+  function nearUi() { $('townNear').setAttribute('aria-pressed', TN.nearKind === 'me' ? 'true' : 'false'); $('townCourse').setAttribute('aria-pressed', TN.nearKind === 'course' ? 'true' : 'false'); $('townCourse').hidden = !courseCenter(); }
+  function nearSet(kind, fix) { TN.near = fix; TN.nearKind = kind; TN.pages = 1; nearUi(); renderTown(); }
   $('townNear').addEventListener('click', function () {
-    if (TN.near) { TN.near = null; $('townNear').setAttribute('aria-pressed', 'false'); TN.pages = 1; renderTown(); return; }
+    if (TN.nearKind === 'me') { nearSet('', null); return; }
     var fix = curFix();
-    if (fix) { TN.near = fix; $('townNear').setAttribute('aria-pressed', 'true'); TN.pages = 1; renderTown(); return; }
-    openLoc(function () { var f = curFix(); if (f) { TN.near = f; $('townNear').setAttribute('aria-pressed', 'true'); TN.pages = 1; renderTown(); } });
+    if (fix) { nearSet('me', fix); return; }
+    openLoc(function () { var f = curFix(); if (f) nearSet('me', f); });
+  });
+  $('townCourse').addEventListener('click', function () {
+    if (TN.nearKind === 'course') { nearSet('', null); return; }
+    var cc = courseCenter(); if (cc) nearSet('course', cc);
   });
   $('townClear').addEventListener('click', function () { var q = $('townQ'); q.value = ''; TN.q = ''; TN.pages = 1; $('townClear').hidden = true; renderTown(); q.focus(); });
   $('townQ').addEventListener('input', function () { clearTimeout(townT); var v = this.value; $('townClear').hidden = !v; townT = setTimeout(function () { TN.q = v.trim(); TN.pages = 1; renderTown(); }, 160); });
