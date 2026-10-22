@@ -1300,6 +1300,17 @@
     return S.dayTab || 0;
   }
   /* 코스 밖 볼거리를 코스에 넣는다: 코스 고치기와 같은 계산(editor.js bestInsert — 가장 덜 돌아가는 자리)으로 넣고, 홈에서 그 장을 펼쳐 보여 준다 */
+  /* 동네 탭의 식당·카페(공공데이터, 좌표 있는 곳)를 코스에 들어갈 장소로 만든다. 운영 시간은 자료에 없어 '종일'로 두고 가게에 확인하라고 안내한다. */
+  function eatPlaceFrom(x) {
+    var id = 'eat_' + x.key;
+    if (!PLACE[id]) {
+      var cafe = isCafe(x), nm = x.name || '식당', sh = nm.length > 9 ? nm.slice(0, 9) : nm;
+      var p = { id: id, short: sh, name: nm, lat: x.lat, lng: x.lng, visit: cafe ? 40 : 50, indoor: true, stairs: false, slope: false, stairsKnown: false, kind: 'meal', tags: [cafe ? '카페' : '먹거리'], value: 0, '출처': '공공데이터포털 동해시 음식점', qa: [], menu: [], open: [0, 1440], openText: '운영 시간은 가게에 확인해 주세요', addr: x.addr || '', region: '', story: '', townEat: true };
+      p.kind = undefined; delete p.kind; // 코스 안에서는 일반 장소로 다룬다(끼니 시간 줄이 아님)
+      D.places.push(p); PLACE[id] = p;
+    }
+    return id;
+  }
   function spotAdd(pid) {
     if (!S.plan || !PLACE[pid]) return false;
     if (courseIds()[pid]) { flash('이미 코스에 있어요'); return false; }
@@ -3291,12 +3302,19 @@
   var K_HELP = 'tour.livehelp.v1', LIVE_LIFE = 1440, LIVE_CAT = { view: '풍경', food: '밥집', cafe: '카페' };
   var LIVE_EX = [
     { id: 'lx1', cat: 'view', pid: 'chuam', ago: 14, text: '구름 사이로 빛이 내려와서 바다가 반짝여요.', help: 6 },
-    { id: 'lx2', cat: 'food', pid: 'cheongok', ago: 55, text: '천곡동 쪽 현지 식당 소식이에요(예시). 묵호보다 기다림이 적대요.', help: 3 },
+    { id: 'lx2', cat: 'food', pid: 'cheongok', ago: 55, text: '이 근처 식당 소식 글 자리예요(예시 글 · 가게는 공공데이터의 실제 식당).', help: 3 },
     { id: 'lx3', cat: 'view', pid: 'mangsang', ago: 120, text: '오늘 해변이 한적하고 파도가 잔잔해요.', help: 4 },
-    { id: 'lx4', cat: 'cafe', pid: 'chuambeach', ago: 200, text: '추암 해변 근처 바다 보이는 카페 소식이에요(예시).', help: 2 }
+    { id: 'lx4', cat: 'cafe', pid: 'chuambeach', ago: 200, text: '이 근처 카페 소식 글 자리예요(예시 글 · 가게는 공공데이터의 실제 카페).', help: 2 }
   ];
   var liveFilter = 'all', liveSort = 'near';
   function liveBase() { var c = courseCenter(); if (c) return { pt: c, name: '내 코스' }; if (TN.near) return { pt: TN.near, name: TN.nearKind === 'me' ? '내 위치' : '기준 위치' }; return null; }
+  var liveEatMemo = {};
+  function liveEatPick(cat) { // 예시 밥집·카페 카드에 붙일 실제 가게(공공데이터, 좌표 있는 곳). 가게 이야기는 지어내지 않는다.
+    if (liveEatMemo[cat] !== undefined) return liveEatMemo[cat];
+    var want = cat === 'cafe', area = want ? /추암|북평|동호/ : /천곡/;
+    var pool = TW.list('eat').filter(function (x) { return TW.hasPos(x) && isCafe(x) === want; });
+    return (liveEatMemo[cat] = pool.filter(function (x) { return area.test(x.dong || x.addr || ''); })[0] || pool[0] || null);
+  }
   function renderNews() {
     var ul = $('newsList'); if (!ul) return;
     var hide = jget(K_HIDE, {}), helped = jget(K_HELP, {}), now = Date.now(), items = [], inCourse = S.plan ? courseIds() : {};
@@ -3305,10 +3323,15 @@
       var ago = Math.round((now - r.at) / 60000); if (ago < 0 || ago >= LIVE_LIFE) return;
       items.push({ id: r.id, cat: 'view', pid: r.placeId, ago: ago, text: r.text || '풍경이 좋아요.', help: 0, mine: r.dev === myDev(), ex: false });
     });
-    LIVE_EX.forEach(function (e) { if (PLACE[e.pid]) items.push({ id: e.id, cat: e.cat, pid: e.pid, ago: e.ago, text: e.text, help: e.help, mine: false, ex: true }); });
+    LIVE_EX.forEach(function (e) {
+      if (!PLACE[e.pid]) return;
+      var it = { id: e.id, cat: e.cat, pid: e.pid, ago: e.ago, text: e.text, help: e.help, mine: false, ex: true };
+      if (e.cat !== 'view') { var ex = liveEatPick(e.cat); if (!ex) return; it.eat = ex; }
+      items.push(it);
+    });
     items = items.filter(function (i) { return !hide[i.id] && (liveFilter === 'all' || i.cat === liveFilter); });
     var base = liveBase(), srt = liveSort;
-    items.forEach(function (i) { var q = PLACE[i.pid]; i.dm = base && FU && isFinite(q.lat) ? FU.dist(base.pt.lat, base.pt.lng, q.lat, q.lng) : null; i.hc = i.help + (helped[i.id] ? 1 : 0); });
+    items.forEach(function (i) { var q = i.eat || PLACE[i.pid]; i.dm = base && FU && isFinite(q.lat) ? FU.dist(base.pt.lat, base.pt.lng, q.lat, q.lng) : null; i.hc = i.help + (helped[i.id] ? 1 : 0); });
     if (srt === 'near' && !base) srt = 'new';
     items.sort(function (x, y) { return srt === 'near' ? (x.dm - y.dm) || (x.ago - y.ago) : srt === 'help' ? (y.hc - x.hc) || (x.ago - y.ago) : x.ago - y.ago; });
     $('liveBasis').textContent = liveSort === 'near' ? (base ? base.name + ' 가운데에서 가까운 순이에요.' : '코스를 짜면 내 코스에서 가까운 순으로 보여 드려요. 지금은 최신 순이에요.') : liveSort === 'help' ? '도움돼요를 많이 받은 순이에요.' : '새로 올라온 순이에요.';
@@ -3317,10 +3340,10 @@
       var p = PLACE[i.pid], agoT = i.ago < 1 ? '방금' : i.ago < 60 ? i.ago + '분 전' : Math.floor(i.ago / 60) + '시간 전', left = LIVE_LIFE - i.ago, leftT = left >= 120 ? Math.round(left / 60) + '시간 뒤' : left + '분 뒤';
       var h1 = helped[i.id] ? 1 : 0, act;
       if (i.cat === 'view') act = !S.plan ? '<button type="button" class="btn nact" disabled aria-disabled="true">코스를 먼저 짜면 넣을 수 있어요</button>' : inCourse[i.pid] ? '<button type="button" class="btn nact" disabled aria-disabled="true">이미 내 코스에 있어요</button>' : '<button type="button" class="btn primary nact" data-live-add="' + esc(i.pid) + '">내 코스에 넣기</button>';
-      else act = '<button type="button" class="btn nact" data-live-map="' + esc(i.pid) + '">근처 식당·카페 지도에서 보기</button>';
+      else act = !S.plan ? '<button type="button" class="btn nact" disabled aria-disabled="true">코스를 먼저 짜면 넣을 수 있어요</button>' : inCourse['eat_' + i.eat.key] ? '<button type="button" class="btn nact" disabled aria-disabled="true">이미 내 코스에 있어요</button>' : '<button type="button" class="btn primary nact" data-live-addeat="' + esc(i.eat.key) + '">내 코스에 넣기</button>';
       return '<li class="ncard n-' + i.cat + '">' + artFig(p) +
         '<div class="nh"><span class="ntag">' + LIVE_CAT[i.cat] + '</span>' + (i.ex ? '<span class="nex">예시</span>' : i.mine ? '<span class="nme">내 소식</span>' : '<span class="nme">여행자</span>') + '<span class="nago">' + agoT + '</span></div>' +
-        '<p class="nt"><b>' + esc(p.name) + '</b> · ' + esc(i.text) + '</p>' +
+        '<p class="nt"><b>' + esc(i.eat ? i.eat.name : p.name) + '</b> · ' + esc(i.text) + '</p>' +
         '<p class="nleft">' + (i.dm != null ? (i.dm < 1000 ? '약 ' + Math.max(50, Math.round(i.dm / 50) * 50) + 'm' : '약 ' + (i.dm / 1000).toFixed(1) + 'km') + ' · ' : '') + leftT + ' 사라져요</p>' +
         '<div class="nact-row"><button type="button" class="btn nhelp" data-live-help="' + esc(i.id) + '" aria-pressed="' + (h1 ? 'true' : 'false') + '">도움돼요 ' + (i.help + h1) + '</button>' + act + '</div>' +
         '<button type="button" class="nbad" data-nhide="' + esc(i.id) + '">광고·거짓이에요</button></li>';
@@ -3342,6 +3365,8 @@
     var hp = ev.target.closest('[data-live-help]');
     if (hp) { var hh = jget(K_HELP, {}), id = hp.getAttribute('data-live-help'); if (hh[id]) delete hh[id]; else hh[id] = 1; lsSet(K_HELP, JSON.stringify(hh)); renderNews(); return; }
     var ad = ev.target.closest('[data-live-add]'); if (ad) { spotAdd(ad.getAttribute('data-live-add')); return; }
+    var le = ev.target.closest('[data-live-addeat]');
+    if (le) { var lx = TW.list('eat').filter(function (y) { return y.key === le.getAttribute('data-live-addeat'); })[0]; if (lx) addEatToCourse(lx); return; }
     var mp = ev.target.closest('[data-live-map]');
     if (mp) { var q = PLACE[mp.getAttribute('data-live-map')]; if (q) { S.fromTown = false; openMapAt({ lat: q.lat, lng: q.lng }, { eat: true, focusName: (q.short || q.name) + ' 근처' }); } }
   });
@@ -3591,7 +3616,11 @@
     return withPos.concat(without);
   }
   function townAddState(x) {
-    if (x.kind !== 'lodge') return { ok: false, why: '' }; // 식당은 코스에 넣지 않아요 — 지도 탭에서 위치를 봐요
+    if (x.kind !== 'lodge') { // 식당·카페: 좌표가 있고 코스가 있을 때
+      if (!S.plan) return { ok: false, why: '코스를 먼저 짜면 넣을 수 있어요' };
+      if (!TW.hasPos(x)) return { ok: false, why: '위치 정보가 없어 넣을 수 없어요' };
+      return { ok: true, why: '' };
+    }
     if (!S.plan) return { ok: false, why: '코스를 먼저 짜면 넣을 수 있어요' };
     if (!TW.hasPos(x)) return { ok: false, why: '위치 정보가 없어 넣을 수 없어요' };
     if (!S.plan.multi) return { ok: false, why: '하루 여행이라 숙소는 정하지 않아요' };
@@ -3619,8 +3648,8 @@
       return '<li class="tw tw-' + tk + '" data-key="' + x.key + '"><div class="tw-main"><span class="poi-ic ' + tk + '" aria-hidden="true">' + poiSvg(tk) + '</span><b class="tw-n">' + esc(x.name) + '</b><span class="tw-t">' + esc(x.type) + (x._m != null ? ' · ' + (FU ? FU.round10(x._m) : Math.round(x._m)) + 'm' : '') + '</span></div>' +
         '<p class="tw-a">' + esc(x.area === TW.OTHER ? x.dong : x.area + ' · ' + x.dong) + ' · ' + esc(x.addr) + (x.tel ? ' · <a href="tel:' + esc(x.tel.replace(/[^0-9]/g, '')) + '">' + esc(x.tel) + '</a>' : '') + '</p>' +
         '<div class="tw-btns"><a class="btn tw-map" href="' + esc(TW.kakaoSearch(x.name)) + '" target="_blank" rel="noopener">카카오맵에서 보기</a>' +
-        (!lod ? (noPos ? '' : '<button type="button" class="btn tw-onmap" data-onmap="' + x.key + '">지도에서 보기</button>') : (noPos ? '<span class="tw-nopos">위치 정보 없음</span>' : '<button type="button" class="btn tw-add" data-add="' + x.key + '"' + (st.ok ? '' : ' disabled aria-disabled="true"') + '>코스에 넣기</button>')) + '</div>' +
-        (lod ? (st.ok ? '<p class="tw-why">밤에 묵는 곳으로 정해요</p>' : (noPos ? '' : '<p class="tw-why">' + esc(st.why) + '</p>')) : '') + '</li>';
+        (!lod ? (noPos ? '' : '<button type="button" class="btn tw-onmap" data-onmap="' + x.key + '">지도에서 보기</button><button type="button" class="btn tw-add" data-addeat="' + x.key + '"' + (st.ok ? '' : ' disabled aria-disabled="true"') + '>코스에 넣기</button>') : (noPos ? '<span class="tw-nopos">위치 정보 없음</span>' : '<button type="button" class="btn tw-add" data-add="' + x.key + '"' + (st.ok ? '' : ' disabled aria-disabled="true"') + '>코스에 넣기</button>')) + '</div>' +
+        (lod ? (st.ok ? '<p class="tw-why">밤에 묵는 곳으로 정해요</p>' : (noPos ? '' : '<p class="tw-why">' + esc(st.why) + '</p>')) : (!noPos && !st.ok ? '<p class="tw-why">' + esc(st.why) + '</p>' : '')) + '</li>';
     }).join('');
     var more = $('townMore'); more.hidden = list.length <= shown.length; more.textContent = '더 보기 (' + (list.length - shown.length) + '곳 남음)';
     $('townSrc').textContent = '출처: ' + ((TW.src && TW.src[k === 'lodge' ? 'lodging' : 'eats']) || '') + (k === 'cafe' ? ' · 업태가 "카페"로 적힌 곳 + 이름에 카페·커피가 들어간 곳(완벽하진 않아요)' : '') + ' · 가게 소개·메뉴·별점은 자료에 없어요 · 영업 여부와 예약은 직접 확인 · 광고 없음';
@@ -3655,10 +3684,17 @@
   $('townList').addEventListener('click', function (ev) {
     var m = ev.target.closest('[data-onmap]');
     if (m) { var k2 = m.getAttribute('data-onmap'), y = TW.list('eat').filter(function (z) { return z.key === k2; })[0]; if (y && TW.hasPos(y)) { TN.sy = window.pageYOffset || 0; S.fromTown = true; } if (y && TW.hasPos(y)) openMapAt({ lat: y.lat, lng: y.lng }, { eat: true, focusName: y.name }); return; }
+    var ea = ev.target.closest('[data-addeat]');
+    if (ea) { if (ea.disabled) return; var ek = ea.getAttribute('data-addeat'), ex = TW.list('eat').filter(function (y) { return y.key === ek; })[0]; if (ex) addEatToCourse(ex); return; }
     var b = ev.target.closest('[data-add]'); if (!b || b.disabled) return;
     var key = b.getAttribute('data-add'), x = TW.list('lodge').filter(function (y) { return y.key === key; })[0];
     if (x) townAdd(x);
   });
+  function addEatToCourse(x) {
+    var st = townAddState(x); if (!st.ok) { townSay(st.why, true); return; }
+    var id = eatPlaceFrom(x); townSay('');
+    if (spotAdd(id)) flash(x.name + ' 넣었어요 · 운영 시간은 가게에 확인해 주세요');
+  }
   function townAdd(x) {
     var st = townAddState(x); if (!st.ok) { townSay(st.why, true); return; }
     townLodge(x);
