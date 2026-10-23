@@ -971,11 +971,7 @@
   function aNote(msg) { var n = $('askNote'); n.textContent = msg || ''; n.hidden = !msg; }
   function showTyping(focus) { $('ask').classList.add('show-type'); $('typeToggle').setAttribute('aria-expanded', 'true'); if (focus) { try { $('askText').focus(); } catch (e) { /* 무시 */ } } }
   $('typeToggle').addEventListener('click', function () { aNote(''); showTyping(true); });
-  $('askMic').addEventListener('click', function () {
-    if (aOn && arec) { try { arec.stop(); } catch (e) { /* 무시 */ } return; }
-    if (!ARSR) { aNote('이 화면에서는 음성 입력이 안 돼요. 아래 칸에 글로 적어 주세요.'); showTyping(true); return; }
-    try { stopSpeak(); } catch (e) { /* 무시 */ }
-    arec = new ARSR(); arec.lang = 'ko-KR'; arec.interimResults = true; arec.maxAlternatives = 1; aGot = false; aNote('');
+  function aBind() {
     arec.onresult = function (ev) {
       var t = '', fin = false;
       for (var i = ev.resultIndex; i < ev.results.length; i++) { t += ev.results[i][0].transcript; if (ev.results[i].isFinal) fin = true; }
@@ -990,6 +986,13 @@
       else if (er !== 'aborted') aNote('어떤 말씀인지 놓쳤어요. 다시 말씀하시거나 글로 적어 주세요.');
     };
     arec.onend = function () { var was = aOn; aOn = false; if ($('askMic').classList.contains('listening')) { aMic(''); if (was && !aGot) aNote('목소리를 잘 듣지 못했어요. 버튼을 누르고 조금 더 크게 말씀해 주세요.'); } };
+  }
+  $('askMic').addEventListener('click', function () {
+    if (aOn && arec) { try { arec.stop(); } catch (e) { /* 무시 */ } return; }
+    if (!ARSR) { aNote('이 화면에서는 음성 입력이 안 돼요. 아래 칸에 글로 적어 주세요.'); showTyping(true); return; }
+    try { stopSpeak(); } catch (e) { /* 무시 */ }
+    aGot = false; aNote('');
+    if (!arec) { arec = new ARSR(); arec.lang = 'ko-KR'; arec.interimResults = true; arec.maxAlternatives = 1; aBind(); } // 한 번 만든 걸 계속 씀(매번 새로 만들면 허용을 또 묻는 브라우저가 있음)
     try { arec.start(); aOn = true; aMic('listening', '듣고 있어요… 말씀하세요'); } catch (e) { aOn = false; aMic(''); aNote('음성 입력을 시작하지 못했어요. 글로 적어 주세요.'); showTyping(true); }
   });
   Array.prototype.forEach.call(document.querySelectorAll('#askChips .chip'), function (c) {
