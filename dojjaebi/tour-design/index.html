@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=38">
+<link rel="stylesheet" href="style.css?v=41">
 </head>
 <body class="no-top">
 <a class="skip" href="#app">본문으로 건너뛰기</a>
@@ -414,11 +414,12 @@
     <button type="button" class="chip livebtn" id="liveBtn" data-live="auto">여행 길안내</button>
     <button type="button" class="chip editbtn" id="editBtn" aria-pressed="false">코스 고치기</button>
     <button type="button" class="chip" id="rainBtn" aria-pressed="false">날씨가 안 좋아요</button>
+    <button type="button" class="chip" id="whyBtn" aria-expanded="false" aria-controls="whyText">왜 이 코스예요?</button>
   </div>
   <div class="edwarn pad-in" id="edWarn" aria-live="polite" hidden></div>
   <div class="cnote pad-in" id="courseNote" hidden></div>
   <div class="pick pad-in" id="pickBox" hidden></div>
-  <div class="why pad-in" id="whyBox"><button type="button" class="chip" id="whyBtn" aria-expanded="false">왜 이 코스예요?</button><div class="why-t" id="whyText" role="status" aria-live="polite" hidden></div></div>
+  <div class="why pad-in" id="whyBox"><div class="why-t" id="whyText" role="status" aria-live="polite" hidden></div></div>
   <div class="strip pad-in" id="fxStrip" hidden></div>
   <div class="pad-in" id="tourRsv" hidden></div>
 
