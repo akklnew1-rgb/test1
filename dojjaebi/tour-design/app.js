@@ -2743,7 +2743,7 @@
   $('facInfo').addEventListener('click', function () { S.fac.info = !S.fac.info; renderFacList(); drawMap(); });
 
   /* ---------- 지도(카카오, 실패하면 글로 안내) ---------- */
-  var mapApi = null, mapState = 'idle'; // idle|loading|ok|fail
+  var mapApi = null, mapState = 'idle', mapTiles = false; // idle|loading|ok|fail · mapTiles: 카카오 지도 조각이 실제로 도착했는지(전에는 미리 받아 둔 그림을 보여 준다)
   function loadKakao(key, ok, fail) {
     var done = false, t1 = null, t2 = null;
     function fin(good) { if (done) return; done = true; clearTimeout(t1); clearTimeout(t2); if (good) ok(); else fail(); }
@@ -2999,7 +2999,7 @@
     if (mapState !== 'idle') return;
     var key = String(window.KAKAO_JS_KEY || '').trim();
     if (!key) { mapFail(); return; }
-    mapState = 'loading';
+    mapState = 'loading'; mapTiles = false; $('mapFallback').hidden = false; // 지도 조각이 오기 전까지는 미리 받아 둔 그림을 먼저 보여 준다(빈 상자 방지)
     loadKakao(key, function () {
       try {
         var km = kakao.maps, el = $('map');
@@ -3008,7 +3008,7 @@
         km.event.addListener(map, 'dragend', function () { if (S.screen === 's-map' && layPoi()) { drawMap(true); } }); // 끌어서 옮기면 그 화면의 식당으로 다시 고른다
         km.event.addListener(map, 'zoom_changed', function () { if (S.screen === 's-map' && layPoi()) { drawMap(true); } }); // 확대 수준이 바뀌면 보여 줄 곳 수를 다시 맞춘다
         var ovs = [], lines = [], tiles = false;
-        km.event.addListener(map, 'tilesloaded', function () { tiles = true; });
+        km.event.addListener(map, 'tilesloaded', function () { tiles = true; if (!mapTiles) { mapTiles = true; $('map').classList.remove('pre'); $('mapFallback').hidden = true; $('mapFallback').innerHTML = ''; try { mapApi && mapApi.resize(); } catch (e) { /* 무시 */ } drawMap(true); } });
         mapApi = {
           set: function (pts, segs, facs, pois, focus, keep) {
             ovs.forEach(function (o) { o.setMap(null); }); ovs = []; lines.forEach(function (l) { l.setMap(null); }); lines = [];
@@ -3107,7 +3107,7 @@
     if (!lay.course) { pts = []; segs = []; facs = []; }
     if (mapState === 'ok' && mapApi) { mapApi.set(pts, segs, facs, pois, focus, keep); }
     renderPoiUi();
-    if (mapState === 'fail') {
+    if (mapState === 'fail' || !mapTiles) {
       var sm = staticMapHtml(pts, segs, facs, false, pois, focus);
       $('mapFallback').innerHTML = sm + '<p class="fbtxt"' + (lay.course ? '' : ' hidden') + '><b>' + (sm ? '실시간 지도 대신 미리 받아 둔 지도 그림이에요.' : '지도를 불러오지 못했어요.') + '</b> 순서대로 가시면 돼요.<br>' +
         pts.map(function (p) { return esc(p.name); }).join(' → ') + '</p>';

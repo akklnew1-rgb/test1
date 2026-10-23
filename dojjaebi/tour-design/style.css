@@ -1808,3 +1808,6 @@ body.big #s-start .hero .hero-txt h1{ font-size:26px; }
 
 /* 웹 인터페이스 점검(vercel-labs guidelines): 아래에 붙은 단추 줄·탭 막대가 키보드로 이동한 칸을 가리지 않게 */
 html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
+
+/* 카카오 지도 조각이 오기 전에는 지도 칸을 보이지 않게 둔다(자리는 유지해 조각을 받는다). 미리 받아 둔 그림이 그동안 보인다 */
+#map.pre{ position:absolute; left:0; right:0; height:320px; visibility:hidden; pointer-events:none; }

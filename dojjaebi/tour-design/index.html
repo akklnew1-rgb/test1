@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=42">
+<link rel="stylesheet" href="style.css?v=43">
 </head>
 <body class="no-top">
 <a class="skip" href="#app">본문으로 건너뛰기</a>
@@ -483,7 +483,7 @@
   <div class="facbar laybar" role="group" aria-label="지도에 보기"><span class="fb-l fb-top">장소 켜기</span><button type="button" class="chip" id="layCourse" aria-pressed="true">코스</button><button type="button" class="chip" id="layEat" data-k="eat" aria-pressed="false">식당</button><button type="button" class="chip" id="layCafe" data-k="cafe" aria-pressed="false">카페</button><button type="button" class="chip" id="layLodge" data-k="lodge" aria-pressed="false">숙소</button><button type="button" class="chip" id="laySpot" data-k="spot" aria-pressed="false">볼거리</button></div>
   <div class="facbar" role="group" aria-label="지도에 같이 보기"><span class="fb-l fb-top fb-urgent">급할 때 찾기</span><button type="button" class="chip cap" id="facWc" aria-pressed="false">🚻 개방화장실</button><button type="button" class="chip cap" id="facInfo" aria-pressed="false">ℹ️ 관광안내소</button></div>
   <div class="mapbox">
-    <div id="map" aria-label="코스 지도"></div>
+    <div id="map" class="pre" aria-label="코스 지도"></div>
     <div id="mapFallback" class="mapfb" hidden></div>
     <div class="maplegend" aria-label="지도 색 안내"><span class="lg c-eat"><i></i>식당</span><span class="lg c-cafe"><i></i>카페</span><span class="lg c-lodge"><i></i>숙소</span><span class="lg c-spot"><i></i>볼거리</span><span class="lg ln walk"><u></u>걷기</span><span class="lg ln bus"><u></u>버스</span><span class="lg ln taxi"><u></u>차·택시</span><span class="lg ln tour"><u></u>시티투어</span></div>
     <p class="note" id="mapNote">지도 © Kakao · 선은 카카오 길찾기 기준, 점선은 어림 직선이에요 · 동네 탭의 색과 같은 색이에요</p>
@@ -821,7 +821,7 @@
 <script src="ai-config.js"></script>
 <script src="ai.js?v=3"></script>
 <script src="art.js"></script>
-<script src="app.js?v=39"></script>
+<script src="app.js?v=40"></script>
 <script src="cam.js?v=2"></script>
 </body>
 </html>
