@@ -148,13 +148,13 @@
     S.screen = id;
     stopSpeak();
     if ($('backTown')) $('backTown').hidden = !(id === 's-map' && S.fromTown);
-    var ttl = { 's-start': '여행 준비', 's-input': '여행 준비', 's-prep': '여행 준비', 's-course': '오늘 코스', 's-map': '코스 지도', 's-report': '동해 추천', 's-stay': '동네', 's-card': '기록', 's-watch': '시청 화면' }[id] || '';
+    var ttl = { 's-start': '여행 준비', 's-input': '여행 준비', 's-prep': '여행 준비', 's-course': '오늘 코스', 's-map': '코스 지도', 's-report': '동해 추천', 's-stay': '동네', 's-card': '내 여행', 's-watch': '시청 화면' }[id] || '';
     if ($('scrTitle')) $('scrTitle').textContent = ttl;
     if ($('toMapTop')) $('toMapTop').hidden = !(id === 's-course' && S.plan);
     var inTab = !!S.plan && TAB_SCREENS.indexOf(id) >= 0;
     $('tabs').hidden = !inTab;
     Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) {
-      if (t.getAttribute('data-tab') === id) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
+      if (t.getAttribute('data-tab') === (id === 's-report' ? 's-card' : id)) t.setAttribute('aria-current', 'page'); else t.removeAttribute('aria-current');
     });
     var showBanner = S.banner && TAB_SCREENS.indexOf(id) >= 0;
     $('banner').hidden = !showBanner;
@@ -175,6 +175,10 @@
   $('tabHome').addEventListener('click', function () { show(S.plan ? 's-course' : 's-start'); });
   $('tabMap').addEventListener('click', function () { S.mapFocus = null; if (!S.mapSeen) { S.mapSeen = true; S.mapLay = { course: true, eat: false, cafe: false, lodge: false, spot: false }; } show('s-map'); }); // 지도 탭을 처음 열 때는 코스만 (식당·카페·숙소 층은 끈 채)
   $('toStay').addEventListener('click', function () { show('s-stay'); });
+  $('tabGuide').addEventListener('click', function () { lvOpenAsk(lvDayAuto()); });
+  $('myRec').addEventListener('click', function () { openRec(); });
+  $('myPrep').addEventListener('click', function () { show('s-prep'); });
+  $('myMute').addEventListener('click', function () { $('muteBtn').click(); flash(S.muteAuto ? '자동 음성을 껐어요' : '자동 음성을 켰어요'); });
   $('toCard').addEventListener('click', function () { renderCard(); show('s-card'); });
 
   /* ---------- 큰 글씨 ---------- */

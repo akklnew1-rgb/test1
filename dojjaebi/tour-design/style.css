@@ -1629,3 +1629,8 @@ body.big #s-start .qs-card{ min-height:56px; }
 .rec-del{margin-left:auto}
 #recPrev{max-width:100%;max-height:200px;border-radius:12px;margin:6px 0;object-fit:cover}
 @media (prefers-color-scheme: dark){.rec-like[aria-pressed="true"]{background:#3a1a25;border-color:#ff7a9a;color:#ff9ab3}}
+
+/* 내 여행 메뉴 + 4칸 하단 메뉴 */
+.mytrip-menu{ display:grid; gap:10px; margin:0 0 16px; }
+.mytrip-menu .btn{ min-height:56px; font-size:max(18px,1em); text-align:left; justify-content:flex-start; text-decoration:none; display:flex; align-items:center; }
+.tab{ font-size:max(15px,.85em); }
