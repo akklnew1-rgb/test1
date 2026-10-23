@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=41">
+<link rel="stylesheet" href="style.css?v=42">
 </head>
 <body class="no-top">
 <a class="skip" href="#app">본문으로 건너뛰기</a>
@@ -100,7 +100,7 @@
         </div>
         <button type="button" class="btn primary cta" id="chatMake" hidden>✨ 조건 확인하고 코스 짜기</button>
         <label for="askText" class="visually-hidden">도째비에게 할 말</label>
-        <textarea id="askText" rows="2" placeholder="도째비에게 편하게 말씀해 주세요"></textarea>
+        <textarea id="askText" autocomplete="off" rows="2" placeholder="도째비에게 편하게 말씀해 주세요"></textarea>
         <div class="ask-row">
           <button type="button" class="btn primary" id="askGo">보내기</button>
           <button type="button" class="btn" id="askMic"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span id="askMicTxt">한 번 누르고 말씀하세요</span></button>
@@ -359,7 +359,7 @@
   <h2 id="h-input">어떻게 다니고 싶어요?</h2>
   <p class="lead">돌아갈 기차 시간과 함께 가는 사람, 불편한 점을 적어 주세요.</p>
   <label for="reqText" class="visually-hidden">여행 이야기</label>
-  <textarea id="reqText" rows="4" placeholder="예) 6시 10분 기차, 친구랑 가요. 사진 찍고 싶어요."></textarea>
+  <textarea id="reqText" autocomplete="off" rows="4" placeholder="예) 6시 10분 기차, 친구랑 가요. 사진 찍고 싶어요."></textarea>
   <button type="button" class="btn mic" id="micBtn" hidden><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span id="micTxt">말하기</span></button>
   <p class="note" id="micNote" hidden>이 폰에서는 말하기를 쓸 수 없어요. 글로 적어 주세요.</p>
   <p class="note" id="micErr" hidden></p>
@@ -560,7 +560,7 @@
       <select id="repPlace"></select>
     </label>
     <label class="field">한 줄로 적어 주세요 (선택)
-      <input type="text" id="repText" placeholder="예) 도째비골 줄 20분">
+      <input type="text" id="repText" autocomplete="off" placeholder="예) 도째비골 줄 20분">
     </label>
     <label class="field">사진 (선택)
       <input type="file" id="repPhoto" accept="image/*">
@@ -706,7 +706,7 @@
       <input type="text" id="recName" maxlength="20" placeholder="예) 감추사" autocomplete="off">
     </label>
     <label class="field">한 줄로 적어 주세요
-      <textarea id="recLine" rows="2" maxlength="60" placeholder="예) 계단을 내려가면 바위 틈에 작은 절이 있어요"></textarea>
+      <textarea id="recLine" autocomplete="off" rows="2" maxlength="60" placeholder="예) 계단을 내려가면 바위 틈에 작은 절이 있어요"></textarea>
     </label>
     <label class="field">사진 <small>(있으면 더 눈에 띄어요)</small>
       <input type="file" id="recPhoto" accept="image/*">

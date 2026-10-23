@@ -1805,3 +1805,6 @@ body.big #s-start .hero .hero-txt h1{ font-size:26px; }
 .why{ margin:6px 0 0; }
 #s-start .hero .hero-slides{ flex:0 0 clamp(150px,24dvh,230px); height:clamp(150px,24dvh,230px); }
 #whyBox{ margin:0 var(--gut); } #whyBox:has(#whyText[hidden]){ display:none; } #whyBox .why-t{ margin:6px 0 8px; }
+
+/* 웹 인터페이스 점검(vercel-labs guidelines): 아래에 붙은 단추 줄·탭 막대가 키보드로 이동한 칸을 가리지 않게 */
+html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
