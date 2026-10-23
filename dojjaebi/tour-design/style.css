@@ -1692,3 +1692,14 @@ body:has(#s-start:not([hidden])) .scr-t{ display:none; }
 
 .ask:not(.show-ex) #askChips,.ask:not(.show-ex) .ask-credit{ display:none; }
 .exbtn{ width:100%; min-height:52px; margin:8px 0; font-weight:700; }
+
+/* 첫 화면 위계 (2026-10-23): 말로 하기 = 주인공, 보내기는 글을 쓴 뒤에만 강조, 바로 정하기는 윤곽선 보조 */
+.ask-row #askMic{ order:-1; flex:2; background:var(--brand); border-color:var(--brand); color:#fff; font-weight:800; }
+.ask-row #askMic .ic{ stroke:#fff; }
+.ask-row #askGo{ flex:1; }
+.ask:has(#askText:placeholder-shown) #askGo{ background:var(--soft); border-color:var(--line); color:var(--muted); }
+#askSheet{ background:var(--paper); color:var(--ink); border:2px solid var(--muted); box-shadow:none; font-weight:700; min-height:52px; }
+.exbtn{ background:none; border:0; color:var(--brand); text-decoration:underline; font-weight:700; min-height:48px; }
+@media (prefers-color-scheme: dark){ .ask-row #askMic{ background:#1f6fbf; border-color:#1f6fbf; } #askSheet{ border-color:#94a3b8; } .exbtn{ color:#5aa5f0; } }
+#askSheet.btn.cta{ background:var(--paper) !important; color:var(--ink) !important; border:2px solid var(--muted) !important; box-shadow:none !important; }
+@media (prefers-color-scheme: dark){ #askSheet.btn.cta{ border-color:#94a3b8 !important; } }
