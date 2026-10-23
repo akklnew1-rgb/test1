@@ -1821,3 +1821,13 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
 .tour-more li{ display:flex; flex-direction:column; padding:8px 0; border-top:1px solid var(--line); }
 .tour-more li:first-child{ border-top:0; }
 .tour-more small{ color:var(--muted); }
+
+/* 코스 화면 위쪽 덜어내기 2 (작은 폰에서도 첫 장소 사진이 더 보이게) */
+.cbar{ padding:8px var(--gut); gap:6px; }
+.cbar-stay{ min-height:40px; padding:6px 10px; font-size:.86em; }
+.cbar-edit{ min-height:48px; }
+.ov-toggle{ min-height:44px; margin-bottom:4px; }
+@media (max-width:400px), (max-height:760px){
+  .quiet-row .chip{ min-height:44px; padding:4px 12px; font-size:.9em; }
+  .mvgap{ margin-top:-4px; margin-bottom:-4px; }
+}
