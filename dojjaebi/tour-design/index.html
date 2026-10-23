@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=14">
+<link rel="stylesheet" href="style.css?v=16">
 </head>
 <body>
 <a class="skip" href="#app">본문으로 건너뛰기</a>
@@ -138,13 +138,15 @@
         </div>
         <p class="note qs-msg" id="qsMsg" role="status" hidden>일정과 함께 가는 사람을 골라 주세요.</p>
         <button type="button" class="btn primary cta" id="qsGo">✨ 도째비 맞춤 코스 보기</button>
-        <p class="quiet small"><button type="button" class="linkbtn" id="goNow">지금 동해에 있어요</button><button type="button" class="linkbtn" id="goLater">날짜·시간을 직접 고를래요</button></p>
       </div>
+      <details class="more-start"><summary>다른 방법으로 시작하기</summary>
+        <p class="quiet small"><button type="button" class="linkbtn" id="goNow">지금 동해에 있어요</button><button type="button" class="linkbtn" id="goLater">날짜·시간을 직접 고를래요</button></p>
       <div class="intro-alt" role="group" aria-label="다른 방법으로 시작하기">
         <button type="button" class="ibtn" id="goVoice"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span>말로 하기</span></button>
         <label class="ibtn" for="ticketFile"><svg class="ic" aria-hidden="true"><use href="#i-camera"/></svg><span>승차권 사진으로</span></label>
         <input type="file" id="ticketFile" accept="image/*" class="visually-hidden">
       </div>
+      </details>
     </div>
     <section class="ex" aria-labelledby="exH" hidden style="display:none">
       <h2 id="exH">예시 코스</h2>
@@ -812,6 +814,6 @@
 <script src="ai-config.js"></script>
 <script src="ai.js?v=3"></script>
 <script src="art.js"></script>
-<script src="app.js?v=31"></script>
+<script src="app.js?v=32"></script>
 </body>
 </html>
