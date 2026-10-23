@@ -220,7 +220,7 @@
   function freshCond() {
     var s0 = startDefaults();
     // 2026-10-21: companions 기본값을 ['친구']가 아니라 []로 — "친구"가 미리 눌려 있던 것을 없애고 아무것도 안 고른 채 시작
-    var c = { how: 'train', arrive: s0.arrive, arriveTouched: false, back: 18 * 60, backDate: s0.date, backHow: 'train', backTouched: false, backHowTouched: false, backDateTouched: false, backDateExplicit: false, noLimit: false, end: 'mukho', companions: [], knee: false, interests: [], rain: false, food: false, foodWord: '', count: null, stayBooked: null, date: s0.date, branch: null, tripNights: null, must: [] }; // 2026-10-22: arriveTouched — 사용자가 "오는 시각"을 직접 고르기 전엔 시간칸을 미리 고른 것처럼 안 보이게(twSync)
+    var c = { how: 'train', arrive: s0.arrive, arriveTouched: false, back: 18 * 60, backDate: s0.date, backHow: 'train', backTouched: false, backHowTouched: false, backDateTouched: false, backDateExplicit: false, noLimit: false, end: 'mukho', companions: [], knee: false, interests: [], rain: false, food: false, foodWord: '', count: null, stayBooked: null, hard: false, date: s0.date, branch: null, tripNights: null, must: [] }; // 2026-10-22: arriveTouched — 사용자가 "오는 시각"을 직접 고르기 전엔 시간칸을 미리 고른 것처럼 안 보이게(twSync)
     c.back = defaultBack(c);
     return c;
   }
@@ -396,8 +396,12 @@
     $('inNote').textContent = c.how === 'train' ? '' :c.how === 'bus' ? D.stations.bus.name + '에서 시작해요.' : D.stations.park.name + '에서 시작해요.';
     var CE = { '친구': ['🧑‍🤝‍🧑', '사진·카페·노을'], '연인': ['💑', '노을·카페를 천천히'], '혼자': ['🎒', '조용히 쉬어 가요'], '아이': ['👨‍👩‍👧', '쉬운 길, 체험 중심'], '부모님': ['👵', '덜 걷고 편안하게'] };
     $('chipComp').innerHTML = COMPS.map(function (nm) { return '<button type="button" class="qs-card" aria-pressed="' + ((c.companions || []).indexOf(nm) >= 0 ? 'true' : 'false') + '" data-comp="' + nm + '"><span class="qs-e" aria-hidden="true">' + CE[nm][0] + '</span><b>' + nm + '</b><span>' + CE[nm][1] + '</span></button>'; }).join('');
-    $('chipMore').innerHTML = chip('점심·저녁 시간 넣기', c.food, 'data-food="1"') + chip('사진·노을', c.interests.indexOf('사진') >= 0, 'data-like="사진"') + chip('먹거리 구경', c.interests.indexOf('먹거리') >= 0, 'data-like="먹거리"') + chip('무릎·계단이 힘들어요', c.knee, 'data-knee="1"') + chip('날씨가 안 좋아요' + (S.wxRain ? ' (기상청)' : ''), c.rain, 'data-rain="1"');
-    if (c.rain || c.food || c.knee || c.interests.length) $('moreBox').open = true;
+    var comp0 = c.companions || [], paceNote = comp0.indexOf('부모님') >= 0 ? '부모님과 함께라 걷기 편한 곳 위주로 짜요' : comp0.indexOf('아이') >= 0 ? '아이와 함께라 쉬운 길 위주로 짜요' : '';
+    var paceNow = c.knee ? 'easy' : c.hard ? 'hard' : 'normal';
+    function paceBtn(v, nm, sub) { return '<button type="button" class="pace-b" aria-pressed="' + (paceNow === v ? 'true' : 'false') + '" data-pace="' + v + '"><b>' + nm + '</b><span>' + sub + '</span></button>'; }
+    $('paceBox').innerHTML = paceNote ? '<p class="pace-note">' + esc(paceNote) + '</p>' : '<div class="pace-h" id="paceH">얼마나 걷고 싶으세요?</div><div class="pace-seg" role="group" aria-labelledby="paceH">' + paceBtn('easy', '살랑살랑', '평지·실내 위주') + paceBtn('normal', '가벼운 산책', '기본 · 30분 안') + paceBtn('hard', '땀나는 탐방', '등산길 포함') + '</div>';
+    $('chipMore').innerHTML = chip('점심·저녁 시간 넣기', c.food, 'data-food="1"') + chip('사진·노을', c.interests.indexOf('사진') >= 0, 'data-like="사진"') + chip('먹거리 구경', c.interests.indexOf('먹거리') >= 0, 'data-like="먹거리"') + chip('날씨가 안 좋아요' + (S.wxRain ? ' (기상청)' : ''), c.rain, 'data-rain="1"');
+    if (c.rain || c.food || c.knee || c.hard || c.interests.length) $('moreBox').open = true;
     var sn = $('startNote'); sn.hidden = !S.startNote; sn.textContent = S.startNote || '';
     var sm = $('stepMsg'); if (sm && !sm.hidden && !backEarly(c)) sm.hidden = true;
   }
@@ -451,6 +455,7 @@
     else if (b.hasAttribute('data-nolimit')) { c.noLimit = !c.noLimit; }
     else if (b.hasAttribute('data-comp')) { toggleComp(c, b.getAttribute('data-comp')); }
     else if (b.hasAttribute('data-knee')) { c.knee = !c.knee; }
+    else if (b.hasAttribute('data-pace')) { var pv = b.getAttribute('data-pace'); c.knee = pv === 'easy'; c.hard = pv === 'hard'; }
     else if (b.hasAttribute('data-rain')) { c.rain = !c.rain; if (!c.rain) S.wxRain = false; }
     else if (b.hasAttribute('data-food')) { c.food = !c.food; }
     else if (b.hasAttribute('data-like')) { var l = b.getAttribute('data-like'), j = c.interests.indexOf(l); if (j >= 0) c.interests.splice(j, 1); else c.interests.push(l); }
@@ -748,7 +753,7 @@
     c.end = r.end || 'mukho';
     // 2026-10-21: 누구와는 이제 여러 명 동시 선택이 되는데, 말로/사진으로 들어온 값은 하나만 골라 쓰고 있었음(확인 글에는 다 보여주면서 실제로는 하나만 반영되던 버그) — 들어온 것 전부 반영, 혼자는 다른 것과 함께 못 둠
     if (r.companions && r.companions.length) c.companions = r.companions.indexOf('혼자') >= 0 ? ['혼자'] : r.companions.filter(function (n) { return COMPS.indexOf(n) >= 0; });
-    c.knee = !!r.knee; c.interests = r.interests.slice(); c.rain = !!r.rain || (S.wxRain && c.rain); c.food = !!r.food; c.foodWord = r.foodWord || ''; c.count = r.count;
+    c.knee = !!r.knee; c.hard = !!r.hard && !r.knee; c.interests = r.interests.slice(); c.rain = !!r.rain || (S.wxRain && c.rain); c.food = !!r.food; c.foodWord = r.foodWord || ''; c.count = r.count;
     c.date = r.date || c.date || todayIso();
     if (r.backDate && r.backDate > c.date) { c.backDate = r.backDate; c.backDateTouched = true; c.backDateExplicit = true; c.tripNights = null; }
     if (r.arrive != null) { c.arrive = r.arrive; c.arriveTouched = true; }
@@ -1211,7 +1216,7 @@
   function planOpts(over) {
     var multi = isMulti();
     if (multi) S.mustFoodNear = {}; // 2026-10-22: 여러 날은 must 를 안 쓰니(날마다 강제되는 문제 회피) 전에 하루 코스에서 쓰던 "근처: 가게이름" 표도 지워 둠(묵은 표가 남지 않게)
-    var o = { now: S.simNow, train: effTrain(S.mode), how: S.cond.how, backHow: S.cond.backHow, start: startId(), end: endId(), backDate: S.cond.backDate, stay: multi ? stayInfo() : undefined, sunrise: multi && !S.cond.rain && !isKid() && !isSlow() && (isCouple() || S.cond.companions.indexOf('친구') >= 0 || S.cond.companions.indexOf('혼자') >= 0 || !S.cond.companions.length), kid: isKid(), couple: isCouple(), slow: isSlow(), avoidStairs: isSlow() || isKid(), soft: isSlow(), food: !!S.cond.food, foodWord: S.cond.foodWord || '', rain: S.cond.rain, interests: S.cond.interests, fx: S.fx, crowdFn: S.crowd ? crowdFn : null, mode: S.mode, fixed: S.fixed, date: S.cond.date, tour: !!CT, tourPrefer: !!S.tourLoop, must: multi ? [] : resolveMust(S.cond.must) }; // 꼭 갈 곳(o.must)은 하루 코스에만: planDays 는 날마다 같은 o 를 쓰므로 여러 날이면 날마다 강제돼 버린다 · 2026-10-22: resolveMust 가 'food:' 선택을 가장 가까운 볼거리 id 로 바꿔 줌
+    var o = { now: S.simNow, train: effTrain(S.mode), how: S.cond.how, backHow: S.cond.backHow, start: startId(), end: endId(), backDate: S.cond.backDate, stay: multi ? stayInfo() : undefined, sunrise: multi && !S.cond.rain && !isKid() && !isSlow() && (isCouple() || S.cond.companions.indexOf('친구') >= 0 || S.cond.companions.indexOf('혼자') >= 0 || !S.cond.companions.length), kid: isKid(), couple: isCouple(), slow: isSlow(), avoidStairs: isSlow() || isKid(), avoidTrail: !S.cond.hard, soft: isSlow(), food: !!S.cond.food, foodWord: S.cond.foodWord || '', rain: S.cond.rain, interests: S.cond.interests, fx: S.fx, crowdFn: S.crowd ? crowdFn : null, mode: S.mode, fixed: S.fixed, date: S.cond.date, tour: !!CT, tourPrefer: !!S.tourLoop, must: multi ? [] : resolveMust(S.cond.must) }; // 꼭 갈 곳(o.must)은 하루 코스에만: planDays 는 날마다 같은 o 를 쓰므로 여러 날이면 날마다 강제돼 버린다 · 2026-10-22: resolveMust 가 'food:' 선택을 가장 가까운 볼거리 id 로 바꿔 줌
     if (over) for (var k in over) o[k] = over[k];
     if (over && over.mode) o.train = effTrain(over.mode);
     if (multi) { o.fixed = []; o.mode = 'normal'; o.now = S.cond.arrive; }
@@ -1256,7 +1261,7 @@
   var PLACE_NOTE = { lighthouse: '주차 자리가 거의 없어 자가용이면 멀리 세우고 걸어 올라가야 할 수 있다(현장 경험). 자가용 일행이면 가능하면 다른 곳과 걸어서 묶는다.', samhwasa: '주차장에서 절까지 걸어서 약 10분 들어간다(이동 분에 더해 둠).', yongchu: '차는 무릉계곡 입구(삼화사 쪽)까지만 간다. 입구에서 폭포까지 걸어서 왕복 약 1시간 30분이고 visit 100분은 그 걷기를 포함한 값이다.' };
   /* ---------- AI 가 코스를 짠다 (2026-10-22): 장소 고르기·순서·이유는 AI, 시간·마감·휴무·이동 계산과 검증은 앱(planner)이 한다 ---------- */
   var AIP = null; // { key, days:[{ids, why:{id:글}}], summary }
-  function aiKey() { var c = S.cond; return [c.date, c.backDate || c.date, (c.companions || []).slice().sort().join(','), c.how, c.knee ? 1 : 0, c.rain ? 1 : 0].join('|'); }
+  function aiKey() { var c = S.cond; return [c.date, c.backDate || c.date, (c.companions || []).slice().sort().join(','), c.how, c.knee ? 1 : 0, c.hard ? 1 : 0, c.rain ? 1 : 0].join('|'); }
   function aiActive() { return AIP && AIP.key === aiKey() ? AIP : null; }
   function aiCompose() {
     var c = S.cond, n = Math.max(1, nDays(c)), days = [], base = planOpts({ must: [] }), i;
@@ -1672,7 +1677,7 @@
   S.ed = null; S.editing = false;
   // 2026-10-22(Fable 5.1 독립 검토로 찾은 문제): must(꼭 갈 곳)가 서명에 없어서, 전에 고쳐 둔 코스가 있으면 같은 날짜·시간·동행 조건이라고 보고
   // edRestore() 가 must 없는 옛 코스를 그대로 되살려 버려 — 방금 고른 맛집·카페가 반영 안 된 것처럼 보이던 또 다른 원인. must 도 서명에 넣어 막는다.
-  function edSig() { var c = S.cond; return ED.sigOf({ date: c.date, backDate: c.backDate, arrive: c.arrive, back: c.back, noLimit: c.noLimit, how: c.how, backHow: c.backHow, end: c.end, companions: c.companions, knee: c.knee, interests: c.interests, rain: c.rain, food: c.food, foodWord: c.foodWord, loop: !!S.tourLoop, stay: S.stayPick ? S.stayPick.name : '', must: (c.must || []).join(',') }); }
+  function edSig() { var c = S.cond; return ED.sigOf({ date: c.date, backDate: c.backDate, arrive: c.arrive, back: c.back, noLimit: c.noLimit, how: c.how, backHow: c.backHow, end: c.end, companions: c.companions, hard: c.hard, knee: c.knee, interests: c.interests, rain: c.rain, food: c.food, foodWord: c.foodWord, loop: !!S.tourLoop, stay: S.stayPick ? S.stayPick.name : '', must: (c.must || []).join(',') }); }
   function edEnv() { return { D: D, o: planOpts(), frame: S.ed.frame }; }
   function edRetimed() { return ED.retime(edEnv(), S.ed.hist.cur); }
   function edDirty() { return !!S.ed && JSON.stringify(S.ed.hist.cur) !== JSON.stringify(ED.fromPlan(S.ed.frame)); }

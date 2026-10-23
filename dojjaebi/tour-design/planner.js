@@ -358,7 +358,7 @@
       if (avoidSet[p.id]) { skipped.push({ id: p.id, why: '앞 날에 갔어요' }); return; }
       if (FAR_REGIONS.indexOf(p.region) >= 0 && !farOK) { skipped.push({ id: p.id, why: '시간이 모자라 먼 곳은 뺌' }); return; }
       if (o.avoidStairs && p.stairs) { skipped.push({ id: p.id, why: '계단' }); return; }
-      if (o.avoidStairs && p.trail) { skipped.push({ id: p.id, why: '걷는 길이 길어요' }); return; }
+      if ((o.avoidStairs || o.avoidTrail) && p.trail) { skipped.push({ id: p.id, why: '걷는 길이 길어요' }); return; }
       if (tix && o.tourPrefer && !(tix.byPlace[p.id] || []).some(function (x) { return tourWalk(x.rec, !!o.slow) <= 15; })) { skipped.push({ id: p.id, why: '시티투어 정류장에서 걸어서 15분이 넘어요' }); return; } // 시티투어로 한 바퀴: 정류장에서 걸어갈 만한 곳만
       if (o.rain && p.rainAvoid) { skipped.push({ id: p.id, why: '비 오는 날 야외' }); return; }
       if (p.dayRule && p.dayRule.lastDigit && !(dinfo && p.dayRule.lastDigit.indexOf(dinfo.d % 10) >= 0)) { skipped.push({ id: p.id, why: dinfo ? '장날이 아님' : '날짜 모름' }); return; }

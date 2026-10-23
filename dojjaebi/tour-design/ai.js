@@ -50,7 +50,7 @@
   /* 글·말 → 조건 (todayIso: 오늘 날짜 'YYYY-MM-DD' — 있어야 여행 날짜를 읽는다) */
   function aiParseRequest(text, nowMin, todayIso) {
     var t = String(text || '');
-    var r = { train: null, end: 'mukho', companions: [], knee: false, interests: [], rain: false, food: false, foodWord: '', count: null, date: null, how: null, found: [] };
+    var r = { train: null, end: 'mukho', companions: [], knee: false, hard: false, interests: [], rain: false, food: false, foodWord: '', count: null, date: null, how: null, found: [] };
     r.date = aiParseDate(t, todayIso);
     var h = null, m = 0, mk = null;
     var a = t.match(/(\d{1,2})\s*:\s*(\d{2})/);
@@ -70,6 +70,7 @@
     if ((has(t, /자가용|자동차|운전|렌터카|내 차/) || /(^|[^기열])차로/.test(t))) r.how = 'car'; else if (has(t, /버스/)) r.how = 'bus'; else if (has(t, /기차|열차|KTX|ktx/)) r.how = 'train';
     if (has(t, /혼자/)) r.companions.push('혼자');
     if (has(t, /무릎|계단|힘들|다리|관절|허리/)) r.knee = true;
+    if (!r.knee && has(t, /등산|트레킹|땀나|산행/)) r.hard = true; // 걷기 정도 '땀나는 탐방'(등산길 포함). 무릎·계단 말이 같이 있으면 무릎이 먼저
     if (has(t, /사진|인생샷|노을|일몰|풍경|뷰/)) r.interests.push('사진');
     if (has(t, /먹|맛집|회|시장|음식|간식/)) r.interests.push('먹거리');
     if (has(t, /먹|맛집|물회|밥|식사|배고|점심|저녁/)) r.food = true; // 밥을 먹고 싶다 → 코스에 점심·저녁 '시간'만 잡는다(특정 식당은 정하지 않음)
