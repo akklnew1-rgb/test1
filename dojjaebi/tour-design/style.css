@@ -1670,3 +1670,5 @@ body.big #s-start .qs-card{ min-height:56px; }
 body:has(#s-start:not([hidden])) .scr-t{ display:none; }
 #s-start .hero .hero-txt{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 #s-start .hero{ padding:10px var(--gut) 12px; }
+/* 모든 화면: 맨 위 화면 이름 글자 없앰 (제목은 화면 읽기용으로만 남김) */
+.scr-t{ position:absolute !important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; display:block !important; min-width:0 !important; }
