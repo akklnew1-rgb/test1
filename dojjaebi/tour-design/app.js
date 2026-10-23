@@ -1439,7 +1439,7 @@
     if (p.stairs) b.push('<span class="tag warn">#계단있음</span>');
     else if (p.slope) b.push('<span class="tag warn">#오르막</span>');
     else if (p.stairsKnown === false) b.push('<span class="tag warn">#계단은확인필요</span>');
-    else b.push('<span class="tag good">#계단없음</span>');
+    else b.push('<span class="tag good">#계단없음(자료상)</span>');
     if (p.dayRule) b.push('<span class="tag warn">#장날(3·8일)만</span>');
     if (p.trail) b.push('<span class="tag warn">#걷는길이길어요</span>');
     // 2026-10-23: 운영 시간 태그(#운영대략 · #운영시간관광공사자료 · #운영시간은가게에확인)는 아래 '운영 시간' 줄·안내 문장과 같은 말이라 뺌
@@ -2113,10 +2113,10 @@
     var an = $('aiNote'); if (an) { var at = aiNoteText(); an.textContent = at; an.hidden = !at; }
     var notes = [];
     if (pl.how === 'car') notes.push('자가용 · 걸어서 10분 안은 걷고 먼 곳은 차로(주차 5분 포함)');
-    if (isKid()) notes.push('아이와 함께 · 걷기 20분 안 · 짧게 보는 곳 먼저 · 계단 있는 곳 뺌');
+    if (isKid()) notes.push('아이와 함께 · 걷기 20분 안 · 짧게 보는 곳 먼저 · 계단이 확인된 곳은 뺐어요(나머지는 가시기 전에 확인)');
     if (isCouple()) notes.push('연인과 함께 · 노을·전망·저녁 풍경 먼저');
     if (S.wxRain && S.cond.rain) notes.push('지금 동해에 비가 와서 실내 먼저 짰어요 (기상청)');
-    if (isSlow()) notes.push('천천히 걷기(시속 3km) · 계단 있는 곳 뺌');
+    if (isSlow()) notes.push('천천히 걷기(시속 3km) · 계단이 확인된 곳은 뺐어요(나머지는 가시기 전에 확인)');
     if (S.cond.rain) notes.push('비 오는 날 · 실내 먼저 · 해변·계곡 같은 야외 곳은 뺌');
     if (!pl.multi) { var ch = closedHint(S.cond.date); if (ch) notes.push(ch); } // 장날·시티투어는 위 '주요사항' 줄에 이미 있어서 쉬는 곳 안내만 남김
     else notes.push('날마다 새로 짜요 · 앞 날에 간 곳(추암 세 곳 포함)은 다시 안 가요');
