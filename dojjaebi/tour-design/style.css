@@ -1813,7 +1813,14 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
 #map.pre{ position:absolute; left:0; right:0; height:320px; visibility:hidden; pointer-events:none; }
 
 /* 한국관광공사 관광정보(행사·소개 글·더 있는 곳) */
-#evStrip{ line-height:1.55; }
+#evStrip{ line-height:1.55; background:#E8F7F5; color:#2D4B48; border:1px solid #7FCBC0; padding:12px 16px; }
+#evStrip b{ color:#0D5E55; font-size:1.05em; }
+#evStrip .ev-src{ color:#2D4B48; opacity:.85; }
+@media (prefers-color-scheme: dark){
+  #evStrip{ background:#112527; color:#A5CAC6; border-color:#2A6B68; }
+  #evStrip b{ color:#4EE3D0; }
+  #evStrip .ev-src{ color:#A5CAC6; }
+}
 .ev-src{ font-size:.82em; color:var(--muted); }
 .kto-ov{ margin:8px 0 0; line-height:1.55; }
 .tour-more{ margin:14px var(--gut) 0; padding:12px 14px; border:1px dashed var(--line); border-radius:14px; background:var(--soft); }

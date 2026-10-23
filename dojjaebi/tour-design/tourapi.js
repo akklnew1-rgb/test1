@@ -34,7 +34,7 @@
       var all = loc.concat(api).slice(0, 4);
       if (!all.length) { el.hidden = true; el.innerHTML = ''; return; }
       var src = [loc.length ? '동해시청 행사 게시판' : '', api.length ? '한국관광공사 관광정보' : ''].filter(Boolean).join(' · ');
-      el.innerHTML = '<b>이 즈음 동해 행사</b><br>' + all.map(function (x) { return x.html; }).join('<br>') + '<br><span class="ev-src">출처: ' + src + ' · 가시기 전에 일정을 꼭 확인해 주세요</span>';
+      el.innerHTML = '<b>🎪 이 즈음 동해 행사</b><br>' + all.map(function (x) { return x.html; }).join('<br>') + '<br><span class="ev-src">출처: ' + src + ' · 가시기 전에 일정을 꼭 확인해 주세요</span>';
       el.hidden = false;
     }
     localEvents(function (j) {
