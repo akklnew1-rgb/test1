@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=20">
+<link rel="stylesheet" href="style.css?v=21">
 </head>
 <body>
 <a class="skip" href="#app">본문으로 건너뛰기</a>
@@ -64,7 +64,7 @@
     <button type="button" class="tmap" id="toMapTop" aria-label="지도로 보기" hidden><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg><span class="tmap-l">지도로 보기</span><span class="tmap-s" aria-hidden="true">지도</span></button>
     <a class="ib" hidden href="index.html#watch" target="_blank" rel="noopener" aria-label="시청 화면 (새 창으로 열기)" title="시청 화면"><svg class="ic" aria-hidden="true"><use href="#i-eye"/></svg></a>
     <button type="button" class="ib" hidden id="muteBtn" aria-label="자동 음성 끄기" title="자동 음성 끄기" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-sound"/></svg></button>
-    <button type="button" class="ib" id="bigBtn" aria-label="글씨 크게 키우기" title="글씨 크게" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-text"/></svg></button>
+    <button type="button" class="ib" hidden id="bigBtn" aria-label="글씨 크게 키우기" title="글씨 크게" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-text"/></svg></button>
   </div>
   <div id="banner" class="banner" role="status" aria-live="polite" hidden></div>
 </header>
@@ -602,6 +602,7 @@
   <h2 id="h-card" class="visually-hidden">나의 동해 이야기</h2>
   <div class="mytrip-menu" id="myMenu">
     <button type="button" class="btn" id="myRec">❤ 동해 추천 (안 알려진 곳 · 좋아요)</button>
+    <button type="button" class="btn" id="myBig" aria-pressed="false">글씨 크게 키우기</button>
     <button type="button" class="btn" id="myPrep">D-day 준비 점검</button>
     <button type="button" class="btn" id="myMute">자동 음성 켜기/끄기</button>
     <a class="btn" href="index.html#watch" target="_blank" rel="noopener">시청 화면 (새 창)</a>
@@ -814,7 +815,7 @@
 <script src="ai-config.js"></script>
 <script src="ai.js?v=3"></script>
 <script src="art.js"></script>
-<script src="app.js?v=32"></script>
+<script src="app.js?v=33"></script>
 <script src="hint.js?v=1"></script>
 </body>
 </html>

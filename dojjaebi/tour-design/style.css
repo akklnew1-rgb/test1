@@ -1672,3 +1672,12 @@ body:has(#s-start:not([hidden])) .scr-t{ display:none; }
 #s-start .hero{ padding:10px var(--gut) 12px; }
 /* 모든 화면: 맨 위 화면 이름 글자 없앰 (제목은 화면 읽기용으로만 남김) */
 .scr-t{ position:absolute !important; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; display:block !important; min-width:0 !important; }
+
+/* 맨 위 줄: 첫 화면·주요 탭에서는 통째로 없앰, 하위 화면에는 "← 처음으로"만 */
+.top .brand .flame{ display:none; }
+.top .brand::before{ content:'← 처음으로'; font-weight:800; font-size:max(18px,1em); color:var(--brand); }
+.top .brand{ min-height:48px; }
+.no-top .top .brand,.no-top .top .top-tools{ display:none; }
+.no-top .top{ padding-top:var(--safe-t); padding-bottom:0; min-height:0; border-bottom:0; }
+.top .top-tools{ display:none; }
+#hintFlame .hf-t{ white-space:normal; width:min(15em, 70vw); right:38px; text-align:left; }

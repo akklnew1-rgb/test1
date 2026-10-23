@@ -151,6 +151,7 @@
     var ttl = { 's-start': '여행 준비', 's-input': '여행 준비', 's-prep': '여행 준비', 's-course': '오늘 코스', 's-map': '코스 지도', 's-report': '동해 추천', 's-stay': '동네', 's-card': '내 여행', 's-watch': '시청 화면' }[id] || '';
     if ($('scrTitle')) $('scrTitle').textContent = ttl;
     if ($('toMapTop')) $('toMapTop').hidden = !(id === 's-course' && S.plan);
+    document.body.classList.toggle('no-top', id === 's-start' || TAB_SCREENS.indexOf(id) >= 0);
     var inTab = !!S.plan && TAB_SCREENS.indexOf(id) >= 0;
     $('tabs').hidden = !inTab;
     Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) {
@@ -177,6 +178,9 @@
   $('toStay').addEventListener('click', function () { show('s-stay'); });
   $('tabGuide').addEventListener('click', function () { lvOpenAsk(lvDayAuto()); });
   $('myRec').addEventListener('click', function () { openRec(); });
+  $('myBig').addEventListener('click', function () { setBig(!document.body.classList.contains('big')); myBigUi(); });
+  function myBigUi() { var on = document.body.classList.contains('big'); $('myBig').textContent = on ? '글씨 보통으로 줄이기' : '글씨 크게 키우기'; $('myBig').setAttribute('aria-pressed', on ? 'true' : 'false'); }
+  myBigUi();
   $('myPrep').addEventListener('click', function () { show('s-prep'); });
   $('myMute').addEventListener('click', function () { $('muteBtn').click(); flash(S.muteAuto ? '자동 음성을 껐어요' : '자동 음성을 켰어요'); });
   $('toCard').addEventListener('click', function () { renderCard(); show('s-card'); });
