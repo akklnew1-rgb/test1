@@ -60,8 +60,9 @@
       box.setAttribute('data-done', '1');
       get({ op: 'detail', id: box.getAttribute('data-cid') }, function (j) {
         var t = j && j.item && j.item.overview; if (!t) return;
-        if (t.length > 220) t = t.slice(0, 220).replace(/\s+\S*$/, '') + '…';
-        box.innerHTML = '<b>한국관광공사 소개</b> ' + esc(t) + '<br><span class="ev-src">출처: 한국관광공사 관광정보</span>'; box.hidden = false;
+        if (t.length > 130) t = t.slice(0, 130).replace(/\s+\S*$/, '') + '…';
+        var ps = card.querySelector('.p-src'), dup = ps && ps.textContent.indexOf('한국관광공사') >= 0; // 위 출처 줄에 이미 있으면 또 쓰지 않는다
+        box.innerHTML = '<b>한국관광공사 소개</b> ' + esc(t) + (dup ? '' : '<br><span class="ev-src">출처: 한국관광공사 관광정보</span>'); box.hidden = false;
       });
     }, 80);
   });

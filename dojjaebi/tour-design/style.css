@@ -1822,7 +1822,8 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
   #evStrip .ev-src{ color:#A5CAC6; }
 }
 .ev-src{ font-size:.82em; color:var(--muted); }
-.kto-ov{ margin:8px 0 0; line-height:1.55; }
+.kto-ov{ margin:6px var(--gut) 0; padding:0; border:0; background:none; line-height:1.55; font-size:.9em; color:var(--muted); }
+.kto-ov b{ color:var(--ink); }
 .tour-more{ margin:14px var(--gut) 0; padding:12px 14px; border:1px dashed var(--line); border-radius:14px; background:var(--soft); }
 .tour-more ul{ list-style:none; margin:8px 0; padding:0; }
 .tour-more li{ display:flex; flex-direction:column; padding:8px 0; border-top:1px solid var(--line); }
