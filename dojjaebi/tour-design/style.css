@@ -1689,3 +1689,6 @@ body:has(#s-start:not([hidden])) .scr-t{ display:none; }
 .src-note summary{ min-height:48px; display:flex; align-items:center; font-weight:700; cursor:pointer; }
 .src-note p{ margin:.5em 0; }
 #askH{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
+
+.ask:not(.show-ex) #askChips,.ask:not(.show-ex) .ask-credit{ display:none; }
+.exbtn{ width:100%; min-height:52px; margin:8px 0; font-weight:700; }
