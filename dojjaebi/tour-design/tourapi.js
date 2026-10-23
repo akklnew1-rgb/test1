@@ -1,6 +1,5 @@
-/* 한국관광공사 관광정보(TourAPI)를 중계 서버(ai-server/api/tour.js)에서 받아 세 곳에 보탠다. 못 받으면 아무것도 보이지 않고 앱은 원래대로 돌아간다.
- *  1) 코스 화면: 여행 날짜 앞뒤로 동해시에서 열리는 행사   2) 장소 카드: 관광공사 소개 글(글만 — 새 사진은 이용 조건(공공누리 유형)을 알 수 없어 쓰지 않는다)
- *  3) 동네 찾기: 우리 자료에 없는 곳을 "한국관광공사에 더 있는 곳"으로 보여 줌 */
+/* 한국관광공사 관광정보(TourAPI)를 중계 서버(ai-server/api/tour.js)에서 받아 두 곳에 보탠다. 못 받으면 아무것도 보이지 않고 앱은 원래대로 돌아간다.
+ *  1) 코스 화면: 여행 날짜 앞뒤로 동해시에서 열리는 행사   2) 동네 찾기: 우리 자료에 없는 곳을 "한국관광공사에 더 있는 곳"으로 보여 줌 */
 (function () {
   var BASE = window.DOJJAEBI_AI_URL ? String(window.DOJJAEBI_AI_URL).replace(/\/api\/ai\/?$/, '/api/tour') : '';
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -51,21 +50,6 @@
       show();
     });
   }
-
-  /* 2) 장소 카드 소개 글 — 카드를 펼치면 한 번만 받아서 채운다 */
-  document.addEventListener('click', function (e) {
-    var card = e.target && e.target.closest && e.target.closest('.chap.card'); if (!card) return;
-    setTimeout(function () {
-      var box = card.querySelector('.kto-ov[data-cid]'); if (!box || box.getAttribute('data-done') || card.classList.contains('open') === false) return;
-      box.setAttribute('data-done', '1');
-      get({ op: 'detail', id: box.getAttribute('data-cid') }, function (j) {
-        var t = j && j.item && j.item.overview; if (!t) return;
-        if (t.length > 130) t = t.slice(0, 130).replace(/\s+\S*$/, '') + '…';
-        var ps = card.querySelector('.p-src'), dup = ps && ps.textContent.indexOf('한국관광공사') >= 0; // 위 출처 줄에 이미 있으면 또 쓰지 않는다
-        box.innerHTML = '<b>한국관광공사 소개</b> ' + esc(t) + (dup ? '' : '<br><span class="ev-src">출처: 한국관광공사 관광정보</span>'); box.hidden = false;
-      });
-    }, 80);
-  });
 
   /* 3) 동네 찾기에서 우리 자료에 없는 곳 */
   var tq = document.getElementById('townQ'), tl = document.getElementById('townList'), more = null, tt = null;

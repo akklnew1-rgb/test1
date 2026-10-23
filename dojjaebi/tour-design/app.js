@@ -1552,7 +1552,6 @@
       '<div class="answer" hidden data-ans="' + p.id + '" aria-live="polite"></div></div>' +
       '<div class="p-cap"><div class="cl"><b>도째비</b>' + esc(st.text) + '</div></div>' +
       '<p class="p-src">출처: ' + esc(st.source) + '</p>' +
-      (!extra && p.contentid ? '<div class="kto-ov note" data-cid="' + esc(p.contentid) + '" hidden></div>' : '') +
       '<p class="tags">' + (extra ? '<span class="tag warn">#내일일출(예시시각)</span>' : placeTags(s)) + '</p>' + (!extra && p.townEat ? '<p class="eat-warn" role="note"><b>운영 시간을 몰라요.</b> 가시기 전에 가게에 꼭 확인해 주세요. 문을 닫았을 수 있어요.</p>' : '') + (extra ? '' : crowdBody(s)) +
       '<div class="p-hours note"><div class="note-h">여행자 수첩</div><dl>' +
       '<div><dt>이동</dt><dd>' + mvHtml(s, mv, extra) + '</dd></div>' +
