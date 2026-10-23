@@ -4329,7 +4329,8 @@
       return null;
     }
     if (location.protocol.indexOf('http') !== 0) { setWx(snapshot() || { error: 'none' }); return; }
-    fetch('/api/weather', { cache: 'no-store' }).then(function (r) { return r.json(); })
+    var wxUrl = window.DOJJAEBI_AI_URL ? String(window.DOJJAEBI_AI_URL).replace(/\/api\/ai\/?$/, '/api/weather') : '/api/weather'; // 날씨도 인공지능 중계 서버(열쇠 보관)에서 받는다
+    fetch(wxUrl, { cache: 'no-store' }).then(function (r) { return r.json(); })
       .then(function (j) { setWx(j && !j.error && j.temp != null ? j : (snapshot() || { error: (j && j.error) || 'fail' })); })
       .catch(function () { setWx(snapshot() || { error: 'fail' }); });
   }
