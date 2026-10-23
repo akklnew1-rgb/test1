@@ -1415,7 +1415,8 @@
     rows += factRow('붐빔 예측', S.crowd ? 'guess' : 'none', S.crowd ? '한국관광공사 예측이 코스에 반영됐어요' : '예측 자료는 날짜가 가까워지면 나와요');
     // 2026-10-21: /api/weather 는 "지금 날씨"(기상청 초단기실황)라 오늘이 아닌 날(여행 준비 화면은 늘 앞날)엔 보여 주면 틀린 값이 됨 — 오늘 날짜일 때만 실제 값을 보여줌
     var wxOk = S.wx && !S.wx.error && S.wx.temp != null && c.date === todayIso();
-    rows += factRow('날씨', wxOk ? 'guess' : 'none', wxOk ? Math.round(S.wx.temp) + '℃' + (S.wx.text ? ' ' + S.wx.text : '') + ' (기상청 지금 날씨)' : '아직 예보가 없어요 (가까워지면 기상청 예보가 나와요)');
+    var fcd = S.fc && S.fc.days && S.fc.days[c.date]; // 날짜별 단기예보(/api/forecast) — 오늘~모레쯤만 있다
+    rows += factRow('날씨', (wxOk || fcd) ? 'guess' : 'none', wxOk ? Math.round(S.wx.temp) + '℃' + (S.wx.text ? ' ' + S.wx.text : '') + ' (기상청 지금 날씨)' : fcd ? fcd.tmin + '~' + fcd.tmax + '℃' + (fcd.text ? ' ' + fcd.text : '') + (fcd.pop != null ? ' · 비 올 확률 ' + fcd.pop + '%' : '') + ' (기상청 단기예보)' : (S.fc ? '이 날짜는 아직 예보가 없어요 (기상청 예보는 모레쯤까지만 나와요)' : '예보를 불러오지 못했어요'));
     if (isMulti() && S.plan && S.plan.stay) { // 2026-10-21: 여러 날이면 동선을 보고 숙소 권역을 스스로 추천(동네 탭에서 바꾸면 "추천" 대신 "정함"으로 표시)
       var sa = S.plan.stay, areaTxt = sa.area ? sa.area + ' 쪽' : sa.name;
       rows += factRow('숙소', S.stayAuto ? 'guess' : 'ok', (S.stayAuto ? areaTxt + '을 추천해요(동선을 보고 골랐어요 · ' + sa.name + ' 기준)' : sa.name + ' 쪽으로 정했어요') + ' · 코스 화면의 「동네」 탭에서 둘러보고 바꿀 수 있어요');
@@ -4365,7 +4366,12 @@
   window.addEventListener('hashchange', route);
   initIntro(); setHdr(); window.addEventListener('resize', setHdr);
   loadTrains(); renderStart();
-  loadWeather(); loadCrowd();
+  function loadForecast() {
+    if (location.protocol.indexOf('http') !== 0) return;
+    var u = window.DOJJAEBI_AI_URL ? String(window.DOJJAEBI_AI_URL).replace(/\/api\/ai\/?$/, '/api/forecast') : '/api/forecast';
+    fetch(u, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) { if (j && !j.error && j.days) { S.fc = j; if (!$('s-prep').hidden) renderPrep(); } }).catch(function () { /* 예보 칸은 "불러오지 못했어요"로 남는다 */ });
+  }
+  loadWeather(); loadForecast(); loadCrowd();
   route();
   if (!(location.hash || '').replace('#', '')) edBootRestore(); // 새로 고쳐도 직접 고친 코스는 그대로
 
