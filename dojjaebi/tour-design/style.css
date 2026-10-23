@@ -1653,3 +1653,8 @@ body.big #s-start .qs-card{ min-height:56px; }
   .btn.primary{ background:#1f6fbf; color:#fff; }
   .chip[aria-pressed="true"],.qs-card[aria-pressed="true"]{ border-color:#5aa5f0; }
 }
+/* 첫 화면 위 사진 없앰 (2026-10-23): 색 띠 + 날씨 + 제목만 */
+#s-start .hero{ height:auto; min-height:0; justify-content:flex-start; padding:12px var(--gut) 14px; gap:10px; }
+#s-start .hero .hero-slides,#s-start .hero .hero-shade,#s-start .hero .hero-meta,#s-start .hero .hero-ctl{ display:none !important; }
+#s-start .hero .wx{ position:static; max-width:100%; }
+#s-start .hero .hero-txt{ padding:0; }
