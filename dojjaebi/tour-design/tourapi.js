@@ -22,15 +22,33 @@
   function addDays(iso, n) { var d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
   function fmt(s) { return s && s.length === 8 ? parseInt(s.slice(4, 6), 10) + '/' + parseInt(s.slice(6, 8), 10) : ''; }
 
-  /* 1) 행사 */
+  /* 1) 행사 — 직접 옮겨 적은 data/events.json(동해시청 게시판) + 한국관광공사 행사를 합친다 */
+  function localEvents(cb) {
+    fetch('data/events.json?v=1').then(function (r) { return r.json(); }).then(function (j) { cb(j && j.items ? j : null); }).catch(function () { cb(null); });
+  }
   function events(dateIso, el) {
     if (!el || !/^\d{4}-\d{2}-\d{2}$/.test(dateIso || '')) return;
-    var from = ymd(addDays(dateIso, -60)), d0 = ymd(dateIso), d1 = ymd(addDays(dateIso, 7));
-    get({ op: 'festival', from: from, rows: 30 }, function (j) {
-      var list = ((j && j.items) || []).filter(function (x) { return x.end && x.start && x.end >= d0 && x.start <= d1; }).slice(0, 3);
-      if (!list.length) { el.hidden = true; el.innerHTML = ''; return; }
-      el.innerHTML = '<b>이 즈음 동해 행사</b><br>' + list.map(function (x) { return esc(x.title) + ' · ' + fmt(x.start) + '~' + fmt(x.end) + (x.addr ? ' · ' + esc(x.addr.replace(/^강원(특별자치)?도?\s*/, '')) : ''); }).join('<br>') + '<br><span class="ev-src">한국관광공사 관광정보 · 가시기 전에 일정을 꼭 확인해 주세요</span>';
+    var from = ymd(addDays(dateIso, -60)), d0 = ymd(dateIso), d1 = ymd(addDays(dateIso, 7)), loc = [], api = [], n = 0;
+    function show() {
+      if (++n < 2) return;
+      var all = loc.concat(api).slice(0, 4);
+      if (!all.length) { el.hidden = true; el.innerHTML = ''; return; }
+      var src = [loc.length ? '동해시청 행사 게시판' : '', api.length ? '한국관광공사 관광정보' : ''].filter(Boolean).join(' · ');
+      el.innerHTML = '<b>이 즈음 동해 행사</b><br>' + all.map(function (x) { return x.html; }).join('<br>') + '<br><span class="ev-src">출처: ' + src + ' · 가시기 전에 일정을 꼭 확인해 주세요</span>';
       el.hidden = false;
+    }
+    localEvents(function (j) {
+      loc = ((j && j.items) || []).filter(function (x) { var s = ymd(x.start), e = ymd(x.end || x.start); return s && e >= d0 && s <= d1; }).map(function (x) {
+        var s = ymd(x.start), e = ymd(x.end || x.start);
+        return { html: esc(x.title) + ' · ' + fmt(s) + (e !== s ? '~' + fmt(e) : '') + (x.time ? ' ' + esc(x.time) : '') + (x.place ? ' · ' + esc(x.place) : '') + (x.note ? ' · ' + esc(x.note) : '') };
+      });
+      show();
+    });
+    get({ op: 'festival', from: from, rows: 30 }, function (j) {
+      api = ((j && j.items) || []).filter(function (x) { return x.end && x.start && x.end >= d0 && x.start <= d1; }).slice(0, 3).map(function (x) {
+        return { html: esc(x.title) + ' · ' + fmt(x.start) + '~' + fmt(x.end) + (x.addr ? ' · ' + esc(x.addr.replace(/^강원(특별자치)?도?\s*/, '')) : '') };
+      });
+      show();
     });
   }
 
