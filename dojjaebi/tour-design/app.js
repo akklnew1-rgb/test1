@@ -1093,6 +1093,11 @@
     var th = tourHint(date, short); if (th) out.push(th);
     return P.dateLabel(date) + ' · ' + out.join(' · ');
   }
+  function closedHint(date) {
+    var info = P.dateInfo(date); if (!info) return '';
+    var shut = D.places.filter(function (p) { return p.closedDow && p.closedDow.indexOf(info.dow) >= 0; }).map(function (p) { return p.short; });
+    return shut.length ? DOW_NAME[info.dow] + '요일은 ' + shut.join('·') + '이(가) 쉬어서 뺐어요' : '';
+  }
   /* 시티투어버스 안내 한 줄: 운행일이면 시간·요금, 아니면 "토·일·공휴일만 다녀요 (다음 운행: ○월 ○일)" */
   function tourHint(date, short) {
     if (!CT) return '';
@@ -1437,8 +1442,7 @@
     else b.push('<span class="tag good">#계단없음</span>');
     if (p.dayRule) b.push('<span class="tag warn">#장날(3·8일)만</span>');
     if (p.trail) b.push('<span class="tag warn">#걷는길이길어요</span>');
-    if (p.townEat) b.push('<span class="tag warn">#운영시간은가게에확인</span>');
-    else b.push('<span class="tag' + (p.확인필요 ? ' warn' : '') + '">#' + (p.확인필요 ? '운영대략' : '운영시간관광공사자료') + '</span>');
+    // 2026-10-23: 운영 시간 태그(#운영대략 · #운영시간관광공사자료 · #운영시간은가게에확인)는 아래 '운영 시간' 줄·안내 문장과 같은 말이라 뺌
     if (s.wait) b.push('<span class="tag warn">#열때까지' + s.wait + '분기다림</span>');
     if (s.delay) b.push('<span class="tag bad">#붐빔제보 #기다림' + s.delay + '분</span>');
     if (S.fx && S.fx.view[p.id]) b.push('<span class="tag good">#풍경좋다는제보</span>');
@@ -1554,7 +1558,7 @@
       '<p class="p-src">출처: ' + esc(st.source) + '</p>' +
       '<p class="tags">' + (extra ? '<span class="tag warn">#내일일출(예시시각)</span>' : placeTags(s)) + '</p>' + (!extra && p.townEat ? '<p class="eat-warn" role="note"><b>운영 시간을 몰라요.</b> 가시기 전에 가게에 꼭 확인해 주세요. 문을 닫았을 수 있어요.</p>' : '') + (extra ? '' : crowdBody(s)) +
       '<div class="p-hours note"><div class="note-h">여행자 수첩</div><dl>' +
-      '<div><dt>이동</dt><dd>' + mvHtml(s, mv, extra) + '</dd></div>' +
+      (!extra && s.mode !== 'tour' ? '' : '<div><dt>이동</dt><dd>' + mvHtml(s, mv, extra) + '</dd></div>') + // 걷기·택시는 카드 사이 이동 칩과 같은 말이라 뺌(시티투어 설명은 남김)
       (extra ? '' : '<div><dt>머무는 시간</dt><dd>약 ' + p.visit + '분</dd></div><div><dt>운영 시간</dt><dd>' + esc(p.openText) + '</dd></div>' + (p.restText ? '<div><dt>쉬는 날</dt><dd>' + esc(p.restText) + '</dd></div>' : '')) +
       '</dl></div>' +
       (extra ? '' : tourBlock(s) + kmapHtml(s)) + wcLineHtml(p) +
@@ -2114,7 +2118,7 @@
     if (S.wxRain && S.cond.rain) notes.push('지금 동해에 비가 와서 실내 먼저 짰어요 (기상청)');
     if (isSlow()) notes.push('천천히 걷기(시속 3km) · 계단 있는 곳 뺌');
     if (S.cond.rain) notes.push('비 오는 날 · 실내 먼저 · 해변·계곡 같은 야외 곳은 뺌');
-    if (!pl.multi) { var dh = dateHint(S.cond.date, true); if (dh) notes.push('여행 날짜 ' + dh); }
+    if (!pl.multi) { var ch = closedHint(S.cond.date); if (ch) notes.push(ch); } // 장날·시티투어는 위 '주요사항' 줄에 이미 있어서 쉬는 곳 안내만 남김
     else notes.push('날마다 새로 짜요 · 앞 날에 간 곳(추암 세 곳 포함)은 다시 안 가요');
     if (pl.tour && pl.tour.used) {
       notes.push('시티투어는 미리 예약하세요 · ' + pl.tour.fareText + ' · 하루 한 장으로 어디서나 타고 내려요(' + pl.tour.rides + '번 탐) · 문의 ' + CT.org + ' ' + CT.phone);
