@@ -961,7 +961,37 @@
     chatSend(t);
   });
   $('askText').addEventListener('keydown', function (ev) { if (ev.key === 'Enter' && !ev.shiftKey) { ev.preventDefault(); $('askGo').click(); } });
-  $('askMic').addEventListener('click', function () { $('goVoice').click(); });
+  /* 말로 하기: 이 자리에서 바로 듣는다(예전에는 다른 화면으로 넘어가 한 번 더 눌러야 했음) */
+  var arec = null, aOn = false, aGot = false, ARSR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  function aMic(state, msg) { // state: '' | 'listening' | 'busy'
+    var b = $('askMic'); b.classList.toggle('listening', state === 'listening'); b.classList.toggle('busy', state === 'busy');
+    b.setAttribute('aria-pressed', state === 'listening' ? 'true' : 'false');
+    $('askMicTxt').textContent = msg || '한 번 누르고 말씀하세요';
+  }
+  function aNote(msg) { var n = $('askNote'); n.textContent = msg || ''; n.hidden = !msg; }
+  function showTyping(focus) { $('ask').classList.add('show-type'); $('typeToggle').setAttribute('aria-expanded', 'true'); if (focus) { try { $('askText').focus(); } catch (e) { /* 무시 */ } } }
+  $('typeToggle').addEventListener('click', function () { aNote(''); showTyping(true); });
+  $('askMic').addEventListener('click', function () {
+    if (aOn && arec) { try { arec.stop(); } catch (e) { /* 무시 */ } return; }
+    if (!ARSR) { aNote('이 화면에서는 음성 입력이 안 돼요. 아래 칸에 글로 적어 주세요.'); showTyping(true); return; }
+    try { stopSpeak(); } catch (e) { /* 무시 */ }
+    arec = new ARSR(); arec.lang = 'ko-KR'; arec.interimResults = true; arec.maxAlternatives = 1; aGot = false; aNote('');
+    arec.onresult = function (ev) {
+      var t = '', fin = false;
+      for (var i = ev.resultIndex; i < ev.results.length; i++) { t += ev.results[i][0].transcript; if (ev.results[i].isFinal) fin = true; }
+      if (t) { aGot = true; $('askText').value = t; }
+      if (fin && t.trim()) { aOn = false; aMic('busy', '알아듣는 중…'); try { arec.stop(); } catch (e) { /* 무시 */ } showTyping(false); chatSend(t.trim()); setTimeout(function () { aMic(''); }, 1500); }
+    };
+    arec.onerror = function (ev) {
+      aOn = false; aMic('');
+      var er = ev && ev.error;
+      if (er === 'not-allowed' || er === 'service-not-allowed') { aNote('마이크가 꺼져 있어요. 아래 칸에 글로 적어 주세요.'); showTyping(true); }
+      else if (er === 'no-speech') aNote('목소리를 잘 듣지 못했어요. 버튼을 누르고 조금 더 크게 말씀해 주세요.');
+      else if (er !== 'aborted') aNote('어떤 말씀인지 놓쳤어요. 다시 말씀하시거나 글로 적어 주세요.');
+    };
+    arec.onend = function () { var was = aOn; aOn = false; if ($('askMic').classList.contains('listening')) { aMic(''); if (was && !aGot) aNote('목소리를 잘 듣지 못했어요. 버튼을 누르고 조금 더 크게 말씀해 주세요.'); } };
+    try { arec.start(); aOn = true; aMic('listening', '듣고 있어요… 말씀하세요'); } catch (e) { aOn = false; aMic(''); aNote('음성 입력을 시작하지 못했어요. 글로 적어 주세요.'); showTyping(true); }
+  });
   Array.prototype.forEach.call(document.querySelectorAll('#askChips .chip'), function (c) {
     c.addEventListener('click', function () { chatSend(c.getAttribute('data-say')); });
   });

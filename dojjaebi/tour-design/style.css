@@ -1732,3 +1732,23 @@ body.big #s-start .hero .hero-txt h1{ font-size:28px; }
 #s-start .hero .hero-slides{ order:1; width:100%; flex:0 0 190px; }
 #s-start .hero .hero-meta{ order:2; }
 #s-start .hero .hero-txt{ order:3; }
+
+/* 말로 하기 = 주 입구 (2026-10-23): 큰 가로 마이크 바, 글쓰기는 링크 뒤로 */
+#ask{ display:flex; flex-direction:column; }
+#ask .ask-row{ display:contents; }
+#askMic{ order:-20; width:100%; min-height:64px; border-radius:16px; font-size:18px !important; font-weight:700 !important; gap:10px; margin:0 0 6px; box-shadow:0 8px 24px rgba(15,76,129,.18); }
+#askMic .ic{ width:28px; height:28px; }
+#typeToggle{ order:-19; align-self:center; margin:0 0 8px; }
+#ask:not(.show-type) #askText,#ask:not(.show-type) #askGo{ display:none; }
+#ask.show-type #typeToggle{ display:none; }
+#ask.show-type #askText{ border:1px solid var(--line); border-radius:16px; box-shadow:none; margin:0 0 8px; }
+#ask.show-type #askGo{ width:100%; flex:none; margin:0 0 8px; }
+#askMic.listening{ background:#c2410c !important; border-color:#c2410c !important; animation:micPulse 1.4s ease-out infinite; }
+#askMic.busy{ background:var(--brand-soft) !important; color:var(--brand-dark) !important; border:2px solid var(--brand) !important; }
+#askMic.busy .ic,#askMic.listening .ic{ stroke:currentColor; }
+@keyframes micPulse{ 0%{ box-shadow:0 0 0 0 rgba(194,65,12,.45); } 100%{ box-shadow:0 0 0 18px rgba(194,65,12,0); } }
+@media (prefers-reduced-motion:reduce){ #askMic.listening{ animation:none; box-shadow:0 0 0 6px rgba(194,65,12,.35); } }
+@media (prefers-color-scheme: dark){ #askMic.listening{ background:#ff7a59 !important; border-color:#ff7a59 !important; color:#121820 !important; } #askMic.busy{ background:#1a2d42 !important; color:#f1f5f9 !important; border-color:#5aa5f0 !important; } }
+#s-start .hero .hero-slides{ flex:0 0 140px; height:140px; }
+.typebtn{ color:var(--muted); font-weight:600; font-size:15px; text-decoration:underline; }
+#ask .ask-row #askMic{ order:-20; flex:none; width:100%; min-height:64px; }
