@@ -1437,11 +1437,11 @@
     if (p.region) b.push('<span class="tag">#' + esc(p.region) + '</span>');
     b.push(p.indoor ? '<span class="tag good">#실내</span>' : '<span class="tag">#야외</span>');
     if (p.stairs) b.push('<span class="tag warn">#계단있음</span>');
-    else if (p.slope) b.push('<span class="tag warn">#오르막</span>');
+    else if (p.slope && !p.trail) b.push('<span class="tag warn">#오르막</span>');
     else if (p.stairsKnown === false) b.push('<span class="tag warn">#계단은확인필요</span>');
     else b.push('<span class="tag good">#계단없음(자료상)</span>');
     if (p.dayRule) b.push('<span class="tag warn">#장날(3·8일)만</span>');
-    if (p.trail) b.push('<span class="tag warn">#걷는길이길어요</span>');
+    if (p.trail) b.push('<span class="tag warn">#등산길(오래 걸어요)</span>'); // 2026-10-23: 용추폭포는 오르막이 아니라 등산 — 사용자 지적. 오르막·긴 길 태그를 하나로
     // 2026-10-23: 운영 시간 태그(#운영대략 · #운영시간관광공사자료 · #운영시간은가게에확인)는 아래 '운영 시간' 줄·안내 문장과 같은 말이라 뺌
     if (s.wait) b.push('<span class="tag warn">#열때까지' + s.wait + '분기다림</span>');
     if (s.delay) b.push('<span class="tag bad">#붐빔제보 #기다림' + s.delay + '분</span>');
