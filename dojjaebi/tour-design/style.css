@@ -1705,3 +1705,30 @@ body:has(#s-start:not([hidden])) .scr-t{ display:none; }
 @media (prefers-color-scheme: dark){ #askSheet.btn.cta{ border-color:#94a3b8 !important; } }
 #hintFlame.hf-right .hf-t{ right:auto; left:38px; }
 #hintFlame .hf-t{ right:auto !important; top:-50px !important; width:min(15em, calc(100vw - 32px)); }
+
+/* ===== 첫 화면 재구성 (2026-10-23, 제미나이 시니어 디자이너 안): 날씨 → 사진 액자 → 출처 → 질문 → 입력 캔버스 → 칩 → 보조 경로 ===== */
+#s-start .hero{ display:block; height:auto; padding:16px 20px 0; background:none; color:var(--ink); overflow:visible; }
+#s-start .hero .wx{ position:static; display:inline-flex; min-height:36px; padding:4px 14px 4px 10px; margin:0 0 12px; border-radius:18px; background:var(--brand-soft); border:1px solid var(--line); color:var(--brand-dark); backdrop-filter:none; -webkit-backdrop-filter:none; font-size:max(13px,.8em); max-width:100%; }
+#s-start .hero .wx b,#s-start .hero .wx span{ color:var(--brand-dark); }
+#s-start .hero .wx-hint,#s-start .hero .wx-src{ display:none; }
+#s-start .hero .hero-slides{ display:block !important; position:relative; inset:auto; z-index:0; height:190px; border-radius:12px; overflow:hidden; border:1px solid var(--line); }
+#s-start .hero .hero-shade,#s-start .hero .hero-ctl,#s-start .hero .hero-meta b,#s-start .hero .hero-count{ display:none !important; }
+#s-start .hero .hero-meta{ display:block !important; padding:4px 0 0; text-align:right; text-shadow:none; color:var(--muted); font-size:11px; }
+#s-start .hero .hero-meta .hero-credit{ position:static; color:var(--muted); font-size:11px; text-shadow:none; }
+#s-start .hero .hero-txt{ position:static; width:auto; height:auto; overflow:visible; clip:auto; white-space:normal; padding:16px 0 4px; }
+#s-start .hero .hero-txt h1{ font-size:24px; line-height:1.35; font-weight:700; letter-spacing:-.02em; color:var(--brand-dark); text-shadow:none; }
+body.big #s-start .hero .hero-txt h1{ font-size:28px; }
+#s-start .intro-card{ margin:0; padding:0 20px 24px; background:none; box-shadow:none; border-radius:0; }
+#s-start .ask{ margin:0; padding:0; background:none; }
+#askText{ border:1px solid var(--line); border-bottom:0; border-radius:16px 16px 0 0; background:var(--paper); min-height:64px; font-size:17px; padding:14px 16px; box-shadow:0 8px 24px rgba(15,76,129,.08); }
+.ask-row{ margin:0 0 12px; padding:8px; background:var(--paper); border:1px solid var(--line); border-top:0; border-radius:0 0 16px 16px; box-shadow:0 8px 24px rgba(15,76,129,.08); }
+.ask-row #askMic{ flex:1 1 auto; min-height:50px; font-size:17px; font-weight:600; border-radius:12px; }
+.ask-row #askGo{ flex:0 0 96px; min-height:50px; border-radius:12px; font-size:17px; font-weight:600; }
+.exbtn{ min-height:44px; margin:0 0 8px; }
+#askSheet.btn.cta{ min-height:50px; border-radius:10px; font-size:15px; font-weight:600; border-width:1.5px !important; background:transparent !important; }
+@media (prefers-color-scheme: dark){ #s-start .hero .hero-txt h1{ color:var(--ink); } #askText,.ask-row{ background:#1a222d; border-color:#2d3748; box-shadow:none; } #s-start .hero .wx{ background:#172d44; } }
+#s-start .hero{ display:flex; flex-direction:column; align-items:stretch; }
+#s-start .hero .wx{ order:0; align-self:flex-start; }
+#s-start .hero .hero-slides{ order:1; width:100%; flex:0 0 190px; }
+#s-start .hero .hero-meta{ order:2; }
+#s-start .hero .hero-txt{ order:3; }

@@ -707,7 +707,7 @@
   }
   function heroTimer() { clearInterval(HS.timer); HS.timer = null; if (!reduceMotion() && HS.list.length > 1) HS.timer = setInterval(heroTick, HERO_MS); }
   function initHero() {
-    HS.list = HERO_IDS.map(function (id) { return PLACE[id]; }).filter(function (p) { return p && licNo(p) === 1; });
+    HS.list = HERO_IDS.map(function (id) { return PLACE[id]; }).filter(function (p) { return p && licNo(p) === 1; }).slice(0, 1);
     if (!HS.list.length) { $('heroMeta').hidden = true; $('heroCount').hidden = true; return; }
     $('heroSlides').innerHTML = HS.list.map(function (p, k) { return '<figure class="hs' + (k === 0 ? ' on' : '') + '" data-id="' + p.id + '" aria-hidden="' + (k === 0 ? 'false' : 'true') + '"><img src="' + esc(p.photo) + '" alt="' + esc(p.name + ' 풍경') + '" width="940" height="704"' + (k === 0 ? '' : ' loading="lazy"') + ' decoding="async" referrerpolicy="no-referrer" draggable="false"></figure>'; }).join('');
     $('heroDots').innerHTML = HS.list.map(function (p, k) { return '<button type="button" class="hero-dot" data-k="' + k + '" aria-label="' + (k + 1) + '번째 사진 · ' + esc(p.short || p.name) + '"></button>'; }).join('');
