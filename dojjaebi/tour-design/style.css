@@ -1703,3 +1703,5 @@ body:has(#s-start:not([hidden])) .scr-t{ display:none; }
 @media (prefers-color-scheme: dark){ .ask-row #askMic{ background:#1f6fbf; border-color:#1f6fbf; } #askSheet{ border-color:#94a3b8; } .exbtn{ color:#5aa5f0; } }
 #askSheet.btn.cta{ background:var(--paper) !important; color:var(--ink) !important; border:2px solid var(--muted) !important; box-shadow:none !important; }
 @media (prefers-color-scheme: dark){ #askSheet.btn.cta{ border-color:#94a3b8 !important; } }
+#hintFlame.hf-right .hf-t{ right:auto; left:38px; }
+#hintFlame .hf-t{ right:auto !important; top:-50px !important; width:min(15em, calc(100vw - 32px)); }

@@ -16,8 +16,8 @@
     if (document.body.classList.contains('sh-open') || document.body.classList.contains('no-scroll')) return null;
     var st = document.getElementById('s-start');
     if (st && !st.hidden) {
-      var t = document.getElementById('askText'), go = document.getElementById('askGo');
-      if (t && !t.value.trim()) return vis(t) ? t : null;
+      var t = document.getElementById('askText'), go = document.getElementById('askGo'), mic = document.getElementById('askMic');
+      if (t && !t.value.trim()) return vis(mic) ? mic : null;
       return vis(go) ? go : null;
     }
     return null;
@@ -30,6 +30,7 @@
     el.hidden = false;
     var x = Math.min(window.innerWidth - 40, r.right - 30), y = Math.max(4, r.top - 34);
     el.style.left = x + 'px'; el.style.top = y + 'px';
+    tip.style.left = (16 - x) + 'px';
     tip.hidden = learned;
   }
   document.addEventListener('click', function (ev) {
