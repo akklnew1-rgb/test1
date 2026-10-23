@@ -11,9 +11,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=21">
+<link rel="stylesheet" href="style.css?v=23">
 </head>
-<body>
+<body class="no-top">
 <a class="skip" href="#app">본문으로 건너뛰기</a>
 
 <!-- 아이콘 모음 (선 그림) -->
@@ -601,12 +601,17 @@
 <section id="s-card" class="screen" hidden aria-labelledby="h-card">
   <h2 id="h-card" class="visually-hidden">나의 동해 이야기</h2>
   <div class="mytrip-menu" id="myMenu">
-    <button type="button" class="btn" id="myRec">❤ 동해 추천 (안 알려진 곳 · 좋아요)</button>
+    <button type="button" class="btn" id="myTown">식당·카페·숙소 찾기</button>
+    <button type="button" class="btn" id="myRec" hidden>❤ 동해 추천 (안 알려진 곳 · 좋아요)</button>
     <button type="button" class="btn" id="myBig" aria-pressed="false">글씨 크게 키우기</button>
     <button type="button" class="btn" id="myPrep">D-day 준비 점검</button>
     <button type="button" class="btn" id="myMute">자동 음성 켜기/끄기</button>
-    <a class="btn" href="index.html#watch" target="_blank" rel="noopener">시청 화면 (새 창)</a>
+    <a class="btn" hidden href="index.html#watch" target="_blank" rel="noopener">시청 화면 (새 창)</a>
   </div>
+  <details class="src-note" id="srcNote"><summary>출처·안내</summary>
+  <p><span class="sim">인공지능이 코스를 짜고, 시간·휴무·막차는 앱이 다시 확인해요</span></p>
+  <p>열차 시간은 <b>코레일 시간표(국토교통부 TAGO)</b>예요. 못 받으면 <b>예시 시간표</b>로 알려요. 날씨는 <b>기상청</b> 초단기실황이에요. 장소 좌표·운영시간·가게 정보는 <b>한국관광공사 관광정보</b>(없는 곳은 대략값, 확인 필요)예요. 사진은 한국관광공사 제공(공공누리 제1·제3유형), 없으면 일러스트 그림이에요.</p>
+</details>
   <div class="recap" id="cardBody"></div>
   <div class="share-row">
     <button type="button" class="btn" id="cardSave"><svg class="ic" aria-hidden="true"><use href="#i-down"/></svg>저장</button>
@@ -631,15 +636,12 @@
 
 </main>
 
-<footer class="foot">
-  <p><span class="sim">시연 모드 — 본선에서는 인공지능이 직접 판단</span></p>
-  <p>열차 시간은 <b>코레일 시간표(국토교통부 TAGO)</b>예요. 못 받으면 <b>예시 시간표</b>로 알려요. 날씨는 <b>기상청</b> 초단기실황이에요. 장소 좌표·운영시간·가게 정보는 <b>한국관광공사 관광정보</b>(없는 곳은 대략값, 확인 필요)예요. 사진은 한국관광공사 제공(공공누리 제1·제3유형), 없으면 일러스트 그림이에요.</p>
-</footer>
+<footer class="foot" hidden></footer>
 
 <nav class="tabs" id="tabs" aria-label="아래 메뉴" hidden>
   <button type="button" class="tab" id="tabHome" data-tab="s-course"><svg class="ic" aria-hidden="true"><use href="#i-home"/></svg><span>코스</span></button>
   <button type="button" class="tab" id="tabGuide" aria-label="여행 길안내 시작"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg><span>길안내</span></button>
-  <button type="button" class="tab" id="toStay" data-tab="s-stay" aria-label="동네 (식당과 숙소)"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>동네</span></button>
+  <button type="button" class="tab" id="toStay" data-tab="s-stay" hidden aria-label="동네 (식당과 숙소)"><svg class="ic" aria-hidden="true"><use href="#i-heart"/></svg><span>동네</span></button>
   <button type="button" class="tab" id="toCard" data-tab="s-card"><svg class="ic" aria-hidden="true"><use href="#i-mark"/></svg><span>내 여행</span></button>
   <button type="button" id="tabMap" data-tab="s-map" hidden aria-hidden="true" tabindex="-1"></button>
   <button type="button" id="toReport" data-tab="s-report" hidden aria-hidden="true" tabindex="-1"></button>
@@ -815,7 +817,7 @@
 <script src="ai-config.js"></script>
 <script src="ai.js?v=3"></script>
 <script src="art.js"></script>
-<script src="app.js?v=33"></script>
+<script src="app.js?v=34"></script>
 <script src="hint.js?v=1"></script>
 </body>
 </html>

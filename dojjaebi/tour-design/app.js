@@ -177,6 +177,7 @@
   $('tabMap').addEventListener('click', function () { S.mapFocus = null; if (!S.mapSeen) { S.mapSeen = true; S.mapLay = { course: true, eat: false, cafe: false, lodge: false, spot: false }; } show('s-map'); }); // 지도 탭을 처음 열 때는 코스만 (식당·카페·숙소 층은 끈 채)
   $('toStay').addEventListener('click', function () { show('s-stay'); });
   $('tabGuide').addEventListener('click', function () { lvOpenAsk(lvDayAuto()); });
+  $('myTown').addEventListener('click', function () { show('s-stay'); });
   $('myRec').addEventListener('click', function () { openRec(); });
   $('myBig').addEventListener('click', function () { setBig(!document.body.classList.contains('big')); myBigUi(); });
   function myBigUi() { var on = document.body.classList.contains('big'); $('myBig').textContent = on ? '글씨 보통으로 줄이기' : '글씨 크게 키우기'; $('myBig').setAttribute('aria-pressed', on ? 'true' : 'false'); }

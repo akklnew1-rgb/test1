@@ -1681,3 +1681,11 @@ body:has(#s-start:not([hidden])) .scr-t{ display:none; }
 .no-top .top{ padding-top:var(--safe-t); padding-bottom:0; min-height:0; border-bottom:0; }
 .top .top-tools{ display:none; }
 #hintFlame .hf-t{ white-space:normal; width:min(15em, 70vw); right:38px; text-align:left; }
+
+/* 2026-10-23 정리: 화면에서만 숨김(기능 코드는 그대로) */
+.ask-or,#ask .chat .bub.bot:first-child,.more-start,.near-btn,.p-near,#ovCtl,#liveBtn{ display:none !important; }
+.foot{ display:none !important; }
+.src-note{ margin:0 0 16px; padding:10px 14px; border:1.5px solid var(--line); border-radius:var(--r-m); font-size:.9em; }
+.src-note summary{ min-height:48px; display:flex; align-items:center; font-weight:700; cursor:pointer; }
+.src-note p{ margin:.5em 0; }
+#askH{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); }
