@@ -1,1 +1,1 @@
-{"functions": {"api/ai.js": {"maxDuration": 30}, "api/weather.js": {"maxDuration": 15}}}
+{"functions": {"api/ai.js": {"maxDuration": 30}, "api/weather.js": {"maxDuration": 15}, "api/tour.js": {"maxDuration": 15}}}
