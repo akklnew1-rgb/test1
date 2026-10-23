@@ -1752,3 +1752,17 @@ body.big #s-start .hero .hero-txt h1{ font-size:28px; }
 #s-start .hero .hero-slides{ flex:0 0 140px; height:140px; }
 .typebtn{ color:var(--muted); font-weight:600; font-size:15px; text-decoration:underline; }
 #ask .ask-row #askMic{ order:-20; flex:none; width:100%; min-height:64px; }
+
+/* 덜어내기 (2026-10-23, 제미나이 10년차 안): 날씨 오류는 숨김, 제목 1줄·가운데, 예시는 자판 모드 안으로 */
+#wx[data-state="none"],#wx[data-state="loading"]{ display:none !important; }
+#s-start .hero{ padding-top:20px; }
+#s-start .hero .hero-txt{ padding:24px 0 0; text-align:center; }
+#s-start .hero .hero-txt h1{ font-size:22px; line-height:1.35; color:var(--ink); }
+body.big #s-start .hero .hero-txt h1{ font-size:26px; }
+#s-start .intro-card{ padding-top:20px; }
+#askMic{ margin-bottom:12px; font-size:17px !important; font-weight:600 !important; }
+#exToggle{ display:none !important; }
+#ask:not(.show-type) #askChips,#ask:not(.show-type) .ask-credit{ display:none !important; }
+#ask.show-type #askChips{ display:flex; }
+.typebtn{ font-size:14px; min-height:44px; margin:0 0 32px !important; font-weight:500; }
+#askSheet.btn.cta{ margin-top:0; }
