@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=13">
+<link rel="stylesheet" href="style.css?v=14">
 </head>
 <body>
 <a class="skip" href="#app">본문으로 건너뛰기</a>
@@ -377,8 +377,8 @@
   <div class="daytabs" id="dayTabs" role="group" aria-label="날짜별 일정" hidden></div>
 
   <!-- 코스 한 그림: 번호 붙은 장 · 날짜별 색 선 · 미리 보기 -->
-  <section class="ov pad-in map-open" id="ov" aria-label="코스 전체 그림">
-    <button type="button" class="ov-toggle" id="ovToggle" aria-expanded="true" aria-controls="ovBox"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg><span>지도 접기</span></button>
+  <section class="ov pad-in" id="ov" aria-label="코스 전체 그림">
+    <button type="button" class="ov-toggle" id="ovToggle" aria-expanded="false" aria-controls="ovBox"><svg class="ic" aria-hidden="true"><use href="#i-map"/></svg><span>지도로 동선 보기</span></button>
     <div class="ov-box" id="ovBox">
       <div class="ov-static" id="ovStatic"></div>
       <div class="ov-kakao" id="ovKakao" hidden></div>
@@ -812,6 +812,6 @@
 <script src="ai-config.js"></script>
 <script src="ai.js?v=3"></script>
 <script src="art.js"></script>
-<script src="app.js?v=29"></script>
+<script src="app.js?v=30"></script>
 </body>
 </html>
