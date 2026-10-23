@@ -1551,6 +1551,7 @@
       '<div class="askrow"><input type="text" data-in="' + p.id + '" placeholder="직접 물어보기" aria-label="도째비에게 직접 묻기"><button type="button" class="btn" data-act="qsend" data-id="' + p.id + '">묻기</button></div>' +
       '<div class="answer" hidden data-ans="' + p.id + '" aria-live="polite"></div></div>' +
       '<div class="p-cap"><div class="cl"><b>도째비</b>' + esc(st.text) + '</div></div>' +
+      (!extra && p.contentid ? '<div class="kto-ov note" data-cid="' + esc(p.contentid) + '" hidden></div>' : '') +
       '<p class="p-src">출처: ' + esc(st.source) + '</p>' +
       '<p class="tags">' + (extra ? '<span class="tag warn">#내일일출(예시시각)</span>' : placeTags(s)) + '</p>' + (!extra && p.townEat ? '<p class="eat-warn" role="note"><b>운영 시간을 몰라요.</b> 가시기 전에 가게에 꼭 확인해 주세요. 문을 닫았을 수 있어요.</p>' : '') + (extra ? '' : crowdBody(s)) +
       '<div class="p-hours note"><div class="note-h">여행자 수첩</div><dl>' +
@@ -2127,6 +2128,7 @@
     var strip = $('fxStrip');
     strip.hidden = !fxs.length;
     strip.innerHTML = fxs.length ? fxs.map(esc).join('<br>') : '';
+    if (window.TourAPI) TourAPI.events((S.plan && S.plan.date) || S.cond.date || todayIso(), $('evStrip')); // 한국관광공사 행사(못 받으면 숨김)
     var bz = crowdBusy(); if (bz.length) notes.push('붐빔 예상: ' + bz.map(function (x) { return x.s.place.short + ' ' + Math.round(x.v); }).join(' · ') + ' (한국관광공사 예측 · 날짜별)');
     var csrc = $('crowdSrc'); if (csrc) { var any = placeStops(allStops()).some(function (s) { return crowdOf(s) != null; }); csrc.hidden = !any; csrc.textContent = any ? CR.sourceLine(S.crowd) + ' · 하루 값이라 아침이 더 한산하다는 건 어림이에요' : ''; }
     cnoteRender(notes);

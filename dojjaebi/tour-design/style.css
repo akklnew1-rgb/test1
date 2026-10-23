@@ -1811,3 +1811,13 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
 
 /* 카카오 지도 조각이 오기 전에는 지도 칸을 보이지 않게 둔다(자리는 유지해 조각을 받는다). 미리 받아 둔 그림이 그동안 보인다 */
 #map.pre{ position:absolute; left:0; right:0; height:320px; visibility:hidden; pointer-events:none; }
+
+/* 한국관광공사 관광정보(행사·소개 글·더 있는 곳) */
+#evStrip{ line-height:1.55; }
+.ev-src{ font-size:.82em; color:var(--muted); }
+.kto-ov{ margin:8px 0 0; line-height:1.55; }
+.tour-more{ margin:14px var(--gut) 0; padding:12px 14px; border:1px dashed var(--line); border-radius:14px; background:var(--soft); }
+.tour-more ul{ list-style:none; margin:8px 0; padding:0; }
+.tour-more li{ display:flex; flex-direction:column; padding:8px 0; border-top:1px solid var(--line); }
+.tour-more li:first-child{ border-top:0; }
+.tour-more small{ color:var(--muted); }
