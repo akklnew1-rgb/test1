@@ -3,7 +3,6 @@
 :root{
   /* 회색 단계 (글자·선·바탕) */
   --g-900:#121826; --g-700:#344054; --g-600:#475467; --g-300:#d0d5dd; --g-100:#f3f4f6; --g-50:#fafafa;
-  --ink:var(--g-900); --muted:var(--g-600); --line:var(--g-300); --soft:var(--g-100);
   /* 모서리 4단계 */
   --r-s:8px; --r-m:12px; --r-l:16px; --r-xl:20px;
   /* 그림자는 쓰임새 이름으로만 */
@@ -28,7 +27,7 @@
 .btn:not(.primary):not(.ghost):not(.light){ background:var(--paper); border-color:var(--line); }
 .btn:focus-visible,.chip:focus-visible,.tab:focus-visible{ outline:3px solid var(--brand); outline-offset:2px; }
 .btn:active{ filter:brightness(.94); }
-.btn[disabled]{ opacity:1; background:var(--g-100); border-color:var(--g-100); color:var(--g-600); }
+.btn[disabled]{ opacity:.55; }
 /* 칩 */
 .chip{ border-radius:999px; min-height:48px; font-size:var(--t-body); }
 /* 카드·패널·시트 */
