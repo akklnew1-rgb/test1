@@ -1,0 +1,39 @@
+/* 도째비 길동무 — 디자인 규칙 덧입힘(style.css 뒤에 불러옴). 색·로고·불꽃 마크는 우리 것 그대로,
+   간격·모서리·그림자·글자 크기·버튼 위계만 한 체계로 정리. 지우면 원래 모습으로 돌아감. */
+:root{
+  /* 회색 단계 (글자·선·바탕) */
+  --g-900:#121826; --g-700:#344054; --g-600:#475467; --g-300:#d0d5dd; --g-100:#f3f4f6; --g-50:#fafafa;
+  --ink:var(--g-900); --muted:var(--g-600); --line:var(--g-300); --soft:var(--g-100);
+  /* 모서리 4단계 */
+  --r-s:8px; --r-m:12px; --r-l:16px; --r-xl:20px;
+  /* 그림자는 쓰임새 이름으로만 */
+  --e-header:0 1px 0 rgba(18,24,38,.06), 0 2px 8px rgba(18,24,38,.08);
+  --e-dock:0 -1px 0 rgba(18,24,38,.06), 0 -2px 8px rgba(18,24,38,.06);
+  --e-raised:0 2px 8px rgba(18,24,38,.10);
+  --e-float:0 4px 16px rgba(18,24,38,.16);
+  --e-sheet:0 4px 20px rgba(0,0,0,.32);
+  --sh-1:var(--e-raised); --sh-2:var(--e-float);
+  /* 글자 크기: 닫힌 단계, 본문은 16px 이상 */
+  --t-cap:max(13px,.8125rem); --t-body:var(--fs); --t-title:1.125em; --t-head:1.3em;
+}
+/* 위쪽 바: 평소엔 선만, 스크롤하면 그림자(app.js 아래 조각이 .scrolled 를 붙임) */
+.top{ border-bottom-color:var(--line); box-shadow:none; transition:box-shadow .15s; }
+.top.scrolled{ box-shadow:var(--e-header); border-bottom-color:transparent; }
+/* 아래 탭 바 */
+.tabs{ border-top-color:transparent; box-shadow:var(--e-dock); }
+.tab{ font-size:var(--t-cap); }
+/* 버튼 위계: 주(채움) > 보조(윤곽) > 글자형. 한 화면에 주 버튼은 하나 */
+.btn{ border-radius:var(--r-m); min-height:52px; font-weight:700; }
+.btn.primary{ box-shadow:none; }
+.btn:not(.primary):not(.ghost):not(.light){ background:var(--paper); border-color:var(--line); }
+.btn:focus-visible,.chip:focus-visible,.tab:focus-visible{ outline:3px solid var(--brand); outline-offset:2px; }
+.btn:active{ filter:brightness(.94); }
+.btn[disabled]{ opacity:1; background:var(--g-100); border-color:var(--g-100); color:var(--g-600); }
+/* 칩 */
+.chip{ border-radius:999px; min-height:48px; font-size:var(--t-body); }
+/* 카드·패널·시트 */
+.panel{ border-radius:var(--r-l); }
+.sh-card{ border-radius:var(--r-xl) var(--r-xl) 0 0; box-shadow:var(--e-sheet); }
+.snack,.flash{ border-radius:var(--r-m); box-shadow:var(--e-float); }
+/* 움직임을 줄여 달라는 기기에서는 움직임 끔 */
+@media (prefers-reduced-motion:reduce){ *{ animation-duration:.01ms !important; transition-duration:.01ms !important; } }
