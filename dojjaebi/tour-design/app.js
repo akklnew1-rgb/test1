@@ -4147,6 +4147,40 @@
       (noPos ? '<span class="tw-nopos">위치 정보 없음</span>' : '<button type="button" class="btn tw-onmap" data-onmap="' + x.key + '">지도에서 보기</button><button type="button" class="btn tw-add" data-addeat="' + x.key + '"' + (st.ok ? '' : ' disabled aria-disabled="true"') + '>코스에 넣기</button>') + '</div>' +
       (!noPos && !st.ok ? '<p class="tw-why">' + esc(st.why) + '</p>' : '') + '</li>';
   }
+  /* 공영주차장 — 동해시 주차장정보(공공데이터포털) 24곳. 식당가 중심에서 500m 이내만 안내. 자료에 없는 주차장은 알 수 없음 */
+  var PK = window.TOWN_PARKING, PK_NEAR = 500;
+  function pkNear(b) {
+    if (!PK || !PK.lots) return [];
+    return PK.lots.map(function (l) { return { l: l, m: bkM(b.lat, b.lng, l.lat, l.lng) }; }).filter(function (z) { return z.m <= PK_NEAR; }).sort(function (a, c) { return a.m - c.m; });
+  }
+  function pkWon(v) { return (+v || 0).toLocaleString('ko-KR') + '원'; }
+  function pkFee(l) {
+    if (l.fee === '무료') return '무료';
+    var s = l.fee + (+l.base ? ' · 처음 ' + l.base + '분 ' + pkWon(l.baseWon) : '');
+    if (+l.add) s += ' · 이후 ' + l.add + '분마다 ' + pkWon(l.addWon);
+    if (+l.dayWon) s += ' · 1일권 ' + pkWon(l.dayWon);
+    return s;
+  }
+  function pkHours(l) {
+    var s = '평일 ' + l.wk[0] + '~' + l.wk[1];
+    if (l.sat[0] && !(l.sat[0] === '00:00' && l.sat[1] === '00:00')) s += ' · 토 ' + l.sat[0] + '~' + l.sat[1];
+    return s + ' · 일·공휴일은 자료에 시간이 없어요';
+  }
+  function pkLi(z) {
+    var l = z.l;
+    return '<li class="pk-li"><b>' + esc(l.name) + '</b> <span class="pk-t">' + esc(l.type) + ' · ' + l.n + '면 · 약 ' + (FU ? FU.round10(z.m) : Math.round(z.m)) + 'm</span>' +
+      '<p class="pk-d">' + esc(pkFee(l)) + '<br>' + esc(pkHours(l)) + (l.note ? '<br>' + esc(l.note) : '') + (l.tel ? '<br><a href="tel:' + esc(l.tel.replace(/[^0-9]/g, '')) + '">' + esc(l.tel) + '</a>' : '') + '</p>' +
+      '<a class="btn tw-map" href="' + esc(TW.kakaoSearch(l.name + ' 주차장')) + '" target="_blank" rel="noopener">카카오맵에서 보기</a></li>';
+  }
+  function pkLine(b) {
+    var z = pkNear(b);
+    return z.length ? '근처 공영주차장 ' + z.length + '곳 · 가장 가까운 곳 약 ' + (FU ? FU.round10(z[0].m) : Math.round(z[0].m)) + 'm' : '이 자료에는 근처 공영주차장이 없어요';
+  }
+  function pkBox(b) {
+    var z = pkNear(b);
+    return '<details class="pk-box"><summary>' + esc(pkLine(b)) + '</summary>' + (z.length ? '<ul class="pk-ul">' + z.map(pkLi).join('') + '</ul>' : '') +
+      '<p class="note">출처: ' + esc(PK ? PK.출처 : '') + ' · 기준 ' + esc(PK ? PK.기준일 : '') + '. 식당가 가운데에서 직선 ' + PK_NEAR + 'm 안만 보여 줘요. 이 자료에 없다는 뜻이지 주차장이 없다는 뜻은 아니에요. 요금·시간은 방문 전에 확인해 주세요.</p></details>';
+  }
   function bkNote() {
     var k = BK.기준 || {};
     return '<p class="note bk-note">식당이 가까이 모여 있는 곳을 반경 ' + (k.반경m || 250) + 'm로 자동으로 묶었어요. 순서는 거리(위치를 모르면 가나다순)뿐이고, 가게 수나 인기는 순서에 쓰지 않아요. 거리는 직선 기준 어림이고 실제 걷는 시간과 다를 수 있어요. 위치는 주소로 찾은 대략 값이에요. ' +
@@ -4161,7 +4195,7 @@
       var items = bkItems(b.eats), pubs = items.filter(bkPub).length, rest = items.filter(function (x) { return !bkPub(x); });
       h += '<li class="tw tw-eat"><button type="button" class="bk-card" data-bk-open="' + b.id + '"><b class="bk-n">' + esc(b.name) + '</b>' +
         '<span class="bk-s">식당 ' + items.length + '곳' + (pubs ? ' (술집류 ' + pubs + '곳은 접어 두었어요)' : '') + (b._m != null ? ' · 약 ' + bkMin(b._m) + '분 (직선 기준 어림)' : '') + '</span>' +
-        '<span class="bk-k">' + bkKinds(rest).map(function (k) { return esc(k.name) + ' ' + k.n; }).join(' · ') + '</span></button></li>';
+        '<span class="bk-s bk-p">' + esc(pkLine(b)) + '</span>' + '<span class="bk-k">' + bkKinds(rest).map(function (k) { return esc(k.name) + ' ' + k.n; }).join(' · ') + '</span></button></li>';
     });
     h += '</ul><div class="bk-ext"><button type="button" class="btn" data-bk-ext="scat">식당가에 못 든 흩어진 곳 ' + BK.scattered.length + '곳 보기</button>' +
       (BK.nopos.length ? '<button type="button" class="btn" data-bk-ext="nopos">위치를 몰라 묶지 못한 곳 ' + BK.nopos.length + '곳 보기</button>' : '') + '</div>' + bkNote();
@@ -4176,7 +4210,7 @@
     list.sort(function (a, c) { return (a._m == null) - (c._m == null) || a._m - c._m; });
     var shown = list.slice(0, BN.pages * TW.PAGE);
     return '<button type="button" class="btn bk-back" data-bk-back="1">← 식당가 목록</button><h3 class="bk-h">' + esc(b.name) + '</h3>' +
-      '<p class="note">식당 ' + items.length + '곳 · ' + (TN.near ? (TN.nearKind === 'course' ? '코스 가운데에서 가까운 순' : '내 위치에서 가까운 순') : '식당가 가운데에서 가까운 순') + ' · 가게를 하나도 빼지 않았어요(술집류는 접어 두었을 뿐이에요)</p>' + bkNearChips() +
+      '<p class="note">식당 ' + items.length + '곳 · ' + (TN.near ? (TN.nearKind === 'course' ? '코스 가운데에서 가까운 순' : '내 위치에서 가까운 순') : '식당가 가운데에서 가까운 순') + ' · 가게를 하나도 빼지 않았어요(술집류는 접어 두었을 뿐이에요)</p>' + pkBox(b) + bkNearChips() +
       '<div class="chips town-chips"><button type="button" class="chip" data-bk-menu="" aria-pressed="' + (!BN.menu) + '">모든 메뉴</button>' + kinds.map(function (k) { return '<button type="button" class="chip" data-bk-menu="' + k.id + '" aria-pressed="' + (BN.menu === k.id) + '">' + esc(k.name) + ' ' + k.n + '</button>'; }).join('') +
       (pubs.length ? '<button type="button" class="chip" data-bk-pubs="1" aria-pressed="' + BN.pubs + '">' + (BN.pubs ? '술집류 ' + pubs.length + '곳 포함해서 보는 중' : '술집류 ' + pubs.length + '곳은 접어 두었어요 · 눌러서 펼치기') + '</button>' : '') + '</div>' +
       '<p class="note">' + (BN.menu ? bkMenuName(BN.menu) + ' ' : '') + list.length + '곳' + (list.length > shown.length ? ' 중 ' + shown.length + '곳 보여요' : '') + '</p><ul class="town-list">' + shown.map(bkLi).join('') + '</ul>' +

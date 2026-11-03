@@ -1861,3 +1861,12 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
 .bk-h{ margin:6px 0 4px; font-size:1.2em; overflow-wrap:anywhere; }
 .bk-note{ margin-top:14px; }
 .blockbox .chip{ white-space:normal; text-align:left; min-height:44px; }
+
+/* 공영주차장(식당가) */
+.bk-p{ color:var(--text,inherit); }
+.pk-box{ margin:8px 0 12px; border:1px solid var(--line,#ddd); border-radius:12px; padding:0 12px; }
+.pk-box>summary{ min-height:48px; display:flex; align-items:center; font-weight:600; cursor:pointer; overflow-wrap:anywhere; }
+.pk-ul{ list-style:none; margin:0; padding:0; }
+.pk-li{ padding:10px 0; border-top:1px solid var(--line,#eee); overflow-wrap:anywhere; }
+.pk-t{ color:var(--muted); font-size:.9em; }
+.pk-d{ margin:4px 0 8px; font-size:.92em; line-height:1.5; }
