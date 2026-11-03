@@ -379,6 +379,8 @@
   <!-- 근처 여행자 제보 알림: 코스는 자동으로 바뀌지 않고, 눌러야만 다시 짠다 -->
   <div class="repal pad-in" id="repAlerts" aria-live="polite" hidden></div>
 
+  <div class="qlinks pad-in" aria-label="바로가기"><button type="button" class="btn" data-ql="block">🍴 식당</button><button type="button" class="btn" data-ql="park">🅿️ 주차장</button><button type="button" class="btn" data-ql="stamp">📍 스탬프</button></div>
+
   <!-- 여러 날 여행: 날짜 고르기는 지도 위에(지도와 아래 일정이 모두 고른 날을 따른다) -->
   <div class="daytabs" id="dayTabs" role="group" aria-label="날짜별 일정" hidden></div>
 
@@ -584,6 +586,7 @@
   <div class="seg town-seg" id="townSeg" role="group" aria-label="보기 고르기">
     <button type="button" class="chip" data-tk="eat" aria-pressed="true"><svg class="ic" aria-hidden="true"><use href="#i-fork"/></svg><span>식당</span></button>
     <button type="button" class="chip" data-tk="block" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-fork"/></svg><span>식당가</span></button>
+    <button type="button" class="chip" data-tk="park" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg><span>주차장</span></button>
     <button type="button" class="chip" data-tk="cafe" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-cup"/></svg><span>카페</span></button>
     <button type="button" class="chip" data-tk="lodge" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-bed"/></svg><span>숙소</span></button>
     <button type="button" class="chip" data-tk="tour" aria-pressed="false"><svg class="ic" aria-hidden="true"><use href="#i-bus"/></svg><span>시티투어</span></button>
@@ -610,13 +613,18 @@
   <h2 id="h-card" class="visually-hidden">나의 동해 이야기</h2>
   <section class="stamp" id="stampBox" aria-label="스탬프 모으기" hidden></section>
   <div class="mytrip-menu" id="myMenu">
-    <button type="button" class="btn" id="myCam">📷 도째비와 인증샷</button>
-    <button type="button" class="btn" id="myTown">식당·카페·숙소 찾기</button>
-    <button type="button" class="btn" id="myRec" hidden>❤ 동해 추천 (안 알려진 곳 · 좋아요)</button>
-    <button type="button" class="btn" id="myBig" aria-pressed="false">글씨 크게 키우기</button>
-    <button type="button" class="btn" id="myPrep">D-day 준비 점검</button>
-    <button type="button" class="btn" id="myMute">자동 음성 켜기/끄기</button>
-    <a class="btn" hidden href="index.html#watch" target="_blank" rel="noopener">시청 화면 (새 창)</a>
+    <div class="mm-grid">
+      <button type="button" class="btn primary" id="myTown">🍴 식당·카페·숙소</button>
+      <button type="button" class="btn primary" id="myPark">🅿️ 주차장</button>
+      <button type="button" class="btn" id="myCam">📷 인증샷</button>
+      <button type="button" class="btn" id="myBig" aria-pressed="false">글씨 크게 키우기</button>
+    </div>
+    <details class="mm-more"><summary>더 보기 <small>(D-day 점검 · 음성 · 출처)</small></summary>
+      <button type="button" class="btn" id="myPrep">D-day 준비 점검</button>
+      <button type="button" class="btn" id="myMute">자동 음성 켜기/끄기</button>
+      <button type="button" class="btn" id="myRec" hidden>❤ 동해 추천 (안 알려진 곳 · 좋아요)</button>
+      <a class="btn" hidden href="index.html#watch" target="_blank" rel="noopener">시청 화면 (새 창)</a>
+    </details>
   </div>
   <details class="src-note" id="srcNote"><summary>출처·안내</summary>
   <p><span class="sim">인공지능이 코스를 짜고, 시간·휴무·막차는 앱이 다시 확인해요</span></p>
@@ -831,7 +839,7 @@
 <script src="ai.js?v=3"></script>
 <script src="art.js"></script>
 <script src="tourapi.js?v=5"></script>
-<script src="app.js?v=53"></script>
+<script src="app.js?v=54"></script>
 <script src="cam.js?v=2"></script>
 </body>
 </html>

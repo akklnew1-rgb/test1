@@ -180,6 +180,10 @@
   $('exToggle').addEventListener('click', function () { var a = $('ask'), on = !a.classList.contains('show-ex'); a.classList.toggle('show-ex', on); this.setAttribute('aria-expanded', on ? 'true' : 'false'); this.textContent = on ? '예시 접기' : '예시 보기'; });
   $('myCam').addEventListener('click', function () { if (window.TourCam) window.TourCam.open(); });
   $('myTown').addEventListener('click', function () { show('s-stay'); });
+  $('myPark').addEventListener('click', function () { goTown('park'); });
+  Array.prototype.forEach.call(document.querySelectorAll('[data-ql]'), function (b) {
+    b.addEventListener('click', function () { var k = b.getAttribute('data-ql'); if (k === 'stamp') { renderCard(); show('s-card'); try { $('stampBox').scrollIntoView({ block: 'start' }); } catch (e) { /* 무시 */ } } else goTown(k); });
+  });
   $('myRec').addEventListener('click', function () { openRec(); });
   $('myBig').addEventListener('click', function () { setBig(!document.body.classList.contains('big')); myBigUi(); });
   function myBigUi() { var on = document.body.classList.contains('big'); $('myBig').textContent = on ? '글씨 보통으로 줄이기' : '글씨 크게 키우기'; $('myBig').setAttribute('aria-pressed', on ? 'true' : 'false'); }
@@ -4100,13 +4104,13 @@
     if (TN.kind === 'lodge' && !TN.autoLodge && !TN.near && courseCenter()) { TN.autoLodge = true; TN.near = courseCenter(); TN.nearKind = 'course'; }
     nearUi();
     Array.prototype.forEach.call($('townSeg').querySelectorAll('[data-tk]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-tk') === TN.kind ? 'true' : 'false'); });
-    var tour = TN.kind === 'tour', blk = TN.kind === 'block'; $('townBox').hidden = tour || blk; $('tourBox').hidden = !tour; $('blockBox').hidden = !blk;
+    var tour = TN.kind === 'tour', blk = TN.kind === 'block' || TN.kind === 'park'; $('townBox').hidden = tour || blk; $('tourBox').hidden = !tour; $('blockBox').hidden = !blk;
     if (blk) { renderBlocks(); return; }
     if (tour) { $('tourBox').innerHTML = CT ? OV.ttTabHtml(CT, P, ovMaps(), todayIso()) : '<p class="note">시티투어 자료가 없어요.</p>'; return; }
     renderTown();
   }
   function renderTown() {
-    if (TN.kind === 'block') { renderBlocks(); return; }
+    if (TN.kind === 'block' || TN.kind === 'park') { renderBlocks(); return; }
     var k = TN.kind, all = kindList(k, TN.q), cnt = {}, mcnt = {}, isEat = k === 'eat';
     if (!isEat) TN.menu = '';
     var byMenu = isEat && TN.menu ? all.filter(function (x) { return menuOf(x) === TN.menu; }) : all;
@@ -4174,7 +4178,7 @@
   }
   function pkLi(z) {
     var l = z.l;
-    return '<li class="pk-li"><b>' + esc(l.name) + '</b> <span class="pk-t">' + esc(l.type) + ' · ' + l.n + '면 · 약 ' + (FU ? FU.round10(z.m) : Math.round(z.m)) + 'm</span>' +
+    return '<li class="pk-li"><b>' + esc(l.name) + '</b> <span class="pk-t">' + esc(l.type) + ' · ' + l.n + '면' + (z.m != null ? ' · 약 ' + (FU ? FU.round10(z.m) : Math.round(z.m)) + 'm' : '') + '</span>' +
       '<p class="pk-d">' + esc(pkFee(l)) + '<br>' + esc(pkHours(l)) + (l.note ? '<br>' + esc(l.note) : '') + (l.tel ? '<br><a href="tel:' + esc(l.tel.replace(/[^0-9]/g, '')) + '">' + esc(l.tel) + '</a>' : '') + '</p>' +
       '<a class="btn tw-map" href="' + esc(TW.kakaoSearch(l.name + ' 주차장')) + '" target="_blank" rel="noopener">카카오맵에서 보기</a></li>';
   }
@@ -4187,6 +4191,14 @@
     return '<details class="pk-box"><summary>' + esc(pkLine(b)) + '</summary>' + (z.length ? '<ul class="pk-ul">' + z.map(pkLi).join('') + '</ul>' : '') +
       '<p class="note">출처: ' + esc(PARK ? PARK.출처 : '') + ' · 기준 ' + esc(PARK ? PARK.기준일 : '') + '. 식당가 가운데에서 직선 ' + PARK_NEAR + 'm 안만 보여 줘요. 이 자료에 없다는 뜻이지 주차장이 없다는 뜻은 아니에요. 요금·시간은 방문 전에 확인해 주세요.</p></details>';
   }
+  function parkAll() {
+    var from = TN.near, z = (PARK && PARK.lots ? PARK.lots : []).map(function (l) { return { l: l, m: from ? bkM(from.lat, from.lng, l.lat, l.lng) : null }; });
+    z.sort(function (a, c) { return from ? a.m - c.m : (a.l.name < c.l.name ? -1 : a.l.name > c.l.name ? 1 : 0); });
+    return '<p class="note">공영주차장 ' + z.length + '곳 · ' + (from ? (TN.nearKind === 'course' ? '코스 가운데에서 가까운 순' : '내 위치에서 가까운 순') : '이름순 · 위치를 켜면 가까운 순으로 보여요') + '</p>' + bkNearChips() +
+      '<ul class="pk-ul pk-all">' + z.map(pkLi).join('') + '</ul>' +
+      '<p class="note">출처: ' + esc(PARK ? PARK.출처 : '') + ' · 기준 ' + esc(PARK ? PARK.기준일 : '') + '. 천곡 중앙로 일대가 많고, 묵호·추암 쪽은 자료에 없어요. 이 자료에 없다는 뜻이지 주차장이 없다는 뜻은 아니에요. 요금·시간은 방문 전에 확인해 주세요 · 광고·상업적 대가 없음</p>';
+  }
+  function goTown(kind) { TN.kind = kind; TN.area = ''; TN.menu = ''; TN.pages = 1; BN.open = ''; BN.ext = ''; BN.pages = 1; show('s-stay'); }
   function bkNote() {
     var k = BK.기준 || {};
     return '<p class="note bk-note">식당이 가까이 모여 있는 곳을 반경 ' + (k.반경m || 250) + 'm로 자동으로 묶었어요. 순서는 거리(위치를 모르면 가나다순)뿐이고, 가게 수나 인기는 순서에 쓰지 않아요. 거리는 직선 기준 어림이고 실제 걷는 시간과 다를 수 있어요. 위치는 주소로 찾은 대략 값이에요. ' +
@@ -4232,7 +4244,7 @@
   function renderBlocks() {
     var box = $('blockBox');
     if (!BK || !BK.blocks) { box.innerHTML = '<p class="note">식당가 자료가 없어요.</p>'; return; }
-    box.innerHTML = BN.ext ? bkExt() : BN.open ? bkDetail() : bkHome();
+    box.innerHTML = TN.kind === 'park' ? parkAll() : BN.ext ? bkExt() : BN.open ? bkDetail() : bkHome();
   }
   function bkTop() { try { $('blockBox').scrollIntoView({ block: 'start' }); } catch (e) { /* 무시 */ } }
   $('blockBox').addEventListener('click', function (ev) {
@@ -4363,7 +4375,7 @@
     var got = stampGet(), n = stops.filter(function (s) { return got[s.id]; }).length, today = todayIso();
     box.hidden = false;
     box.innerHTML = '<h3 class="st-h">스탬프 모으기 <span class="st-n">' + n + ' / ' + stops.length + '</span></h3>' +
-      '<p class="note">오늘 코스에 든 곳이에요. 그 장소 200m 안에서 위치를 확인하면 찍혀요. 위치는 이 폰 안에서만 쓰고 저장·전송하지 않아요. 기록은 이 폰에만 남고, 상품이나 순위는 없어요.</p>' +
+      '<p class="note">장소 200m 안에서 위치를 확인하면 찍혀요. 위치와 기록은 이 폰에만 남아요.</p>' +
       '<ul class="st-list">' + stops.map(function (s) {
         var p = PLACE[s.id], g = got[s.id], d = stopDate(s), act = '';
         if (g) act = '<span class="st-done">' + (g.how === 'self' ? '직접 찍음' : g.how === 'demo' ? '시연으로 찍음' : '찍었어요') + '</span>';

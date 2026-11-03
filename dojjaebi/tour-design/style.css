@@ -1889,3 +1889,12 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
 .cf-more{ width:100%; min-height:52px; margin-top:4px; }
 .cf-more{ flex-direction:column; padding:8px 12px; }
 .cf-more small{ display:block; color:var(--muted); }
+
+/* 내 여행·코스 바로가기 */
+.mm-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.mm-grid .btn{ justify-content:center; text-align:center; min-height:56px; }
+.mm-more{ margin-top:10px; }
+.mm-more>summary{ min-height:48px; display:flex; align-items:center; font-weight:600; cursor:pointer; }
+.mm-more .btn{ margin-top:8px; width:100%; }
+.qlinks{ display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:8px 0; padding-left:16px; padding-right:16px; }
+.qlinks .btn{ min-height:48px; justify-content:center; padding:0 6px; }
