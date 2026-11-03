@@ -2774,7 +2774,7 @@
       return;
     }
     var s = document.createElement('script');
-    s.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + encodeURIComponent(key) + '&autoload=false';
+    s.src = 'https://dapi.kakao.com/v2/maps/sdk.js?appkey=' + encodeURIComponent(key) + '&autoload=false&libraries=services';
     s.onerror = function () { fin(false); };
     s.onload = function () {
       clearTimeout(t1);
@@ -4182,20 +4182,46 @@
       '<p class="pk-d">' + esc(pkFee(l)) + '<br>' + esc(pkHours(l)) + (l.note ? '<br>' + esc(l.note) : '') + (l.tel ? '<br><a href="tel:' + esc(l.tel.replace(/[^0-9]/g, '')) + '">' + esc(l.tel) + '</a>' : '') + '</p>' +
       '<a class="btn tw-map" href="' + esc(TW.kakaoSearch(l.name + ' 주차장')) + '" target="_blank" rel="noopener">카카오맵에서 보기</a></li>';
   }
+  /* 카카오맵 장소검색 '주차장'(공영·민영 모두) — 공공자료(24곳, 요금·시간 있음)와 섞지 않고 따로 보여 준다. 요금·시간은 카카오 자료에 거의 없어 카카오맵에서 확인 */
+  function kakaoParks(lat, lng, done) {
+    var key = String(window.KAKAO_JS_KEY || '').trim();
+    if (!key) { done(null, 'nokey'); return; }
+    loadKakao(key, function () {
+      try {
+        if (!(kakao.maps.services && kakao.maps.services.Places)) { done(null, 'nolib'); return; }
+        new kakao.maps.services.Places().categorySearch('PK6', function (res, st) {
+          if (st === kakao.maps.services.Status.OK) done(res.map(function (r) { return { name: r.place_name, addr: r.road_address_name || r.address_name || '', tel: r.phone || '', m: +r.distance || 0, url: r.place_url || '', cat: r.category_name || '' }; }), 'ok');
+          else if (st === kakao.maps.services.Status.ZERO_RESULT) done([], 'ok');
+          else done(null, 'err');
+        }, { location: new kakao.maps.LatLng(lat, lng), radius: 500, sort: kakao.maps.services.SortBy.DISTANCE });
+      } catch (e) { done(null, 'err'); }
+    }, function () { done(null, 'nomap'); });
+  }
+  function kpHtml(list, st) {
+    if (!list) return '<p class="note">카카오맵 주차장 검색을 불러오지 못했어요(' + (st === 'nokey' || st === 'nolib' || st === 'nomap' ? '지도 서비스 연결 실패' : '잠시 뒤 다시 시도') + '). 아래 카카오맵 링크로 직접 찾아 보세요.</p>';
+    if (!list.length) return '<p class="note">카카오맵에서도 500m 안에 주차장이 나오지 않았어요.</p>';
+    return '<ul class="pk-ul">' + list.map(function (z) {
+      return '<li class="pk-li"><b>' + esc(z.name) + '</b> <span class="pk-t">약 ' + (FU ? FU.round10(z.m) : z.m) + 'm</span><p class="pk-d">' + esc(z.addr) + (z.tel ? '<br><a href="tel:' + esc(z.tel.replace(/[^0-9]/g, '')) + '">' + esc(z.tel) + '</a>' : '') + '<br>요금·운영시간은 자료에 없어요 — 카카오맵에서 확인</p>' +
+        '<a class="btn tw-map" href="' + esc(z.url || TW.kakaoSearch(z.name)) + '" target="_blank" rel="noopener">카카오맵에서 보기</a></li>';
+    }).join('') + '</ul><p class="note">출처: 카카오맵 장소검색(공영·민영 포함) · 이 앱의 공공자료와 별개이며, 영업·요금은 직접 확인해 주세요.</p>';
+  }
+  function kpBox(lat, lng, label) {
+    return '<div class="kp-box"><button type="button" class="btn kp-go" data-kp="go" data-lat="' + lat + '" data-lng="' + lng + '">🅿️ ' + esc(label) + ' 카카오맵으로 주차장 더 찾기 (민영 포함)</button><div class="kp-out" aria-live="polite"></div></div>';
+  }
   function pkLine(b) {
     var z = pkNear(b);
     return z.length ? '근처 공영주차장 ' + z.length + '곳 · 가장 가까운 곳 약 ' + (FU ? FU.round10(z[0].m) : Math.round(z[0].m)) + 'm' : '이 자료에는 근처 공영주차장이 없어요';
   }
   function pkBox(b) {
     var z = pkNear(b);
-    return '<details class="pk-box"><summary>' + esc(pkLine(b)) + '</summary>' + (z.length ? '<ul class="pk-ul">' + z.map(pkLi).join('') + '</ul>' : '') +
+    return '<details class="pk-box"><summary>' + esc(pkLine(b)) + '</summary>' + (z.length ? '<ul class="pk-ul">' + z.map(pkLi).join('') + '</ul>' : '') + kpBox(b.lat, b.lng, '이 식당가 주변') +
       '<p class="note">출처: ' + esc(PARK ? PARK.출처 : '') + ' · 기준 ' + esc(PARK ? PARK.기준일 : '') + '. 식당가 가운데에서 직선 ' + PARK_NEAR + 'm 안만 보여 줘요. 이 자료에 없다는 뜻이지 주차장이 없다는 뜻은 아니에요. 요금·시간은 방문 전에 확인해 주세요.</p></details>';
   }
   function parkAll() {
     var from = TN.near, z = (PARK && PARK.lots ? PARK.lots : []).map(function (l) { return { l: l, m: from ? bkM(from.lat, from.lng, l.lat, l.lng) : null }; });
     z.sort(function (a, c) { return from ? a.m - c.m : (a.l.name < c.l.name ? -1 : a.l.name > c.l.name ? 1 : 0); });
     return '<p class="note">공영주차장 ' + z.length + '곳 · ' + (from ? (TN.nearKind === 'course' ? '코스 가운데에서 가까운 순' : '내 위치에서 가까운 순') : '이름순 · 위치를 켜면 가까운 순으로 보여요') + '</p>' + bkNearChips() +
-      '<ul class="pk-ul pk-all">' + z.map(pkLi).join('') + '</ul>' +
+      (from ? kpBox(from.lat, from.lng, TN.nearKind === 'course' ? '코스 가운데 주변' : '내 위치 주변') : '<p class="note">위치를 켜면 그 주변의 민영 주차장도 카카오맵으로 찾아 드려요.</p>') + '<ul class="pk-ul pk-all">' + z.map(pkLi).join('') + '</ul>' +
       '<p class="note">출처: ' + esc(PARK ? PARK.출처 : '') + ' · 기준 ' + esc(PARK ? PARK.기준일 : '') + '. 천곡 중앙로 일대가 많고, 묵호·추암 쪽은 자료에 없어요. 이 자료에 없다는 뜻이지 주차장이 없다는 뜻은 아니에요. 요금·시간은 방문 전에 확인해 주세요 · 광고·상업적 대가 없음</p>';
   }
   function goTown(kind) { TN.kind = kind; TN.area = ''; TN.menu = ''; TN.pages = 1; BN.open = ''; BN.ext = ''; BN.pages = 1; show('s-stay'); }
@@ -4250,6 +4276,8 @@
   $('blockBox').addEventListener('click', function (ev) {
     var t = ev.target, o = t.closest('[data-bk-open]');
     if (o) { BN.open = o.getAttribute('data-bk-open'); BN.menu = ''; BN.pubs = false; BN.pages = 1; BN.ext = ''; renderBlocks(); bkTop(); return; }
+    var kp = t.closest('[data-kp]');
+    if (kp) { var out = kp.parentNode.querySelector('.kp-out'); kp.disabled = true; kp.textContent = '찾는 중이에요…'; kakaoParks(+kp.getAttribute('data-lat'), +kp.getAttribute('data-lng'), function (list, st) { out.innerHTML = kpHtml(list, st); kp.disabled = false; kp.textContent = '다시 찾기'; }); return; }
     var e = t.closest('[data-bk-ext]'); if (e) { BN.ext = e.getAttribute('data-bk-ext'); BN.pages = 1; renderBlocks(); bkTop(); return; }
     if (t.closest('[data-bk-back]')) { BN.open = ''; BN.ext = ''; BN.pages = 1; renderBlocks(); bkTop(); return; }
     var m = t.closest('[data-bk-menu]'); if (m) { BN.menu = m.getAttribute('data-bk-menu'); BN.pages = 1; renderBlocks(); return; }
