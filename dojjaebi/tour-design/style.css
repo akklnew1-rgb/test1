@@ -1885,3 +1885,7 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
 .st-act .btn{ min-height:48px; }
 .st-done{ font-weight:700; }
 .st-all{ margin:12px 0 0; font-weight:700; }
+
+.cf-more{ width:100%; min-height:52px; margin-top:4px; }
+.cf-more{ flex-direction:column; padding:8px 12px; }
+.cf-more small{ display:block; color:var(--muted); }
