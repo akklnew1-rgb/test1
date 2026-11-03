@@ -608,6 +608,7 @@
 <!-- 5. 나의 동해 이야기 -->
 <section id="s-card" class="screen" hidden aria-labelledby="h-card">
   <h2 id="h-card" class="visually-hidden">나의 동해 이야기</h2>
+  <section class="stamp" id="stampBox" aria-label="스탬프 모으기" hidden></section>
   <div class="mytrip-menu" id="myMenu">
     <button type="button" class="btn" id="myCam">📷 도째비와 인증샷</button>
     <button type="button" class="btn" id="myTown">식당·카페·숙소 찾기</button>
@@ -748,10 +749,10 @@
   <div class="sh-card" id="repLocCard" tabindex="-1">
     <h3 id="repLocT">근처인지 확인할게요</h3>
     <div id="repLocGps">
-      <p class="lvask-p"><b>내 위치를 써도 될까요?</b><br>제보는 그 장소 가까이(200m 안)에서만 남길 수 있어요. 지나가다 보낸 거짓 제보를 막기 위해서예요.</p>
+      <p class="lvask-p"><b>내 위치를 써도 될까요?</b><br>제보와 스탬프는 그 장소 가까이(200m 안)에서만 남길 수 있어요. 지나가다 보낸 거짓 제보를 막기 위해서예요.</p>
       <ul class="lvask-ul">
         <li>위치는 <b>근처인지 확인만</b> 하고 <b>저장·전송하지 않아요</b>.</li>
-        <li>제보에는 장소 이름과 "근처에서 보냄" 표시만 남아요.</li>
+        <li>제보에는 장소 이름과 "근처에서 보냄" 표시만, 스탬프는 이 폰에만 남아요.</li>
         <li>폰이 위치를 물으면 <b>허용</b>을 눌러 주세요.</li>
       </ul>
       <button type="button" class="btn primary lvask-b" id="repLocGo">위치 켜고 확인하기</button>
@@ -830,7 +831,7 @@
 <script src="ai.js?v=3"></script>
 <script src="art.js"></script>
 <script src="tourapi.js?v=5"></script>
-<script src="app.js?v=50"></script>
+<script src="app.js?v=52"></script>
 <script src="cam.js?v=2"></script>
 </body>
 </html>

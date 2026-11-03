@@ -4148,10 +4148,10 @@
       (!noPos && !st.ok ? '<p class="tw-why">' + esc(st.why) + '</p>' : '') + '</li>';
   }
   /* 공영주차장 — 동해시 주차장정보(공공데이터포털) 24곳. 식당가 중심에서 500m 이내만 안내. 자료에 없는 주차장은 알 수 없음 */
-  var PK = window.TOWN_PARKING, PK_NEAR = 500;
+  var PARK = window.TOWN_PARKING, PARK_NEAR = 500;
   function pkNear(b) {
-    if (!PK || !PK.lots) return [];
-    return PK.lots.map(function (l) { return { l: l, m: bkM(b.lat, b.lng, l.lat, l.lng) }; }).filter(function (z) { return z.m <= PK_NEAR; }).sort(function (a, c) { return a.m - c.m; });
+    if (!PARK || !PARK.lots) return [];
+    return PARK.lots.map(function (l) { return { l: l, m: bkM(b.lat, b.lng, l.lat, l.lng) }; }).filter(function (z) { return z.m <= PARK_NEAR; }).sort(function (a, c) { return a.m - c.m; });
   }
   function pkWon(v) { return (+v || 0).toLocaleString('ko-KR') + '원'; }
   function pkFee(l) {
@@ -4179,7 +4179,7 @@
   function pkBox(b) {
     var z = pkNear(b);
     return '<details class="pk-box"><summary>' + esc(pkLine(b)) + '</summary>' + (z.length ? '<ul class="pk-ul">' + z.map(pkLi).join('') + '</ul>' : '') +
-      '<p class="note">출처: ' + esc(PK ? PK.출처 : '') + ' · 기준 ' + esc(PK ? PK.기준일 : '') + '. 식당가 가운데에서 직선 ' + PK_NEAR + 'm 안만 보여 줘요. 이 자료에 없다는 뜻이지 주차장이 없다는 뜻은 아니에요. 요금·시간은 방문 전에 확인해 주세요.</p></details>';
+      '<p class="note">출처: ' + esc(PARK ? PARK.출처 : '') + ' · 기준 ' + esc(PARK ? PARK.기준일 : '') + '. 식당가 가운데에서 직선 ' + PARK_NEAR + 'm 안만 보여 줘요. 이 자료에 없다는 뜻이지 주차장이 없다는 뜻은 아니에요. 요금·시간은 방문 전에 확인해 주세요.</p></details>';
   }
   function bkNote() {
     var k = BK.기준 || {};
@@ -4339,7 +4339,45 @@
       '<ol class="rc-list">' + c.rows.map(function (r) { return r.head ? '<li class="dh">' + esc(r.name) + '</li>' : '<li><span class="n">' + r.n + '</span>' + esc(r.name) + '<span class="tm">' + esc(r.tm) + '</span></li>'; }).join('') + '</ol>' +
       '<p class="rc-mine">' + (c.mine.length ? '<b>내가 남긴 제보</b> ' + c.mine.map(esc).join(' · ') : '아직 남긴 제보가 없어요.') + '</p>' +
       '<div class="say"><span class="note">도째비 한마디</span><br>' + esc(c.line) + '</div>';
+    renderStamp();
   }
+  /* ===== 스탬프 투어 — 오늘 코스에 든 장소마다 한 칸. 장소 200m 안에서 위치를 확인해야 찍힘(권한을 안 주면 '직접 찍기'로 기록, 표시가 다름) ·
+     기록은 이 폰 안에만 저장(tour.stamp.v1) — 서버로 보내지 않음 · 상품·순위·혜택 없음 ===== */
+  var K_STAMP = 'tour.stamp.v1';
+  function stampGet() { return jget(K_STAMP, {}); }
+  function stampSet(id, how) { var m = stampGet(); m[id] = { at: Date.now(), how: how }; lsSet(K_STAMP, JSON.stringify(m)); }
+  function stampStops() {
+    var seen = {}, pl = S.plan; if (!pl) return [];
+    return placeStops(pl.stops).filter(function (s) { if (!s.id || seen[s.id] || !PLACE[s.id]) return false; seen[s.id] = true; return true; });
+  }
+  function stampDay(iso) { var d = new Date(iso + 'T00:00:00'); return isFinite(d) ? (d.getMonth() + 1) + '월 ' + d.getDate() + '일' : ''; }
+  function renderStamp() {
+    var box = $('stampBox'); if (!box) return;
+    var stops = stampStops(); if (!stops.length) { box.hidden = true; box.innerHTML = ''; return; }
+    var got = stampGet(), n = stops.filter(function (s) { return got[s.id]; }).length, today = todayIso();
+    box.hidden = false;
+    box.innerHTML = '<h3 class="st-h">스탬프 모으기 <span class="st-n">' + n + ' / ' + stops.length + '</span></h3>' +
+      '<p class="note">오늘 코스에 든 곳이에요. 그 장소 200m 안에서 위치를 확인하면 찍혀요. 위치는 이 폰 안에서만 쓰고 저장·전송하지 않아요. 기록은 이 폰에만 남고, 상품이나 순위는 없어요.</p>' +
+      '<ul class="st-list">' + stops.map(function (s) {
+        var p = PLACE[s.id], g = got[s.id], d = stopDate(s), act = '';
+        if (g) act = '<span class="st-done">' + (g.how === 'self' ? '직접 찍음' : g.how === 'demo' ? '시연으로 찍음' : '찍었어요') + '</span>';
+        else if (d && d !== today) act = '<span class="st-wait">' + esc(stampDay(d)) + '에 찍어요</span>';
+        else {
+          var ns = nearState(s.id);
+          if (ns.ok) act = '<button type="button" class="btn primary st-go" data-st="go" data-id="' + esc(s.id) + '">스탬프 찍기</button>';
+          else if (ns.state === 'far') act = '<span class="st-wait">약 ' + (FU ? FU.round10(ns.m) : ns.m) + 'm 떨어져 있어요 · 가까이 가면 찍혀요</span><button type="button" class="btn st-re" data-st="loc">위치 다시 확인</button>';
+          else act = '<button type="button" class="btn st-re" data-st="loc">위치 켜고 확인하기</button>' + (!repGpsOk() || ns.state === 'badacc' ? '<button type="button" class="btn ghost st-self" data-st="self" data-id="' + esc(s.id) + '">위치를 못 쓰면 직접 찍기</button>' : '');
+        }
+        return '<li class="st-li' + (g ? ' on' : '') + '"><span class="st-mark" aria-hidden="true">' + (g ? '✓' : '') + '</span><div class="st-b"><b>' + esc(p.name) + '</b>' + (g ? '<span class="st-t">' + esc(new Date(g.at).getHours() + '시 ' + ('0' + new Date(g.at).getMinutes()).slice(-2) + '분') + '</span>' : '') + '<div class="st-act">' + act + '</div></div></li>';
+      }).join('') + '</ul>' + (n === stops.length ? '<p class="st-all">오늘 코스의 스탬프를 모두 모았어요.</p>' : '');
+  }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest && ev.target.closest('#stampBox [data-st]'); if (!b) return;
+    var k = b.getAttribute('data-st'), id = b.getAttribute('data-id');
+    if (k === 'loc') { openLoc(renderStamp); return; }
+    if (k === 'go') { var ns = nearState(id); if (!ns.ok) { renderStamp(); flash('아직 장소 근처가 아니에요'); return; } stampSet(id, S.demoNear ? 'demo' : 'gps'); renderStamp(); flash('스탬프를 찍었어요'); return; }
+    if (k === 'self') { stampSet(id, 'self'); renderStamp(); flash('직접 찍음으로 기록했어요'); }
+  });
   function cardText() {
     var c = cardParts(); if (!c) return '';
     var NL = String.fromCharCode(10);
