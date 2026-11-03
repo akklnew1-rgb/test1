@@ -36,3 +36,7 @@
 .snack,.flash{ border-radius:var(--r-m); box-shadow:var(--e-float); }
 /* 움직임을 줄여 달라는 기기에서는 움직임 끔 */
 @media (prefers-reduced-motion:reduce){ *{ animation-duration:.01ms !important; transition-duration:.01ms !important; } }
+/* 동네 목록의 '지도에서 보기'·'코스에 넣기': 위 .btn:not(...) 규칙이 색을 흰색으로 덮어 글자가 안 보이던 것을 되돌림 */
+.btn:not(.primary):not(.ghost):not(.light).tw-onmap,
+.btn:not(.primary):not(.ghost):not(.light).tw-add{ background:var(--tc,var(--brand)); border-color:var(--tc,var(--brand)); color:#fff; }
+.btn:not(.primary):not(.ghost):not(.light).tw-add:disabled{ background:#e9ecef; border-color:#e9ecef; color:#4b5259; }

@@ -4094,11 +4094,13 @@
     if (TN.kind === 'lodge' && !TN.autoLodge && !TN.near && courseCenter()) { TN.autoLodge = true; TN.near = courseCenter(); TN.nearKind = 'course'; }
     nearUi();
     Array.prototype.forEach.call($('townSeg').querySelectorAll('[data-tk]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-tk') === TN.kind ? 'true' : 'false'); });
-    var tour = TN.kind === 'tour'; $('townBox').hidden = tour; $('tourBox').hidden = !tour;
+    var tour = TN.kind === 'tour', blk = TN.kind === 'block'; $('townBox').hidden = tour || blk; $('tourBox').hidden = !tour; $('blockBox').hidden = !blk;
+    if (blk) { renderBlocks(); return; }
     if (tour) { $('tourBox').innerHTML = CT ? OV.ttTabHtml(CT, P, ovMaps(), todayIso()) : '<p class="note">시티투어 자료가 없어요.</p>'; return; }
     renderTown();
   }
   function renderTown() {
+    if (TN.kind === 'block') { renderBlocks(); return; }
     var k = TN.kind, all = kindList(k, TN.q), cnt = {}, mcnt = {}, isEat = k === 'eat';
     if (!isEat) TN.menu = '';
     var byMenu = isEat && TN.menu ? all.filter(function (x) { return menuOf(x) === TN.menu; }) : all;
@@ -4124,6 +4126,86 @@
     var more = $('townMore'); more.hidden = list.length <= shown.length; more.textContent = '더 보기 (' + (list.length - shown.length) + '곳 남음)';
     $('townSrc').textContent = '출처: ' + ((TW.src && TW.src[k === 'lodge' ? 'lodging' : 'eats']) || '') + (k === 'cafe' ? ' · 업태가 "카페"로 적힌 곳 + 이름에 카페·커피가 들어간 곳(완벽하진 않아요)' : '') + ' · 가게 소개·메뉴·별점은 자료에 없어요 · 영업 여부와 예약은 직접 확인 · 광고 없음';
   }
+  /* ===== 식당가(블록) — 정책: 순서는 거리(위치 모르면 가나다)뿐 · 가게 수·인기 안 씀 · 블록 안 가게 전부 · 술집류는 접기(제외 아님) ===== */
+  var BK = window.TOWN_BLOCKS, BN = { open: '', menu: '', pubs: false, pages: 1, ext: '' }, EATBY = null;
+  function eatBy() { if (!EATBY) { EATBY = {}; TW.list('eat').forEach(function (x) { EATBY[x.key] = x; }); } return EATBY; }
+  function bkItems(ids) { var m = eatBy(); return ids.map(function (i) { return m['e' + i]; }).filter(Boolean); }
+  function bkM(a, b, c, d) { var r = Math.PI / 180, dp = (c - a) * r, dl = (d - b) * r, h = Math.sin(dp / 2) * Math.sin(dp / 2) + Math.cos(a * r) * Math.cos(c * r) * Math.sin(dl / 2) * Math.sin(dl / 2); return 12742000 * Math.asin(Math.sqrt(h)); }
+  function bkMin(m) { return Math.max(1, Math.round(m * 1.3 / 66.7)); } // 직선×1.3, 시속 4km
+  function bkPub(x) { return BK.pub.indexOf(x.type) >= 0; }
+  function bkMenuName(id) { for (var i = 0; i < MENU_GROUPS.length; i++) if (MENU_GROUPS[i][0] === id) return MENU_GROUPS[i][1]; return ''; }
+  function bkKinds(items) { var c = {}; items.forEach(function (x) { var m = menuOf(x); c[m] = (c[m] || 0) + 1; }); return MENU_GROUPS.filter(function (g) { return c[g[0]]; }).map(function (g) { return { id: g[0], name: g[1], n: c[g[0]] }; }).sort(function (a, b) { return b.n - a.n; }); }
+  function bkNearChips() {
+    return '<div class="chips town-chips"><button type="button" class="chip" data-bk="near" aria-pressed="' + (TN.nearKind === 'me') + '">내 위치에서 가까운 순</button>' +
+      (courseCenter() ? '<button type="button" class="chip" data-bk="course" aria-pressed="' + (TN.nearKind === 'course') + '">코스에서 가까운 순</button>' : '') + '</div>';
+  }
+  function bkLi(x) {
+    var noPos = !TW.hasPos(x), st = townAddState(x);
+    return '<li class="tw tw-eat" data-key="' + x.key + '"><div class="tw-main"><span class="poi-ic eat" aria-hidden="true">' + poiSvg('eat') + '</span><b class="tw-n">' + esc(x.name) + '</b><span class="tw-t">' + esc(x.type) + (x._m != null ? ' · ' + (FU ? FU.round10(x._m) : Math.round(x._m)) + 'm' : '') + '</span></div>' +
+      '<p class="tw-a">' + esc(x.area === TW.OTHER ? x.dong : x.area + ' · ' + x.dong) + ' · ' + esc(x.addr) + '</p>' +
+      '<div class="tw-btns"><a class="btn tw-map" href="' + esc(TW.kakaoSearch(x.name)) + '" target="_blank" rel="noopener">카카오맵에서 보기</a>' +
+      (noPos ? '<span class="tw-nopos">위치 정보 없음</span>' : '<button type="button" class="btn tw-onmap" data-onmap="' + x.key + '">지도에서 보기</button><button type="button" class="btn tw-add" data-addeat="' + x.key + '"' + (st.ok ? '' : ' disabled aria-disabled="true"') + '>코스에 넣기</button>') + '</div>' +
+      (!noPos && !st.ok ? '<p class="tw-why">' + esc(st.why) + '</p>' : '') + '</li>';
+  }
+  function bkNote() {
+    var k = BK.기준 || {};
+    return '<p class="note bk-note">식당이 가까이 모여 있는 곳을 반경 ' + (k.반경m || 250) + 'm로 자동으로 묶었어요. 순서는 거리(위치를 모르면 가나다순)뿐이고, 가게 수나 인기는 순서에 쓰지 않아요. 거리는 직선 기준 어림이고 실제 걷는 시간과 다를 수 있어요. 위치는 주소로 찾은 대략 값이에요. ' +
+      '출처: ' + esc((TW.src && TW.src.eats) || '') + ' · 영업 여부와 시간은 방문 전 확인해 주세요 · 광고·상업적 대가 없음</p>';
+  }
+  function bkHome() {
+    var bl = BK.blocks.slice(), fix = TN.near, h;
+    if (fix) { bl.forEach(function (b) { b._m = bkM(fix.lat, fix.lng, b.lat, b.lng); }); bl.sort(function (a, b) { return a._m - b._m; }); }
+    else { bl.forEach(function (b) { b._m = null; }); bl.sort(function (a, b) { return a.name < b.name ? -1 : a.name > b.name ? 1 : 0; }); }
+    h = '<p class="note">' + (fix ? (TN.nearKind === 'course' ? '코스 가운데에서 가까운 순' : '내 위치에서 가까운 순') : '이름순 · 위치를 켜면 가까운 순으로 보여요') + ' · 식당가 ' + bl.length + '곳</p>' + bkNearChips() + '<ul class="town-list bk-list">';
+    bl.forEach(function (b) {
+      var items = bkItems(b.eats), pubs = items.filter(bkPub).length, rest = items.filter(function (x) { return !bkPub(x); });
+      h += '<li class="tw tw-eat"><button type="button" class="bk-card" data-bk-open="' + b.id + '"><b class="bk-n">' + esc(b.name) + '</b>' +
+        '<span class="bk-s">식당 ' + items.length + '곳' + (pubs ? ' (술집류 ' + pubs + '곳은 접어 두었어요)' : '') + (b._m != null ? ' · 약 ' + bkMin(b._m) + '분 (직선 기준 어림)' : '') + '</span>' +
+        '<span class="bk-k">' + bkKinds(rest).map(function (k) { return esc(k.name) + ' ' + k.n; }).join(' · ') + '</span></button></li>';
+    });
+    h += '</ul><div class="bk-ext"><button type="button" class="btn" data-bk-ext="scat">식당가에 못 든 흩어진 곳 ' + BK.scattered.length + '곳 보기</button>' +
+      (BK.nopos.length ? '<button type="button" class="btn" data-bk-ext="nopos">위치를 몰라 묶지 못한 곳 ' + BK.nopos.length + '곳 보기</button>' : '') + '</div>' + bkNote();
+    return h;
+  }
+  function bkDetail() {
+    var b = BK.blocks.filter(function (z) { return z.id === BN.open; })[0]; if (!b) { BN.open = ''; return bkHome(); }
+    var items = bkItems(b.eats), pubs = items.filter(bkPub), base = BN.pubs ? items : items.filter(function (x) { return !bkPub(x); });
+    var from = TN.near ? TN.near : { lat: b.lat, lng: b.lng }, kinds = bkKinds(base);
+    var list = BN.menu ? base.filter(function (x) { return menuOf(x) === BN.menu; }) : base.slice();
+    list = list.map(function (x) { x._m = TW.hasPos(x) ? bkM(from.lat, from.lng, x.lat, x.lng) : null; return x; });
+    list.sort(function (a, c) { return (a._m == null) - (c._m == null) || a._m - c._m; });
+    var shown = list.slice(0, BN.pages * TW.PAGE);
+    return '<button type="button" class="btn bk-back" data-bk-back="1">← 식당가 목록</button><h3 class="bk-h">' + esc(b.name) + '</h3>' +
+      '<p class="note">식당 ' + items.length + '곳 · ' + (TN.near ? (TN.nearKind === 'course' ? '코스 가운데에서 가까운 순' : '내 위치에서 가까운 순') : '식당가 가운데에서 가까운 순') + ' · 가게를 하나도 빼지 않았어요(술집류는 접어 두었을 뿐이에요)</p>' + bkNearChips() +
+      '<div class="chips town-chips"><button type="button" class="chip" data-bk-menu="" aria-pressed="' + (!BN.menu) + '">모든 메뉴</button>' + kinds.map(function (k) { return '<button type="button" class="chip" data-bk-menu="' + k.id + '" aria-pressed="' + (BN.menu === k.id) + '">' + esc(k.name) + ' ' + k.n + '</button>'; }).join('') +
+      (pubs.length ? '<button type="button" class="chip" data-bk-pubs="1" aria-pressed="' + BN.pubs + '">' + (BN.pubs ? '술집류 ' + pubs.length + '곳 포함해서 보는 중' : '술집류 ' + pubs.length + '곳은 접어 두었어요 · 눌러서 펼치기') + '</button>' : '') + '</div>' +
+      '<p class="note">' + (BN.menu ? bkMenuName(BN.menu) + ' ' : '') + list.length + '곳' + (list.length > shown.length ? ' 중 ' + shown.length + '곳 보여요' : '') + '</p><ul class="town-list">' + shown.map(bkLi).join('') + '</ul>' +
+      (list.length > shown.length ? '<button type="button" class="btn town-more" data-bk-more="1">더 보기 (' + (list.length - shown.length) + '곳 남음)</button>' : '') + bkNote();
+  }
+  function bkExt() {
+    var ids = BN.ext === 'scat' ? BK.scattered : BK.nopos, items = bkItems(ids).sort(function (a, b) { return a.name < b.name ? -1 : a.name > b.name ? 1 : 0; }), shown = items.slice(0, BN.pages * TW.PAGE);
+    items.forEach(function (x) { x._m = null; });
+    return '<button type="button" class="btn bk-back" data-bk-back="1">← 식당가 목록</button><h3 class="bk-h">' + (BN.ext === 'scat' ? '식당가에 못 든 흩어진 곳' : '위치를 몰라 묶지 못한 곳') + '</h3>' +
+      '<p class="note">' + items.length + '곳 · 이름순 · ' + (BN.ext === 'scat' ? '가까이 모인 식당이 5곳 미만인 곳이에요' : '주소로 위치를 찾지 못한 곳이에요') + '</p><ul class="town-list">' + shown.map(bkLi).join('') + '</ul>' +
+      (items.length > shown.length ? '<button type="button" class="btn town-more" data-bk-more="1">더 보기 (' + (items.length - shown.length) + '곳 남음)</button>' : '') + bkNote();
+  }
+  function renderBlocks() {
+    var box = $('blockBox');
+    if (!BK || !BK.blocks) { box.innerHTML = '<p class="note">식당가 자료가 없어요.</p>'; return; }
+    box.innerHTML = BN.ext ? bkExt() : BN.open ? bkDetail() : bkHome();
+  }
+  function bkTop() { try { $('blockBox').scrollIntoView({ block: 'start' }); } catch (e) { /* 무시 */ } }
+  $('blockBox').addEventListener('click', function (ev) {
+    var t = ev.target, o = t.closest('[data-bk-open]');
+    if (o) { BN.open = o.getAttribute('data-bk-open'); BN.menu = ''; BN.pubs = false; BN.pages = 1; BN.ext = ''; renderBlocks(); bkTop(); return; }
+    var e = t.closest('[data-bk-ext]'); if (e) { BN.ext = e.getAttribute('data-bk-ext'); BN.pages = 1; renderBlocks(); bkTop(); return; }
+    if (t.closest('[data-bk-back]')) { BN.open = ''; BN.ext = ''; BN.pages = 1; renderBlocks(); bkTop(); return; }
+    var m = t.closest('[data-bk-menu]'); if (m) { BN.menu = m.getAttribute('data-bk-menu'); BN.pages = 1; renderBlocks(); return; }
+    if (t.closest('[data-bk-pubs]')) { BN.pubs = !BN.pubs; if (!BN.pubs && BN.menu === 'bar') BN.menu = ''; BN.pages = 1; renderBlocks(); return; }
+    if (t.closest('[data-bk-more]')) { BN.pages++; renderBlocks(); return; }
+    var n = t.closest('[data-bk]');
+    if (n) { $(n.getAttribute('data-bk') === 'course' ? 'townCourse' : 'townNear').click(); }
+  });
   $('backTown').addEventListener('click', function () { var y = TN.sy || 0; show('s-stay'); setTimeout(function () { window.scrollTo(0, y); }, 40); });
   $('townSeg').addEventListener('click', function (ev) {
     var b = ev.target.closest('[data-tk]'); if (!b) return;
@@ -4152,7 +4234,7 @@
   $('townClear').addEventListener('click', function () { var q = $('townQ'); q.value = ''; TN.q = ''; TN.pages = 1; $('townClear').hidden = true; renderTown(); q.focus(); });
   $('townQ').addEventListener('input', function () { clearTimeout(townT); var v = this.value; $('townClear').hidden = !v; townT = setTimeout(function () { TN.q = v.trim(); TN.pages = 1; renderTown(); }, 160); });
   $('townMore').addEventListener('click', function () { TN.pages++; renderTown(); });
-  $('townList').addEventListener('click', function (ev) {
+  function townListClick(ev) {
     var m = ev.target.closest('[data-onmap]');
     if (m) { var k2 = m.getAttribute('data-onmap'), y = TW.list('eat').filter(function (z) { return z.key === k2; })[0]; if (y && TW.hasPos(y)) { TN.sy = window.pageYOffset || 0; S.fromTown = true; } if (y && TW.hasPos(y)) openMapAt({ lat: y.lat, lng: y.lng }, { eat: true, focusName: y.name }); return; }
     var ea = ev.target.closest('[data-addeat]');
@@ -4160,7 +4242,9 @@
     var b = ev.target.closest('[data-add]'); if (!b || b.disabled) return;
     var key = b.getAttribute('data-add'), x = TW.list('lodge').filter(function (y) { return y.key === key; })[0];
     if (x) townAdd(x);
-  });
+  }
+  $('townList').addEventListener('click', townListClick);
+  $('blockBox').addEventListener('click', townListClick);
   function addEatToCourse(x) {
     var st = townAddState(x); if (!st.ok) { townSay(st.why, true); return; }
     var id = eatPlaceFrom(x); townSay('');
