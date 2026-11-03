@@ -70,6 +70,7 @@ const info = blocks.map(mem => {
     dir: near && bd > 150 ? dirOf(lat - ba.lat, lng - ba.lng, lat) : '', anchor: near ? ba.name : '', anchorM: Math.round(bd)
   };
 });
+const b0 = ys => ys.some(b => b.near); // 기준점 이름은 기존 규칙(기준점에서 본 방향) 유지
 // 4) 이름 확정: 기본 → (겹치면) 방향 → (그래도 겹치면) 가게 많은 순 번호
 const by = {}; info.forEach(b => { (by[b.base] = by[b.base] || []).push(b); });
 Object.values(by).forEach(g => {
@@ -77,6 +78,10 @@ Object.values(by).forEach(g => {
   const g2 = {}; g.forEach(b => { const k = b.base + (b.dir ? ' ' + b.dir + '쪽' : ''); (g2[k] = g2[k] || []).push(b); });
   Object.entries(g2).forEach(([k, ys]) => {
     if (ys.length === 1) { ys[0].name = k; return; }
+    // 기준점이 없는 이름('동 도로명 일대')이 겹치면: 같은 이름끼리의 가운데에서 본 방향(북쪽·남동쪽…)을 붙인다. 방향도 겹치면 마지막으로 번호
+    const cl = ys.reduce((a, b) => a + b.lat, 0) / ys.length, cg = ys.reduce((a, b) => a + b.lng, 0) / ys.length;
+    const dn = ys.map(b => k + ' ' + dirOf(b.lat - cl, b.lng - cg, cl) + '쪽');
+    if (!b0(ys) && new Set(dn).size === ys.length) { ys.forEach((b, j) => { b.name = dn[j]; }); return; }
     ys.sort((a, b) => b.n - a.n).forEach((b, j) => { b.name = k + ' ' + (j + 1); });
   });
 });
