@@ -922,9 +922,14 @@
     rows += cfRow('date', '📅', '여행 날짜', cfDateText(r), !r.date, '<label class="cf-lb" for="cfDate">가는 날</label><input type="date" class="cf-in" id="cfDate" min="' + todayIso() + '" value="' + esc(r.date || '') + '"><label class="cf-lb" for="cfDate2">오는 날 (당일치기면 비워 두세요)</label><input type="date" class="cf-in" id="cfDate2" min="' + esc(r.date || todayIso()) + '" max="' + esc(r.date ? (P.addDays(r.date, 2) || '') : '') + '" value="' + esc(r.backDate && r.backDate > r.date ? r.backDate : '') + '">');
     rows += cfRow('comp', '👥', '누구와', esc(comp) || AUTO, false, COMPS.map(function (n) { return cfChip('comp', n, n, (r.companions || []).indexOf(n) >= 0); }).join(''));
     rows += cfRow('how', '🚆', '오는 교통', r.how ? HOWN[r.how] : '정하지 않으면 기차로 잡아요', false, [['train', '기차'], ['bus', '버스'], ['car', '자가용']].map(function (h) { return cfChip('how', h[0], h[1], r.how === h[0]); }).join(''));
-    rows += cfRow('arrive', '🕐', '동해에 도착', r.arrive != null ? hhmm(r.arrive) : AUTO, false, '<input type="time" class="cf-in" id="cfArrive" value="' + (r.arrive != null ? toTimeValue(r.arrive) : '') + '" aria-label="도착 시각">');
-    rows += cfRow('back', '🕑', r.how === 'car' ? '떠날 시각' : '돌아갈 시각', r.train != null ? hhmm(r.train) : AUTO, false, '<input type="time" class="cf-in" id="cfBack" value="' + (r.train != null ? toTimeValue(r.train) : '') + '" aria-label="돌아갈 시각">');
-    rows += cfRow('must', '📍', '꼭 가고 싶은 곳', mustN.length ? esc(mustN.join(' · ')) : '없어요 — 도째비가 골라요', false, D.places.map(function (p) { return cfChip('must', p.id, p.short || p.name, (r.must || []).indexOf(p.id) >= 0); }).join(''));
+    var rest = '';
+    rest += cfRow('arrive', '🕐', '동해에 도착', r.arrive != null ? hhmm(r.arrive) : AUTO, false, '<input type="time" class="cf-in" id="cfArrive" value="' + (r.arrive != null ? toTimeValue(r.arrive) : '') + '" aria-label="도착 시각">');
+    rest += cfRow('back', '🕑', r.how === 'car' ? '떠날 시각' : '돌아갈 시각', r.train != null ? hhmm(r.train) : AUTO, false, '<input type="time" class="cf-in" id="cfBack" value="' + (r.train != null ? toTimeValue(r.train) : '') + '" aria-label="돌아갈 시각">');
+    rest += cfRow('must', '📍', '꼭 가고 싶은 곳', mustN.length ? esc(mustN.join(' · ')) : '없어요 — 도째비가 골라요', false, D.places.map(function (p) { return cfChip('must', p.id, p.short || p.name, (r.must || []).indexOf(p.id) >= 0); }).join(''));
+    // 처음엔 날짜·누구와·교통 3가지만. 나머지(도착·돌아갈 시각·꼭 가고 싶은 곳)는 선택이라 접어 둔다. 이미 값을 고쳤거나 연 행이 있으면 펼친 채로 둔다
+    var restSet = r.arrive != null || r.train != null || (r.must && r.must.length) || ['arrive', 'back', 'must'].indexOf(CF.open) >= 0;
+    if (restSet) CF.more = true;
+    rows += CF.more ? rest : '<button type="button" class="btn cf-more" data-cf="more">시간·꼭 가고 싶은 곳도 정하기 <small>(안 해도 돼요)</small></button>';
     $('cfList').innerHTML = rows;
     var why = cfMissing(r); $('cfWhy').textContent = why; $('cfWhy').hidden = !why; $('cfGo').disabled = !!why;
   }
@@ -932,10 +937,11 @@
     var sh = $('cfSheet'); sh.hidden = !on;
     if (on) { document.body.classList.add('no-scroll'); try { $('cfCard').focus(); } catch (e) {} } else document.body.classList.remove('no-scroll');
   }
-  function cfOpen() { CF.r = chatBuildR(); CF.open = ''; cfRender(); cfShow(true); }
+  function cfOpen() { CF.r = chatBuildR(); CF.open = ''; CF.more = false; cfRender(); cfShow(true); }
   $('cfSheet').addEventListener('click', function (ev) {
     var t = ev.target.closest('[data-cf]'); if (!t) return; var k = t.getAttribute('data-cf'), r = CF.r;
     if (k === 'close') { cfShow(false); return; }
+    if (k === 'more') { CF.more = true; cfRender(); return; }
     if (k === 'row') { var key = t.getAttribute('data-k'); CF.open = CF.open === key ? '' : key; cfRender(); return; }
     var v = t.getAttribute('data-v');
     if (k === 'comp') { var c = r.companions || (r.companions = []), ix = c.indexOf(v); if (v === '혼자') r.companions = ix >= 0 ? [] : ['혼자']; else { r.companions = c.filter(function (n) { return n !== '혼자'; }); ix = r.companions.indexOf(v); if (ix >= 0) r.companions.splice(ix, 1); else r.companions.push(v); } }
