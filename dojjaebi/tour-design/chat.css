@@ -1,0 +1,46 @@
+/* 동해 사랑방 (2026-11-09) — 화면 전체를 덮는 창. 색은 앱의 변수(--paper·--ink·--line·--soft·--brand)를 그대로 써서 어두운 화면도 따라간다. */
+html.cr-open{ overflow:hidden; }
+.cr{ position:fixed; z-index:95; left:0; right:0; top:0; height:100dvh; width:100%; margin:0 auto; max-width:720px; display:flex; flex-direction:column; background:var(--paper); color:var(--ink); font-family:'Pretendard','Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif; line-height:1.5; word-break:keep-all; overflow-wrap:anywhere; outline:none; padding-top:var(--safe-t); }
+@media (min-width:900px) and (hover:hover){ .cr{ max-width:430px; top:24px; height:calc(100dvh - 48px); border-radius:30px; overflow:hidden; } }
+.cr[hidden]{ display:none; }
+.cr *{ box-sizing:border-box; }
+.cr .ic{ width:1.1em; height:1.1em; flex:none; fill:none; stroke:currentColor; stroke-width:1.9; stroke-linecap:round; stroke-linejoin:round; vertical-align:-.18em; }
+.cr-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px var(--gut,16px); border-bottom:1px solid var(--line); background:var(--paper); }
+.cr-ht{ min-width:0; }
+.cr-head h2{ margin:0; font-size:1.25em; font-weight:800; letter-spacing:-.02em; color:var(--ink); }
+.cr-sub{ margin:2px 0 0; font-size:.82em; color:var(--muted); }
+.cr-x{ flex:none; min-height:44px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:var(--paper); color:var(--ink); font:inherit; font-size:.9em; font-weight:700; cursor:pointer; touch-action:manipulation; }
+.cr-chips{ display:flex; gap:8px; flex-wrap:wrap; padding:10px var(--gut,16px) 0; }
+.cr-chip{ min-height:44px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:var(--paper); color:var(--muted); font:inherit; font-size:.92em; font-weight:700; cursor:pointer; touch-action:manipulation; }
+.cr-chip[aria-pressed="true"]{ background:var(--brand-soft); color:var(--brand-dark); border:2px solid var(--brand); }
+.cr-chip[hidden]{ display:none; }
+.cr-rule{ display:flex; align-items:center; gap:10px; margin:10px var(--gut,16px) 0; padding:10px 12px; border:1px solid var(--info-line); border-radius:14px; background:var(--info-soft); color:var(--info); font-size:.84em; }
+.cr-rule[hidden]{ display:none; }
+.cr-ok{ flex:none; min-height:40px; padding:0 12px; border:0; border-radius:10px; background:var(--brand); color:#fff; font:inherit; font-size:.95em; font-weight:700; cursor:pointer; }
+.cr-state{ margin:10px var(--gut,16px) 0; font-size:.9em; color:var(--muted); }
+.cr-state[hidden]{ display:none; }
+.cr-list{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; list-style:none; margin:0; padding:12px var(--gut,16px); display:flex; flex-direction:column; gap:10px; -webkit-overflow-scrolling:touch; }
+.cr-m{ position:relative; align-self:flex-start; max-width:88%; padding:10px 12px 8px; border:1px solid var(--line); border-radius:16px 16px 16px 4px; background:var(--soft); }
+.cr-m.mine{ align-self:flex-end; border-radius:16px 16px 4px 16px; background:var(--brand-soft); border-color:var(--brand); }
+.cr-mh{ display:flex; align-items:baseline; flex-wrap:wrap; gap:6px; font-size:.82em; color:var(--muted); }
+.cr-mh b{ color:var(--ink); font-size:1.02em; }
+.cr-mh time{ margin-left:auto; font-size:.95em; }
+.cr-demo{ padding:1px 7px; border-radius:999px; background:var(--warn-soft); color:var(--warn); font-size:.85em; font-weight:700; }
+.cr-pl{ display:inline-flex; align-items:center; gap:4px; margin-top:4px; padding:2px 9px; border-radius:999px; background:var(--paper); border:1px solid var(--line); color:var(--brand-dark); font-size:.8em; font-weight:700; }
+.cr-t{ margin:4px 0 2px; font-size:1em; white-space:pre-wrap; color:var(--ink); }
+.cr-rp{ display:block; margin:2px 0 0 auto; min-height:32px; padding:0 8px; border:0; background:none; color:var(--muted); font:inherit; font-size:.78em; text-decoration:underline; cursor:pointer; touch-action:manipulation; }
+.cr-empty{ margin:auto; padding:24px 8px; text-align:center; color:var(--muted); list-style:none; }
+.cr-form{ padding:8px var(--gut,16px) max(10px, var(--safe-b)); border-top:1px solid var(--line); background:var(--paper); }
+.cr-tag{ display:block; width:100%; min-height:44px; margin-bottom:8px; padding:6px 12px; border:1px solid var(--line); border-radius:12px; background:var(--soft); color:var(--brand-dark); font:inherit; font-size:.88em; font-weight:700; text-align:left; cursor:pointer; touch-action:manipulation; }
+.cr-tag[hidden]{ display:none; }
+.cr-tag small{ font-weight:400; color:var(--muted); }
+.cr-row{ display:flex; gap:8px; }
+.cr-row input{ flex:1; min-width:0; min-height:48px; padding:0 14px; border:1px solid var(--line); border-radius:14px; background:var(--paper); color:var(--ink); font:inherit; font-size:1em; }
+.cr-row input:focus-visible,.cr-send:focus-visible,.cr-chip:focus-visible,.cr-x:focus-visible,.cr-tag:focus-visible,.cr-ok:focus-visible,.cr-rp:focus-visible{ outline:3px solid var(--c3,#1d8aa5); outline-offset:2px; }
+.cr-send{ flex:none; min-width:76px; min-height:48px; padding:0 16px; border:0; border-radius:14px; background:var(--brand); color:#fff; font:inherit; font-weight:800; cursor:pointer; touch-action:manipulation; }
+.cr-send:disabled{ opacity:.55; }
+.cr-msg{ margin:6px 2px 0; min-height:1.3em; font-size:.86em; color:var(--muted); }
+.cr-msg.bad{ color:var(--alert); font-weight:700; }
+.cr-me{ margin:2px 2px 0; font-size:.78em; color:var(--muted); }
+.cr-me b{ color:var(--ink); }
+/* 코스 장소 카드의 '사랑방' 단추 · 아래 메뉴의 '사랑방' 탭은 앱의 기존 모양(.ico.pin · .tab)을 그대로 쓴다 */
