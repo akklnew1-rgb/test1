@@ -51,6 +51,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     el.innerHTML =
       '<header class="cr-head"><div class="cr-ht"><h2 id="crTitle">동해 사랑방</h2><p class="cr-sub">이름도 얼굴도 몰라도 괜찮아요. 글은 24시간 뒤에 사라져요.</p></div>' +
       '<button type="button" class="cr-x" data-cr="close" aria-label="사랑방 닫기"><span aria-hidden="true">✕</span> 닫기</button></header>' +
+      '<p class="cr-note" id="crNote">이용자가 남긴 글이에요. 도째비의 추천이 아니에요. 가게·숙소 정보는 가시기 전에 꼭 확인하세요.</p>' +
       '<div class="cr-chips" id="crChips" role="group" aria-label="글 골라 보기"><button type="button" class="cr-chip" data-crf="all" aria-pressed="true">전체</button><button type="button" class="cr-chip" data-crf="place" aria-pressed="false" hidden></button></div>' +
       '<div class="cr-rule" id="crRule"><span>서로 존중해 주세요. 링크·전화번호·홍보 글은 올릴 수 없어요. 시연 서비스라 글이 지워질 수 있어요.</span><button type="button" class="cr-ok" data-cr="rule">알겠어요</button></div>' +
       '<p class="cr-state" id="crState" role="status"></p>' +

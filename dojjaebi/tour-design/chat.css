@@ -10,6 +10,7 @@ html.cr-open{ overflow:hidden; }
 .cr-head h2{ margin:0; font-size:1.25em; font-weight:800; letter-spacing:-.02em; color:var(--ink); }
 .cr-sub{ margin:2px 0 0; font-size:.82em; color:var(--muted); }
 .cr-x{ flex:none; min-height:44px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:var(--paper); color:var(--ink); font:inherit; font-size:.9em; font-weight:700; cursor:pointer; touch-action:manipulation; }
+.cr-note{ margin:0; padding:8px var(--gut,16px); background:var(--soft); border-bottom:1px solid var(--line); font-size:.82em; font-weight:700; color:var(--ink); }
 .cr-chips{ display:flex; gap:8px; flex-wrap:wrap; padding:10px var(--gut,16px) 0; }
 .cr-chip{ min-height:44px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:var(--paper); color:var(--muted); font:inherit; font-size:.92em; font-weight:700; cursor:pointer; touch-action:manipulation; }
 .cr-chip[aria-pressed="true"]{ background:var(--brand-soft); color:var(--brand-dark); border:2px solid var(--brand); }
