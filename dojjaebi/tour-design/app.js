@@ -1564,6 +1564,7 @@
       '<button type="button" class="ico" data-act="like" data-id="' + p.id + '" aria-pressed="' + liked + '" aria-label="좋아요" title="좋아요">' + ico('heart') + '</button>' +
       '<button type="button" class="ico" data-act="ask" data-id="' + p.id + '" aria-label="도째비에게 묻기" title="도째비에게 묻기" aria-expanded="false">' + ico('chat') + '</button>' +
       '<button type="button" class="ico" data-act="listen" data-id="' + p.id + '" data-label="이야기 듣기" aria-label="이야기 듣기" title="이야기 듣기">' + ico('sound') + '</button>' +
+      (extra ? '' : '<button type="button" class="ico pin room" data-act="room" data-id="' + p.id + '" aria-label="동해 사랑방에서 ' + esc(p.short || p.name) + ' 얘기하기" title="사랑방에서 이 장소 얘기하기">' + ico('room') + '<span>사랑방</span></button>') +
       '<span class="gap"></span>' +
       (extra || S.ed || (S.plan && S.plan.multi) ? '' : '<button type="button" class="ico pin" data-act="arrive" data-i="' + i + '" aria-label="여기 왔어요" title="여기 왔어요">' + ico('pin') + '<span>여기 왔어요</span></button>') +
       '</div>' +
@@ -2605,6 +2606,10 @@
       var inp = document.querySelector('[data-in="' + id + '"]'); showAnswer(id, inp.value);
     } else if (act === 'arrive') {
       arriveAt(+b.getAttribute('data-i'));
+    } else if (act === 'room') {
+      var rp = PLACE[id]; if (!rp) return;
+      if (window.TourChat) window.TourChat.open({ id: rp.id, name: rp.short || rp.name });
+      else flash('사랑방을 아직 못 불러왔어요. 잠시 뒤에 다시 눌러 주세요.');
     } else if (act === 'near') {
       var np = PLACE[id]; if (!np) return;
       openMapAt({ lat: np.lat, lng: np.lng }, { spot: true, focusName: np.short + ' 근처', di: dayOfPlace(id) });
