@@ -44,4 +44,17 @@ html.cr-open{ overflow:hidden; }
 .cr-msg.bad{ color:var(--alert); font-weight:700; }
 .cr-me{ margin:2px 2px 0; font-size:.78em; color:var(--muted); }
 .cr-me b{ color:var(--ink); }
+/* 장소 카드 안의 '사랑방 얘기 요약' (카드는 앱 쪽이라 .cr 바깥) */
+.p-room{ margin:10px var(--gut,16px) 0; }
+.p-room .btn{ min-height:48px; width:100%; }
+.rs-out{ margin-top:8px; }
+.rs-list{ list-style:none; margin:0; padding:0; display:grid; gap:8px; }
+.rs-list li{ padding:10px 12px; border:1px solid var(--line); border-radius:14px; background:var(--soft); color:var(--ink); font-size:.95em; line-height:1.5; }
+.rs-m{ display:inline-block; padding:1px 8px; border-radius:999px; font-size:.78em; font-weight:700; background:var(--paper); border:1px solid var(--line); color:var(--muted); vertical-align:1px; }
+.rs-m.rs-good{ color:var(--ok); border-color:var(--ok); }
+.rs-m.rs-bad{ color:var(--warn); border-color:var(--warn); }
+.rs-m.rs-ask{ color:var(--brand-dark); border-color:var(--brand); }
+.rs-none{ margin:4px 0 0; font-size:.9em; color:var(--muted); }
+.rs-foot{ margin:8px 2px 0; font-size:.78em; color:var(--muted); line-height:1.45; }
+.rs-foot b{ color:var(--warn); }
 /* 코스 장소 카드의 '사랑방' 단추 · 아래 메뉴의 '사랑방' 탭은 앱의 기존 모양(.ico.pin · .tab)을 그대로 쓴다 */
