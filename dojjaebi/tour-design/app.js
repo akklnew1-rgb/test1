@@ -1574,6 +1574,7 @@
       '<div class="p-cap"><div class="cl"><b>도째비</b>' + esc(st.text) + '</div></div>' +
       '<p class="p-src">출처: ' + esc(st.source) + '</p>' +
       '<p class="tags">' + (extra ? '<span class="tag warn">#내일일출(예시시각)</span>' : placeTags(s)) + '</p>' + (!extra && p.townEat ? '<p class="eat-warn" role="note"><b>운영 시간을 몰라요.</b> 가시기 전에 가게에 꼭 확인해 주세요. 문을 닫았을 수 있어요.</p>' : '') + (extra ? '' : crowdBody(s)) +
+      (extra ? '' : '<div class="p-room"><button type="button" class="btn" data-act="roomsum" data-id="' + p.id + '">사랑방 얘기 요약 보기</button><div class="rs-out" aria-live="polite"></div></div>') +
       '<div class="p-hours note"><div class="note-h">여행자 수첩</div><dl>' +
       (!extra && s.mode !== 'tour' ? '' : '<div><dt>이동</dt><dd>' + mvHtml(s, mv, extra) + '</dd></div>') + // 걷기·택시는 카드 사이 이동 칩과 같은 말이라 뺌(시티투어 설명은 남김)
       (extra ? '' : '<div><dt>머무는 시간</dt><dd>약 ' + p.visit + '분</dd></div><div><dt>운영 시간</dt><dd>' + esc(p.openText) + '</dd></div>' + (p.restText ? '<div><dt>쉬는 날</dt><dd>' + esc(p.restText) + '</dd></div>' : '')) +
@@ -2606,6 +2607,11 @@
       var inp = document.querySelector('[data-in="' + id + '"]'); showAnswer(id, inp.value);
     } else if (act === 'arrive') {
       arriveAt(+b.getAttribute('data-i'));
+    } else if (act === 'roomsum') {
+      var sp = PLACE[id]; if (!sp) return;
+      var so = b.closest('.p-room').querySelector('.rs-out');
+      if (window.TourChat) window.TourChat.summary(sp.id, sp.short || sp.name, so, b);
+      else so.innerHTML = '<p class="rs-none">사랑방을 아직 못 불러왔어요. 잠시 뒤에 다시 눌러 주세요.</p>';
     } else if (act === 'room') {
       var rp = PLACE[id]; if (!rp) return;
       if (window.TourChat) window.TourChat.open({ id: rp.id, name: rp.short || rp.name });

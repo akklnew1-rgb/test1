@@ -206,7 +206,50 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     });
   }
 
-  window.TourChat = { open: open, close: close };
+  /* ---- 장소 카드의 "사랑방 얘기 요약" (AI 중계 task:'room') ----
+   * 그 장소 이름이 붙은 최근 24시간 글만 보낸다. 글쓴이는 번호(0,1,2…)로만 보내고, "이용자 N명"은 중계 함수가 번호를 세어 돌려준다.
+   * 요약은 도째비의 추천이 아니라 이용자가 한 말을 전하는 것 — 화면에도 그렇게 적는다. 같은 장소는 90초 동안 결과를 다시 쓴다. */
+  var sumCache = {}, MOOD = { good: '좋았다는 말', bad: '아쉬웠다는 말', info: '알려 준 말', ask: '궁금해하는 말' };
+  function roomMsgs(id) {
+    var cut = Date.now() - DAY;
+    return msgs.filter(function (m) { return m.pl === id && m.t && m.ts >= cut && (m.r || 0) < HIDE_AT && !reported[m.k]; });
+  }
+  function sumShow(out, html) { out.innerHTML = html; }
+  function summary(id, name, out, btn) {
+    id = String(id); name = String(name || '이 장소');
+    var list = roomMsgs(id);
+    if (!list.length) {
+      sumShow(out, '<p class="rs-none">아직 ' + esc(name) + ' 얘기가 없어요. 사랑방에서 첫 마디를 남겨 보세요.</p>');
+      return;
+    }
+    var sig = list.length + ':' + list[list.length - 1].k, c = sumCache[id];
+    if (c && c.sig === sig && Date.now() - c.at < 90000) { sumShow(out, c.html); return; }
+    var url = window.DOJJAEBI_AI_URL;
+    if (!url) { sumShow(out, '<p class="rs-none">AI 연결이 없어서 요약을 못 해요. 사랑방에서 직접 읽어 보세요.</p>'); return; }
+    var who = {}, nw = 0, body = list.slice(-40).map(function (m) { if (who[m.u] == null) who[m.u] = nw++; return { w: who[m.u], t: m.t }; });
+    var hasDemo = list.some(function (m) { return m.d; });
+    if (btn) btn.disabled = true;
+    sumShow(out, '<p class="rs-none">이용자 글을 읽고 있어요…</p>');
+    var ctl = typeof AbortController === 'function' ? new AbortController() : null, to = setTimeout(function () { if (ctl) ctl.abort(); }, 12000);
+    fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ task: 'room', place: { id: id, name: name }, msgs: body }), signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { return r.json(); })
+      .then(function (j) {
+        if (!j || !j.ok) throw new Error('fail');
+        var li = (j.items || []).map(function (it) {
+          return '<li><span class="rs-m rs-' + esc(it.mood) + '">' + esc(MOOD[it.mood] || MOOD.info) + '</span> <b>이용자 ' + (+it.n || 1) + '명</b> · ' + (it.topic ? esc(it.topic) + ': ' : '') + esc(it.gist) + '</li>';
+        }).join('');
+        var d = new Date(), t = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+        var html = (li ? '<ul class="rs-list">' + li + '</ul>' : '<p class="rs-none">요약할 만한 내용이 아직 없어요.</p>') +
+          '<p class="rs-foot">이용자 글 ' + (+j.total || list.length) + '개(글쓴이 ' + (+j.writers || nw) + '명)를 AI가 요약했어요 · ' + t + ' 기준. 사실과 다를 수 있고 도째비의 추천이 아니에요.' + (hasDemo ? ' <b>시연용 예시 글이 들어 있어요.</b>' : '') + '</p>';
+        sumCache[id] = { sig: sig, at: Date.now(), html: html };
+        sumShow(out, html);
+        if (btn) btn.textContent = '다시 요약하기';
+      })
+      .catch(function () { sumShow(out, '<p class="rs-none">요약을 못 불러왔어요. 잠시 뒤에 다시 눌러 보시거나 사랑방에서 직접 읽어 보세요.</p>'); })
+      .then(function () { clearTimeout(to); if (btn) btn.disabled = false; });
+  }
+
+  window.TourChat = { open: open, close: close, summary: summary };
   var tab = document.getElementById('tabRoom');
   if (tab) tab.addEventListener('click', function () { open(null); });
   if (db) { subscribe(); } // 미리 연결해 두면 열 때 바로 글이 보인다
