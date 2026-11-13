@@ -250,6 +250,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
   }
 
   window.TourChat = { open: open, close: close, summary: summary };
+  if (window.TourNav) window.TourNav.register('chatRoom', close);
   var tab = document.getElementById('tabRoom');
   if (tab) tab.addEventListener('click', function () { open(null); });
   if (db) { subscribe(); } // 미리 연결해 두면 열 때 바로 글이 보인다

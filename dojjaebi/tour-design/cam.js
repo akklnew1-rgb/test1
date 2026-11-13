@@ -111,4 +111,5 @@
     else say('이 브라우저는 바로 공유가 안 돼요. 저장을 눌러 주세요.');
   });
   window.TourCam = { open: open, close: close };
+  if (window.TourNav) window.TourNav.register('camView', close);
 })();

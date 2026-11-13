@@ -166,7 +166,9 @@
     if (id === 's-course') { ovKakaoEnsure(); renderPicks(); }
     if (id === 's-watch') renderWatch();
     if (id === 's-prep') renderPrep();
+    if (window.TourNav) { if (navBack) window.TourNav.quiet(id); else window.TourNav.screen(id); }
   }
+  var navBack = false;
   document.addEventListener('click', function (ev) {
     var g = ev.target.closest('[data-go]'); if (g) { show(g.getAttribute('data-go')); }
   });
@@ -4559,6 +4561,23 @@
   loadWeather(); loadForecast(); loadCrowd();
   route();
   if (!(location.hash || '').replace('#', '')) edBootRestore(); // 새로 고쳐도 직접 고친 코스는 그대로
+
+  // 뒤로가기: 열린 창 닫기·이전 화면으로 (nav.js)
+  if (window.TourNav) {
+    var N = window.TourNav;
+    N.register('story', function () { closeStory(); });
+    N.register('addSheet', function () { closeSheet(); });
+    N.register('cfSheet', function () { cfShow(false); });
+    N.register('recSheet', function () { recShow(false); });
+    N.register('ttSheet', function () { ttClose(); });
+    N.register('imgView', function () { closeImage(); });
+    N.register('repLoc', function () { closeLoc(); });
+    N.register('lvAsk', function () { lvCloseAsk(); });
+    N.onScreen(function (id) {
+      if (id === 's-course' && !S.plan) id = 's-start';
+      navBack = true; try { show(id); } finally { navBack = false; }
+    });
+  }
 
   // 시험용 접근(자동 점검에서만 쓴다)
   window.__tour = { map: function () { return mapApi; }, pois: function () { return buildPois().length; }, ov: function () { return { OVS: OVS, OA: OA, TN: TN }; }, ovPlay: ovPlay, townAdd: townAdd, state: S, replan: replan, ingest: ingest, ED: ED, edEnv: function () { return edEnv(); }, live: function () { return lv; }, liveStart: lvStart, liveAsk: lvOpenAsk };
