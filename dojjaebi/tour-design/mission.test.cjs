@@ -21,7 +21,7 @@ var mem = {}, store = { getItem: function (k) { return mem[k] == null ? null : m
 assert.deepStrictEqual(M.loadStamps(store), {});
 M.saveStamps({ 'nolgol-1': { ts: 1, via: 'gps', note: '벽화' } }, store);
 assert.strictEqual(M.loadStamps(store)['nolgol-1'].via, 'gps');
-mem['dojjaebi.mission.v1'] = '{망가짐'; assert.deepStrictEqual(M.loadStamps(store), {});
+mem['dojjaebi.mission.v2'] = '{망가짐'; assert.deepStrictEqual(M.loadStamps(store), {});
 assert.deepStrictEqual(M.loadStamps({ getItem: function () { throw new Error('막힘'); } }), {});
 // 5) 기본 엽서 — 도장 수·현장 확인 수를 그대로 말하고 지어내지 않음
 var st = { 'nolgol-1': { via: 'gps' }, 'lighthouse-1': { via: 'self' } }, fb = M.fallbackPostcard(M.stampList(st), st);
@@ -32,4 +32,27 @@ assert(/졸업장/.test(M.fallbackPostcard(M.stampList(all), all).title));
 var lines = M.wrapText(function (t) { return t.length * 10; }, '가나다라마바사아자차', 50);
 assert.deepStrictEqual(lines, ['가나다라마', '바사아자차']);
 assert.deepStrictEqual(M.wrapText(function (t) { return t.length; }, 'ab\ncd', 9), ['ab', 'cd']);
+// 7) 답 검사
+var F = require('./chatfilter.js');
+var pk = M.findMission('mukhoport-1'), tx = M.findMission('nolgol-1'), bg = M.findMission('nolgol-2');
+assert.strictEqual(M.validateAnswer(pk, '갈매기').ok, true);
+assert.strictEqual(M.validateAnswer(pk, '고래').ok, false, '보기에 없는 답');
+assert.strictEqual(M.validateAnswer(tx, '   ').ok, false);
+assert.strictEqual(M.validateAnswer(tx, '가'.repeat(31)).ok, false);
+assert.strictEqual(M.validateAnswer(tx, '어머 도깨비다', F).ok, true);
+assert.strictEqual(M.validateAnswer(tx, '전화 010-1234-5678', F).ok, false, '전화번호 막음');
+assert.strictEqual(M.validateAnswer(bg, ['벽화']).ok, false, '2개 미만');
+assert.strictEqual(M.validateAnswer(bg, ['벽화', '계단', '벽화', '없는것']).n, 2, '중복·없는 항목 제외');
+// 8) 먼저 다녀간 여행자 — 내 답 제외, 실제로 있는 것만
+var recs = [{ u: 'me', t: '갈매기', ts: 1 }, { u: 'a', t: '갈매기', ts: 2 }, { u: 'b', t: '배', ts: 3 }, { u: 'c', t: '갈매기', ts: 4 }, { u: 'd', t: '고래', ts: 5 }, null, { u: 'e', t: 3 }];
+var tl = M.tally(pk, recs, 'me');
+assert.strictEqual(tl.total, 4); assert.deepStrictEqual(tl.rows, [{ label: '갈매기', n: 2 }, { label: '배', n: 1 }]);
+assert.deepStrictEqual(M.tally(pk, [], 'me'), { total: 0, rows: [] }, '데이터 없으면 0 (지어내지 않음)');
+var tr2 = [{ u: 'a', t: '좋아요', ts: 1 }, { u: 'b', t: '문의 010-1234-5678', ts: 9 }, { u: 'c', t: '최고예요', ts: 5 }, { u: 'me', t: '내글', ts: 8 }];
+assert.deepStrictEqual(M.recentTexts(tr2, 'me', F, 3), ['최고예요', '좋아요'], '최신순·검사 통과·내 글 제외');
+// 9) 기본 반응
+assert(/갈매기/.test(M.fallbackReact(pk, '갈매기'))); assert(/벽화/.test(M.fallbackReact(bg, '벽화, 계단')));
+// 10) 미션 모양: 고르기 2·글 3·찾기 1, 글자수 한도 있음
+var kinds = {}; M.MISSIONS.forEach(function (m) { kinds[m.kind] = (kinds[m.kind] || 0) + 1; if (m.kind === 'text') assert(m.max > 0 && m.max <= 30); if (m.kind === 'pick') assert(m.options.length >= 2); });
+assert.deepStrictEqual(kinds, { pick: 2, text: 3, bingo: 1 });
 console.log('mission.test.cjs 통과');

@@ -23,5 +23,11 @@ function call(body) {
   r = await call({ task: 'postcard', stamps: [{ place: '논골담길', mission: '벽화', note: '재미있었다' }] });
   assert.strictEqual(r.j.ok, true); assert.strictEqual(r.j.title, '도깨비와 걸은 날');
   r = await call({ task: 'postcard', stamps: [] }); assert.strictEqual(r.code, 400);
+  reply = JSON.stringify({ line: '“갈매기”라니, 도깨비도 같은 생각이었어요!' });
+  r = await call({ task: 'react', place: { name: '묵호항' }, mission: '도깨비 취향 맞히기', answer: '갈매기' });
+  assert.strictEqual(r.j.ok, true); assert(/갈매기/.test(r.j.line));
+  reply = JSON.stringify({ line: '여기가 제일 유명해요' });
+  r = await call({ task: 'react', place: { name: 'a' }, mission: 'b', answer: 'c' }); assert.strictEqual(r.j.ok, false);
+  r = await call({ task: 'react', place: { name: 'a' }, mission: 'b', answer: '' }); assert.strictEqual(r.code, 400);
   console.log('중계 미션 시험 통과');
 })().catch(function (e) { console.error(e); process.exit(1); });

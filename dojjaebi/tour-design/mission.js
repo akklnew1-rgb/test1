@@ -1,6 +1,8 @@
 /*
  * 도깨비 미션 (2026-11-13) — 장소마다 도깨비가 낸 미션을 하나씩 해결하면 도장이 찍히고, 끝나면 도깨비가 엽서를 써 준다.
- * 장소·할 일은 아래 표(MISSIONS)에 고정돼 있다. 인공지능은 도깨비 한마디(line·hint)와 엽서 글만 쓰고, 실패하거나 느리면 아래 기본 글로 바로 돌아온다.
+ * 장소·할 일은 아래 표(MISSIONS)에 고정돼 있다. 미션은 세 가지 모양이다 — 고르기(pick)·짧은 글(text)·찾아 체크(bingo). 긴 글·사진 판정은 일부러 뺐다.
+ * 인공지능은 도깨비 한마디·내 답에 대한 반응·엽서 글만 쓰고, 실패하거나 느리면 아래 기본 글로 바로 돌아온다.
+ * "먼저 다녀간 여행자" 칸은 Firebase(mtraces)에 실제로 남은 답만 보여준다. 데이터가 없으면 없다고 말하고, 숫자를 지어내지 않는다.
  * 도장은 "현장 확인"(휴대폰 위치가 장소 근처)과 "직접 확인"(위치를 못 받음)으로 나눠 표시한다 — 위치·사진은 완벽한 방문 증명이 아니다.
  * 저장: 이 기기(localStorage)에만. 사진은 기기 메모리에만 두고 서버로 보내지 않는다.
  * 본선에서 장소를 바꾸려면 MISSIONS 표만 고치면 된다(좌표는 places.js 와 같은 값).
@@ -14,15 +16,15 @@
     { id: 'lighthouse', name: '묵호등대', short: '묵호등대', lat: 37.5548308, lng: 129.1184742 }
   ];
   var MISSIONS = [
-    { id: 'mukhoport-1', place: 'mukhoport', title: '바다 위에 배가 몇 척 떠 있는지 세어 보기', line: '도깨비는 배 세기를 좋아해요. 눈 크게 뜨고 세어 보세요!', hint: '멀리 보이는 배부터 세면 덜 헷갈려요.', ask: '몇 척이었나요?' },
-    { id: 'mukhoport-2', place: 'mukhoport', title: '시장에서 가장 눈에 띄는 색 찾기', line: '도깨비불보다 더 눈에 띄는 색이 있을까요?', hint: '사람 얼굴은 빼고 물건이나 풍경만 담아 주세요.', ask: '무슨 색이었나요?' },
-    { id: 'nolgol-1', place: 'nolgol', title: '벽화 한 장면 골라 이야기 지어 주기', line: '벽 속 사람들이 무슨 말을 할지 도깨비한테도 알려 주세요.', hint: '길이 좁으니 지나가는 분께 길을 비켜 주세요.', ask: '어떤 이야기였나요?' },
-    { id: 'nolgol-2', place: 'nolgol', title: '골목에서 바다가 가장 잘 보이는 모퉁이 찾기', line: '오르막이 힘들어도 바다 한 번이면 괜찮아져요.', hint: '무리하지 말고 쉬엄쉬엄 올라가요.', ask: '어느 모퉁이였나요?' },
-    { id: 'lighthouse-1', place: 'lighthouse', title: '바다가 가장 예쁘게 보이는 자리 찾아 남기기', line: '여기서는 도깨비도 말을 잠깐 멈춰요. 가장 좋은 자리를 찾아 주세요.', hint: '바람이 센 날은 난간 쪽에 천천히 다가가요.', ask: '그 자리는 어땠나요?' },
-    { id: 'lighthouse-2', place: 'lighthouse', title: '수평선에서 보이는 것 세 가지 적기', line: '배, 구름, 갈매기… 도깨비 눈에는 또 뭐가 보일까요?', hint: '맑은 날과 흐린 날 보이는 게 달라요.', ask: '무엇이 보였나요?' }
+    { id: 'mukhoport-1', place: 'mukhoport', kind: 'pick', title: '도깨비 취향 맞히기', ask: '도깨비는 항구에서 무엇이 더 멋지다고 할까요?', options: ['갈매기', '배', '둘 다'], line: '도깨비는 항구에 올 때마다 고민해요. 누가 더 멋질까?', hint: '정답은 없어요. 보이는 대로 골라 보세요.' },
+    { id: 'mukhoport-2', place: 'mukhoport', kind: 'text', title: '시장에서 만난 것에 별명 붙이기', ask: '별명을 지어 주세요', max: 15, ph: '예: 파란 심술쟁이', line: '이름 없는 것들에게 이름을 지어 주면 도깨비가 좋아해요.', hint: '사람 얼굴 말고 물건이나 풍경으로 해 주세요.' },
+    { id: 'nolgol-1', place: 'nolgol', kind: 'text', title: '벽화 속 인물이 도깨비를 만나면 뭐라고 할까?', ask: '첫마디를 한 문장으로', max: 30, ph: '예: 어머, 도깨비가 길을 잃었나?', line: '벽 속 사람들이 도깨비한테 뭐라고 할지 궁금해요.', hint: '길이 좁으니 지나가는 분께 길을 비켜 주세요.' },
+    { id: 'nolgol-2', place: 'nolgol', kind: 'bingo', title: '골목에서 찾아보기', ask: '눈에 띈 것을 2개 이상 골라 주세요', items: ['벽화', '계단', '바다 한 조각', '알록달록한 색'], min: 2, line: '걷다 보면 하나씩 눈에 들어와요. 없는 건 안 골라도 돼요.', hint: '오르막은 무리하지 말고 쉬엄쉬엄 올라가요.' },
+    { id: 'lighthouse-1', place: 'lighthouse', kind: 'pick', title: '오늘 바다를 한 단어로', ask: '오늘 바다는 어떤 느낌인가요?', options: ['설렘', '자유', '그리움', '시원함'], line: '도깨비는 바다 앞에서 말을 잠깐 멈춰요.', hint: '바람이 센 날은 난간에서 한 걸음 떨어져 주세요.' },
+    { id: 'lighthouse-2', place: 'lighthouse', kind: 'text', title: '바다를 보며 도깨비에게 소원 한 줄', ask: '소원을 한 줄로 (돈 얘기는 빼고요)', max: 20, ph: '예: 오늘 같은 날이 자주 오게 해 주세요', line: '도깨비가 소원을 하나쯤은 귀담아들어요.', hint: '길게 안 써도 돼요.' }
   ];
   var NEAR_M = 500; // 이 안이면 "현장 확인" (휴대폰 위치 오차를 넉넉히 본다)
-  var KEY = 'dojjaebi.mission.v1';
+  var KEY = 'dojjaebi.mission.v2';
 
   /* ---------- 계산 (화면 없이 시험할 수 있게 따로) ---------- */
   function dist(a, b) {
@@ -61,13 +63,46 @@
     return lines;
   }
 
-  var api = { PLACES: PLACES, MISSIONS: MISSIONS, NEAR_M: NEAR_M, dist: dist, judge: judge, findMission: findMission, loadStamps: loadStamps, saveStamps: saveStamps, stampList: stampList, fallbackPostcard: fallbackPostcard, wrapText: wrapText };
+  /* 답 검사: pick 은 보기 중 하나, text 는 글자 수 안(글 검사 규칙 chatfilter 가 있으면 함께), bingo 는 min 개 이상 */
+  function validateAnswer(m, value, filter) {
+    if (m.kind === 'pick') return (m.options || []).indexOf(value) >= 0 ? { ok: true, text: value } : { ok: false, why: '하나를 골라 주세요' };
+    if (m.kind === 'bingo') {
+      var got = (Array.isArray(value) ? value : []).filter(function (x, i, a) { return (m.items || []).indexOf(x) >= 0 && a.indexOf(x) === i; });
+      return got.length >= (m.min || 1) ? { ok: true, text: got.join(', '), n: got.length } : { ok: false, why: (m.min || 1) + '개 이상 골라 주세요' };
+    }
+    var t = String(value == null ? '' : value).replace(/\s+/g, ' ').trim();
+    if (!t) return { ok: false, why: '한 줄 적어 주세요' };
+    if (t.length > (m.max || 30)) return { ok: false, why: (m.max || 30) + '자까지 적을 수 있어요' };
+    if (filter) { var f = filter.check(t); if (!f.ok) return { ok: false, why: f.why }; }
+    return { ok: true, text: t };
+  }
+  /* 먼저 다녀간 사람들의 답 모으기 — 내가 쓴 것은 빼고, 실제로 있는 것만 센다 */
+  function othersOf(records, myUid) { return (records || []).filter(function (r) { return r && r.u !== myUid && typeof r.t === 'string' && r.t; }); }
+  function tally(m, records, myUid) { // pick → [{label, n}] (n>0 만), 전체 인원
+    var o = othersOf(records, myUid), cnt = {}; o.forEach(function (r) { cnt[r.t] = (cnt[r.t] || 0) + 1; });
+    var out = (m.options || []).filter(function (x) { return cnt[x]; }).map(function (x) { return { label: x, n: cnt[x] }; });
+    return { total: o.length, rows: out };
+  }
+  function recentTexts(records, myUid, filter, n) { // text → 최근 글 n개 (검사 규칙 통과한 것만)
+    var o = othersOf(records, myUid).sort(function (a, b) { return (+b.ts || 0) - (+a.ts || 0); }), out = [];
+    for (var i = 0; i < o.length && out.length < (n || 3); i++) { if (!filter || filter.check(o[i].t).ok) out.push(o[i].t); }
+    return out;
+  }
+  function fallbackReact(m, answer) {
+    if (m.kind === 'pick') return '“' + answer + '”라고 하셨군요. 도깨비가 기억해 둘게요.';
+    if (m.kind === 'bingo') return '골목에서 ' + answer + ' 쪽을 눈여겨보셨네요. 도깨비도 뿌듯해요.';
+    return '좋은 말이에요. 도깨비가 잘 받아 적었어요.';
+  }
+
+  var api = { PLACES: PLACES, MISSIONS: MISSIONS, NEAR_M: NEAR_M, dist: dist, judge: judge, findMission: findMission, loadStamps: loadStamps, saveStamps: saveStamps, stampList: stampList, fallbackPostcard: fallbackPostcard, wrapText: wrapText, validateAnswer: validateAnswer, tally: tally, recentTexts: recentTexts, fallbackReact: fallbackReact };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; return; }
   root.TourMission = api;
   if (typeof document === 'undefined') return;
 
   /* ---------- 화면 ---------- */
-  var st = loadStamps(), photos = {}, lines = {}, el = null, open = null, card = null;
+  var st = loadStamps(), photos = {}, lines = {}, el = null, open = null;
+  var tr = {};            // 먼저 다녀간 사람들의 답: { 미션id: { state:'loading'|'ok'|'fail', rows:[...] } }
+  var uid = (function () { var u = null; try { u = localStorage.getItem('chat.uid'); } catch (e) { /* 무시 */ } if (!u) { u = 'u' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); try { localStorage.setItem('chat.uid', u); } catch (e) { /* 무시 */ } } return u; })();
   function $(id) { return document.getElementById(id); }
   function mk(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
 
@@ -86,6 +121,33 @@
     });
   }
 
+  /* 다른 여행자의 답 저장소 — 사랑방과 같은 Firebase 프로젝트의 /mtraces/<미션id>. 못 불러오면 그 칸만 "지금은 못 불러와요"로 두고 나머지는 그대로 쓴다 */
+  var FB_CFG = { apiKey: 'AIzaSyAvPAAx1HckCiiDG-OVonGPTalLJKhrZMU', authDomain: 'dojjaebi.firebaseapp.com', databaseURL: 'https://dojjaebi-default-rtdb.asia-southeast1.firebasedatabase.app', projectId: 'dojjaebi', appId: '1:968561148026:web:80d087555b2726b11bbbc3' };
+  var fbP = null;
+  function fb() {
+    if (fbP) return fbP;
+    var timeout = new Promise(function (ok) { setTimeout(function () { ok(null); }, 6000); });
+    var load = Promise.all([import('https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js'), import('https://www.gstatic.com/firebasejs/13.2.0/firebase-database.js')]).then(function (m) {
+      var app = m[0].initializeApp(FB_CFG, 'mission'), d = m[1];
+      return { db: d.getDatabase(app), ref: d.ref, push: d.push, query: d.query, limitToLast: d.limitToLast, get: d.get, serverTimestamp: d.serverTimestamp };
+    }).catch(function () { return null; });
+    fbP = Promise.race([load, timeout]); return fbP;
+  }
+  function loadTraces(m) {
+    if (m.kind === 'bingo' || (tr[m.id] && tr[m.id].state === 'loading')) return;
+    tr[m.id] = { state: 'loading' };
+    fb().then(function (F) {
+      if (!F) { tr[m.id] = { state: 'fail' }; return null; }
+      return F.get(F.query(F.ref(F.db, 'mtraces/' + m.id), F.limitToLast(60))).then(function (snap) {
+        var arr = []; snap.forEach(function (c) { arr.push(c.val()); }); tr[m.id] = { state: 'ok', recs: arr };
+      }).catch(function () { tr[m.id] = { state: 'fail' }; });
+    }).then(function () { if (el && !el.hidden && !$('msBody').querySelector('.ms-form')) render(); });
+  }
+  function shareTrace(m, text) {
+    if (m.kind === 'bingo') return Promise.resolve();
+    return fb().then(function (F) { if (!F) return; return F.push(F.ref(F.db, 'mtraces/' + m.id), { u: uid, t: text, ts: F.serverTimestamp() }).catch(function () { /* 규칙상 못 쓰면 내 화면에서만 */ }); });
+  }
+
   function build() {
     if (el) return;
     el = mk('div', 'ms'); el.id = 'missionRoom'; el.hidden = true; el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-label', '도깨비 미션'); el.tabIndex = -1;
@@ -93,7 +155,7 @@
     ht.appendChild(mk('h2', '', '도깨비 미션')); ht.appendChild(mk('p', 'ms-sub', '묵호에서 도깨비가 낸 미션을 해결해 보세요')); head.appendChild(ht);
     var x = mk('button', 'ms-x', '닫기'); x.type = 'button'; x.addEventListener('click', close); head.appendChild(x);
     el.appendChild(head);
-    el.appendChild(mk('p', 'ms-note', '위치와 사진은 완벽한 방문 증명이 아니에요. 사진은 이 휴대폰에만 있고 서버로 보내지 않아요.'));
+    el.appendChild(mk('p', 'ms-note', '위치는 완벽한 방문 증명이 아니에요. 사진은 이 휴대폰에만 있고 서버로 보내지 않아요. 남긴 답은 익명으로 다른 여행자에게 보일 수 있어요(끌 수 있어요).'));
     var body = mk('div', 'ms-body'); body.id = 'msBody'; el.appendChild(body);
     document.body.appendChild(el);
     document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && el && !el.hidden) close(); });
@@ -115,17 +177,38 @@
     body.appendChild(pc);
   }
 
+  function tracesBox(m) { // 먼저 다녀간 여행자
+    var box = mk('div', 'ms-tr'), t = tr[m.id];
+    if (m.kind === 'bingo') return null;
+    box.appendChild(mk('p', 'ms-tr-h', '먼저 다녀간 여행자'));
+    if (!t || t.state === 'loading') { box.appendChild(mk('p', 'ms-state', '불러오는 중이에요…')); return box; }
+    if (t.state === 'fail') { box.appendChild(mk('p', 'ms-state', '지금은 다른 여행자의 답을 못 불러와요.')); return box; }
+    if (m.kind === 'pick') {
+      var tl = tally(m, t.recs, uid);
+      if (!tl.total) box.appendChild(mk('p', 'ms-state', '아직 먼저 다녀간 분이 없어요. 첫 번째로 남겨 주셨어요!'));
+      else { tl.rows.forEach(function (r) { box.appendChild(mk('p', 'ms-tr-row', '“' + r.label + '” ' + r.n + '명 (먼저 다녀간 ' + tl.total + '명 중)')); }); }
+    } else {
+      var rt = recentTexts(t.recs, uid, root.ChatFilter, 3);
+      if (!rt.length) box.appendChild(mk('p', 'ms-state', '아직 먼저 다녀간 분이 없어요. 첫 번째로 남겨 주셨어요!'));
+      else { rt.forEach(function (x) { box.appendChild(mk('p', 'ms-tr-row', '“' + x + '”')); }); box.appendChild(mk('p', 'ms-state', '이용자가 남긴 글이에요. 도째비의 추천이 아니에요.')); }
+    }
+    return box;
+  }
+
   function missionCard(m) {
     var s = st[m.id], c = mk('article', 'ms-m' + (s ? ' done' : '')), t = mk('h4', '', (s ? '✓ ' : '') + m.title); c.appendChild(t);
     var say = lines[m.id] || { line: m.line, hint: m.hint };
     c.appendChild(mk('p', 'ms-line', '“' + say.line + '”')); c.appendChild(mk('p', 'ms-hint', '요령: ' + say.hint));
     if (s) {
       c.appendChild(mk('p', 'ms-tag ' + s.via, s.via === 'gps' ? '현장 확인' : '직접 확인'));
-      if (s.note) c.appendChild(mk('p', 'ms-memo', '남긴 말: ' + s.note));
+      c.appendChild(mk('p', 'ms-memo', '내 답: ' + (s.answer || s.note || '')));
+      if (s.react) c.appendChild(mk('p', 'ms-react', '도깨비: ' + s.react));
+      if (!tr[m.id]) loadTraces(m);
+      var tb = tracesBox(m); if (tb) c.appendChild(tb);
       return c;
     }
     if (open === m.id) { c.appendChild(form(m)); return c; }
-    var b = mk('button', 'ms-go', '해결했어요'); b.type = 'button';
+    var b = mk('button', 'ms-go', '해볼래요'); b.type = 'button';
     b.addEventListener('click', function () { open = m.id; render(); if (!lines[m.id]) askLine(m); });
     c.appendChild(b); return c;
   }
@@ -133,29 +216,50 @@
   function askLine(m) { // 도깨비 한마디를 인공지능에게 — 못 받으면 기본 글 그대로
     var p = placeOf(m);
     aiPost({ task: 'mission', place: { id: p.id, name: p.name }, mission: m.title, companions: [], rain: false }, 6000).then(function (j) {
-      if (j && j.line) { lines[m.id] = { line: j.line, hint: j.hint || m.hint }; if (el && !el.hidden) render(); }
+      if (j && j.line && open === m.id) { lines[m.id] = { line: j.line, hint: j.hint || m.hint }; var l = el.querySelector('.ms-form'); if (!l) render(); }
     });
   }
 
   function form(m) {
-    var f = mk('div', 'ms-form'), lb = mk('label', '', m.ask), inp = mk('input'); inp.type = 'text'; inp.maxLength = 60; inp.placeholder = '한 줄로 남겨 주세요 (안 써도 돼요)'; lb.appendChild(inp); f.appendChild(lb);
+    var f = mk('div', 'ms-form'), value = m.kind === 'bingo' ? [] : '', getVal = function () { return value; };
+    f.appendChild(mk('p', 'ms-ask', m.ask));
+    var msg = mk('p', 'ms-state', ''); msg.setAttribute('aria-live', 'polite');
+    var ok = mk('button', 'ms-go', '도장 찍기'); ok.type = 'button';
+    function refresh() { ok.disabled = !validateAnswer(m, getVal(), root.ChatFilter).ok; }
+    if (m.kind === 'pick') {
+      var grp = mk('div', 'ms-opts'); grp.setAttribute('role', 'group'); grp.setAttribute('aria-label', m.ask);
+      m.options.forEach(function (o) { var b = mk('button', 'ms-opt', o); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.addEventListener('click', function () { value = o; Array.prototype.forEach.call(grp.children, function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); }); refresh(); }); grp.appendChild(b); });
+      f.appendChild(grp);
+    } else if (m.kind === 'bingo') {
+      var bg = mk('div', 'ms-opts'); bg.setAttribute('role', 'group'); bg.setAttribute('aria-label', m.ask);
+      m.items.forEach(function (o) { var b = mk('button', 'ms-opt', o); b.type = 'button'; b.setAttribute('aria-pressed', 'false'); b.addEventListener('click', function () { var i = value.indexOf(o); if (i >= 0) value.splice(i, 1); else value.push(o); b.setAttribute('aria-pressed', i >= 0 ? 'false' : 'true'); refresh(); }); bg.appendChild(b); });
+      f.appendChild(bg);
+    } else {
+      var inp = mk('input'); inp.type = 'text'; inp.maxLength = m.max || 30; inp.placeholder = m.ph || ''; inp.setAttribute('aria-label', m.ask);
+      inp.addEventListener('input', function () { value = inp.value; refresh(); }); f.appendChild(inp);
+    }
+    var share = null;
+    if (m.kind !== 'bingo') { var sl = mk('label', 'ms-share'), sc = document.createElement('input'); sc.type = 'checkbox'; sc.checked = true; sl.appendChild(sc); sl.appendChild(document.createTextNode(' 다른 여행자에게도 익명으로 보이기')); f.appendChild(sl); share = sc; }
     var pl = mk('label', 'ms-photo', '사진 남기기 (선택)'), pi = mk('input'); pi.type = 'file'; pi.accept = 'image/*'; pl.appendChild(pi);
     var thumb = mk('img', 'ms-thumb'); thumb.alt = '고른 사진'; thumb.hidden = true; pl.appendChild(thumb); f.appendChild(pl);
     pi.addEventListener('change', function () {
       var file = pi.files && pi.files[0]; if (!file) return;
       var url = URL.createObjectURL(file), img = new Image();
-      img.onload = function () { // 엽서용으로 작게 줄여 메모리에만 둔다
-        var w = 600, h = Math.round(img.height * w / img.width), cv = document.createElement('canvas'); cv.width = w; cv.height = h; cv.getContext('2d').drawImage(img, 0, 0, w, h);
-        photos[m.id] = cv; thumb.src = cv.toDataURL('image/jpeg', .7); thumb.hidden = false; URL.revokeObjectURL(url);
-      };
+      img.onload = function () { var w = 600, h = Math.round(img.height * w / img.width), cv = document.createElement('canvas'); cv.width = w; cv.height = h; cv.getContext('2d').drawImage(img, 0, 0, w, h); photos[m.id] = cv; thumb.src = cv.toDataURL('image/jpeg', .7); thumb.hidden = false; URL.revokeObjectURL(url); };
       img.src = url;
     });
-    var ok = mk('button', 'ms-go', '도장 찍기'); ok.type = 'button';
-    var msg = mk('p', 'ms-state', ''); msg.setAttribute('aria-live', 'polite');
+    ok.disabled = true;
     ok.addEventListener('click', function () {
+      var v = validateAnswer(m, getVal(), root.ChatFilter); if (!v.ok) { msg.textContent = v.why; return; }
       ok.disabled = true; msg.textContent = '휴대폰 위치를 확인하는 중이에요…';
+      var shareOn = !!(share && share.checked);
       getPos().then(function (pos) {
-        st[m.id] = { ts: Date.now(), via: judge(m, pos), note: inp.value.trim().slice(0, 60) }; saveStamps(st); open = null; render();
+        st[m.id] = { ts: Date.now(), via: judge(m, pos), answer: v.text, shared: shareOn && m.kind !== 'bingo', react: fallbackReact(m, v.text) };
+        saveStamps(st); open = null; delete tr[m.id];
+        var p = placeOf(m), done = shareOn ? shareTrace(m, v.text) : Promise.resolve();
+        render();
+        aiPost({ task: 'react', place: { id: p.id, name: p.name }, mission: m.title, answer: v.text }, 6000).then(function (j) { if (j && j.line) { st[m.id].react = j.line; saveStamps(st); if (el && !el.hidden && !$('msBody').querySelector('.ms-form')) render(); } });
+        done.then(function () { loadTraces(m); });
       });
     });
     var cancel = mk('button', 'ms-cancel', '접기'); cancel.type = 'button'; cancel.addEventListener('click', function () { open = null; render(); });
@@ -167,10 +271,10 @@
     var body = $('msBody'); body.textContent = '';
     var back = mk('button', 'ms-cancel', '← 미션으로'); back.type = 'button'; back.addEventListener('click', render); body.appendChild(back);
     var state = mk('p', 'ms-state', '도깨비가 엽서를 쓰는 중이에요…'); state.setAttribute('aria-live', 'polite'); body.appendChild(state);
-    var stamps = list.map(function (m) { return { place: placeOf(m).name, mission: m.title, note: st[m.id].note || '' }; });
-    var fb = fallbackPostcard(list, st);
+    var stamps = list.map(function (m) { return { place: placeOf(m).name, mission: m.title, note: st[m.id].answer || st[m.id].note || '' }; });
+    var fb0 = fallbackPostcard(list, st);
     aiPost({ task: 'postcard', stamps: stamps, companions: [] }, 9000).then(function (j) {
-      var out = j && j.title && j.body ? { title: j.title, body: j.body } : fb;
+      var out = j && j.title && j.body ? { title: j.title, body: j.body } : fb0;
       state.textContent = j ? '인공지능(제미나이)이 도장 기록을 보고 쓴 엽서예요' : '도장 기록으로 만든 기본 엽서예요';
       var cv = drawCard(out, list); cv.className = 'ms-canvas'; cv.setAttribute('role', 'img'); cv.setAttribute('aria-label', '도깨비 엽서: ' + out.title);
       body.appendChild(cv);

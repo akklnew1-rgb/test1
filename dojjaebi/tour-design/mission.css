@@ -32,3 +32,14 @@ html.ms-open{ overflow:hidden; }
 .ms-thumb[hidden]{ display:none; }
 .ms-state{ margin:6px 0 0; font-size:.88em; color:var(--muted); }
 .ms-canvas{ width:100%; height:auto; border-radius:14px; border:1px solid var(--line); }
+.ms-ask{ margin:0; font-weight:800; font-size:.95em; }
+.ms-opts{ display:flex; flex-wrap:wrap; gap:8px; }
+.ms-opt{ min-height:48px; padding:0 16px; border:1px solid var(--line); border-radius:999px; background:var(--paper); color:var(--ink); font:inherit; font-weight:700; cursor:pointer; touch-action:manipulation; }
+.ms-opt[aria-pressed="true"]{ background:var(--brand-soft); border:2px solid var(--brand); color:var(--brand-dark); }
+.ms-share{ flex-direction:row !important; align-items:center; gap:8px; font-weight:600 !important; color:var(--muted); }
+.ms-share input{ width:22px; height:22px; }
+.ms-go:disabled{ background:var(--soft); color:var(--muted); cursor:default; }
+.ms-react{ margin:0 0 8px; font-size:.92em; font-weight:700; color:var(--brand-dark); }
+.ms-tr{ margin-top:8px; padding-top:8px; border-top:1px dashed var(--line); }
+.ms-tr-h{ margin:0 0 4px; font-size:.82em; font-weight:800; color:var(--muted); }
+.ms-tr-row{ margin:0 0 4px; font-size:.9em; }
