@@ -853,6 +853,7 @@
     CH.cond = CH.cond || {};
     if (!a) return;
     ['date', 'arrive', 'train', 'how', 'foodWord'].forEach(function (k) { if (a[k] != null && a[k] !== '') CH.cond[k] = a[k]; });
+    if (a.date) CH.cond.backDate = a.backDate || ''; // 숙박은 매번 통째로 다시 받는다(당일로 바뀌면 지워짐)
     if (a.end === 'donghae') CH.cond.end = 'donghae';
     if (a.companions && a.companions.length) CH.cond.companions = a.companions;
     ['interests'].forEach(function (k) { if (a[k] && a[k].length) CH.cond[k] = a[k]; });
@@ -897,6 +898,7 @@
     if (a.must && a.must.length) r.must = a.must;
     if (a.date && ((P.dateInfo && !P.dateInfo(a.date)) || a.date < todayIso())) r.date = null;
     if (a.end === 'donghae') r.end = 'donghae';
+    if (r.date && a.backDate && a.backDate > r.date) r.backDate = a.backDate; else if (a.date) r.backDate = null;
     if (a.companions && a.companions.length) r.companions = a.companions;
     (a.interests || []).forEach(function (v) { if (r.interests.indexOf(v) < 0) r.interests.push(v); });
     r.knee = r.knee || !!a.knee; r.rain = r.rain || !!a.rain; r.food = r.food || !!a.food; if (a.foodWord) r.foodWord = a.foodWord;

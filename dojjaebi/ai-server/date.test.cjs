@@ -4,3 +4,6 @@ const T = '2026-11-13'; // 금요일
   .forEach(([t, e]) => a.strictEqual(d(t, T), e, t));
 a.strictEqual(d('이번 주말', '2026-11-15'), '2026-11-15');
 console.log('날짜 말 시험 통과');
+const { nightsHint: n } = require('./api/ai.js');
+[['1박 2일로 갈래',1],['2박 3일',2],['당일치기',0],['이틀 동안',1],['토요일 일요일에',1],['금요일 토요일 일요일',2],['단풍',null],['3박 4일',2]].forEach(([t, e]) => a.strictEqual(n(t, T), e, t));
+console.log('머무는 기간 시험 통과');

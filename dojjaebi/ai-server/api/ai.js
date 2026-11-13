@@ -70,8 +70,19 @@ var REACT_SYS = '너는 동해시 여행 앱의 도깨비 "도째비"다. 여행
 var REACT_SCHEMA = { type: 'OBJECT', properties: { line: { type: 'STRING' } }, required: ['line'] };
 
 var PARSE_SYS = '너는 동해시 여행 앱의 "여행 이야기 → 조건" 번역기다. 사용자가 쓴 한국어 문장에서 아래 항목만 뽑는다. 말에 없는 항목은 비워 두고 절대 짐작해서 채우지 않는다. 오늘 날짜는 사용자 메시지의 today 로 계산한다("내일", "이번 토요일" 등을 YYYY-MM-DD 로). back 은 "돌아갈 시각"(기차·버스 출발 또는 떠날 시각) 24시간 HH:MM — "6시 10분 기차" 처럼 저녁 여행이 자연스러우면 18:10. 시각 말이 없으면 빈 문자열. how 는 가는 교통: car(자가용)·bus·train 중 하나, 말이 없으면 빈 문자열. companions 는 부모님·아이·연인·친구·혼자 중에서만. interests 는 사진·먹거리 중에서만. knee 는 무릎·계단·다리·허리 등 걷기 힘들다는 말이 있을 때 true. rain 은 비 이야기가 있을 때 true. food 는 밥·식사·맛집 말이 있을 때 true, foodWord 는 물회·칼국수·국수·회덮밥·모듬회·미역국·죽 중 말한 음식 하나(없으면 빈 문자열). count 는 사람 수(말이 없으면 0). end 는 동해역에서 끝나면 donghae, 아니면 mukho. reply 에는 한 줄로 "이렇게 알아들었어요: …" 를 쉬운 말로 쓴다.';
-var PARSE_SCHEMA = { type: 'OBJECT', properties: { date: { type: 'STRING' }, arrive: { type: 'STRING' }, back: { type: 'STRING' }, how: { type: 'STRING' }, end: { type: 'STRING' }, companions: { type: 'ARRAY', items: { type: 'STRING' } }, interests: { type: 'ARRAY', items: { type: 'STRING' } }, knee: { type: 'BOOLEAN' }, rain: { type: 'BOOLEAN' }, food: { type: 'BOOLEAN' }, foodWord: { type: 'STRING' }, count: { type: 'INTEGER' }, reply: { type: 'STRING' } } };
+var PARSE_SCHEMA = { type: 'OBJECT', properties: { date: { type: 'STRING' }, backDate: { type: 'STRING' }, arrive: { type: 'STRING' }, back: { type: 'STRING' }, how: { type: 'STRING' }, end: { type: 'STRING' }, companions: { type: 'ARRAY', items: { type: 'STRING' } }, interests: { type: 'ARRAY', items: { type: 'STRING' } }, knee: { type: 'BOOLEAN' }, rain: { type: 'BOOLEAN' }, food: { type: 'BOOLEAN' }, foodWord: { type: 'STRING' }, count: { type: 'INTEGER' }, reply: { type: 'STRING' } } };
 
+function addDaysIso(iso, n) { var d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); }
+function nightsHint(text, today) { // "1박 2일"·"이틀"·"당일치기"·"토요일 일요일" 같은 머무는 말 → 밤 수(0~2). 말이 없으면 null
+  var t = String(text || ''), m;
+  if ((m = t.match(/(\d)\s*박/))) return Math.min(+m[1], 2);
+  if (/사흘|3\s*일\s*간/.test(t)) return 2;
+  if (/이틀|2\s*일\s*간|하루\s*자고|하룻밤/.test(t)) return 1;
+  if (/당일/.test(t)) return 0;
+  var w = t.match(/[월화수목금토일](?=요일)/g);
+  if (w && w.length >= 2 && w[0] !== w[w.length - 1]) { var W = '일월화수목금토', off = (W.indexOf(w[w.length - 1]) - W.indexOf(w[0]) + 7) % 7; if (off > 0) return Math.min(off, 2); }
+  return null;
+}
 function dateHint(text, today) { // 날짜 말(오늘·내일·모레·요일·주말·몇 월 며칠)을 서버가 직접 날짜로 바꾼다(모델이 되묻지 않게)
   if (!/^\d{4}-\d{2}-\d{2}$/.test(String(today || ''))) return '';
   var t = String(text || ''), base = new Date(today + 'T00:00:00Z'), dow = base.getUTCDay(), mi = (dow + 6) % 7, m;
@@ -111,13 +122,14 @@ function cleanParse(raw) {
   var j = raw; if (typeof raw === 'string') { try { j = JSON.parse(raw); } catch (e) { return null; } } if (!j || typeof j !== 'object') return null;
   var r = { date: null, arrive: null, train: null, how: null, end: 'mukho', companions: [], interests: [], knee: !!j.knee, rain: !!j.rain, food: !!j.food, foodWord: '', count: null };
   if (/^\d{4}-\d{2}-\d{2}$/.test(String(j.date || ''))) r.date = j.date;
-  var am = String(j.arrive || '').match(/^(\\d{1,2}):(\\d{2})$/); if (am && +am[1] < 24 && +am[2] < 60) r.arrive = +am[1] * 60 + +am[2];
+  var am = String(j.arrive || '').match(/^(\d{1,2}):(\d{2})$/); if (am && +am[1] < 24 && +am[2] < 60) r.arrive = +am[1] * 60 + +am[2];
   var m = String(j.back || '').match(/^(\d{1,2}):(\d{2})$/); if (m && +m[1] < 24 && +m[2] < 60) r.train = +m[1] * 60 + +m[2];
   if (['car', 'bus', 'train'].indexOf(j.how) >= 0) r.how = j.how;
   if (j.end === 'donghae') r.end = 'donghae';
   (j.companions || []).forEach(function (c) { if (['부모님', '아이', '연인', '친구', '혼자'].indexOf(c) >= 0 && r.companions.indexOf(c) < 0) r.companions.push(c); });
   (j.interests || []).forEach(function (c) { if (['사진', '먹거리'].indexOf(c) >= 0 && r.interests.indexOf(c) < 0) r.interests.push(c); });
   if (['물회', '칼국수', '국수', '회덮밥', '모듬회', '미역국', '죽'].indexOf(j.foodWord) >= 0) { r.foodWord = j.foodWord; r.food = true; }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(j.backDate || ''))) r.backDate = j.backDate;
   var n = parseInt(j.count, 10); if (n >= 1 && n <= 9) r.count = n;
   return { r: r, reply: String(j.reply || '').slice(0, 100) };
 }
@@ -195,8 +207,9 @@ module.exports = async function handler(req, res) {
       var ctoday = /^\d{4}-\d{2}-\d{2}$/.test(String(b.today || '')) ? b.today : '';
       if (!msgs.length) { res.status(400).json({ ok: false }); return; }
       var cwd = ctoday ? '일월화수목금토'[new Date(ctoday + 'T00:00:00Z').getUTCDay()] + '요일' : '';
-      var dh = ''; msgs.filter(function (m) { return !/^도째비:/.test(m); }).reverse().some(function (m) { dh = dateHint(m, ctoday); return !!dh; });
-      var craw = await gemini(CHAT_SYS, 'today: ' + ctoday + ' ' + cwd + (dh ? '\n날짜 확정: 사용자가 이미 날짜를 말했다(' + dh + '). parsed.date 에 이 값을 넣고 날짜는 다시 묻지 말 것.' : '') + '\njoke_state: ' + (function () { var all = msgs.join(' '), food = /맛집|식당|먹|밥|회|메뉴|국수|탕/.test(all), stay = /숙소|호텔|펜션|모텔|민박|리조트|숙박|잘 곳/.test(all), bot = msgs.filter(function (m) { return /^도째비:/.test(m); }).join(' '), fj = /입맛|혀|쇠도/.test(bot), sj = /침대|잠을 안/.test(bot), last = msgs[msgs.length - 1] || ''; var lf = /맛집|식당|먹|밥|회|메뉴|국수|탕|해산물|고기|면|분식|중식/.test(last), ls = /숙소|호텔|펜션|모텔|민박|리조트|숙박|잘 곳/.test(last); if (ls && stay && !sj) return '이번 답은 숙소 이야기이니 도깨비 잠자리 농담을 한 문장 넣을 것'; if (lf && food && !fj && !ls) return '이번 답은 식당 이야기이니 도깨비 입맛 농담을 한 문장 넣을 것'; return '이번 답에는 도깨비 농담을 넣지 말 것'; })() + '\nplaces: ' + JSON.stringify(cplaces) + '\ncands: ' + JSON.stringify(cands) + '\n대화:\n' + msgs.join('\n'), CHAT_SCHEMA, 1100, 9000);
+      var dh = '', nh = null, umsgs = msgs.filter(function (m) { return !/^도째비:/.test(m); }).reverse();
+      umsgs.some(function (m) { dh = dateHint(m, ctoday); return !!dh; }); umsgs.some(function (m) { nh = nightsHint(m, ctoday); return nh != null; });
+      var craw = await gemini(CHAT_SYS, 'today: ' + ctoday + ' ' + cwd + (dh ? '\n날짜 확정: 사용자가 이미 날짜를 말했다(' + dh + '). parsed.date 에 이 값을 넣고 날짜는 다시 묻지 말 것.' : '') + (dh && nh != null ? '\n머무는 기간 확정: ' + (nh ? nh + '박 ' + (nh + 1) + '일(' + dh + ' ~ ' + addDaysIso(dh, nh) + ')' : '당일치기') + '. 이 기간은 다시 묻지 말 것.' : '') + '\njoke_state: ' + (function () { var all = msgs.join(' '), food = /맛집|식당|먹|밥|회|메뉴|국수|탕/.test(all), stay = /숙소|호텔|펜션|모텔|민박|리조트|숙박|잘 곳/.test(all), bot = msgs.filter(function (m) { return /^도째비:/.test(m); }).join(' '), fj = /입맛|혀|쇠도/.test(bot), sj = /침대|잠을 안/.test(bot), last = msgs[msgs.length - 1] || ''; var lf = /맛집|식당|먹|밥|회|메뉴|국수|탕|해산물|고기|면|분식|중식/.test(last), ls = /숙소|호텔|펜션|모텔|민박|리조트|숙박|잘 곳/.test(last); if (ls && stay && !sj) return '이번 답은 숙소 이야기이니 도깨비 잠자리 농담을 한 문장 넣을 것'; if (lf && food && !fj && !ls) return '이번 답은 식당 이야기이니 도깨비 입맛 농담을 한 문장 넣을 것'; return '이번 답에는 도깨비 농담을 넣지 말 것'; })() + '\nplaces: ' + JSON.stringify(cplaces) + '\ncands: ' + JSON.stringify(cands) + '\n대화:\n' + msgs.join('\n'), CHAT_SCHEMA, 1100, 9000);
       var cj; try { cj = JSON.parse(craw); } catch (e) { res.status(200).json({ ok: false, why: 'parse' }); return; }
       var okc = {}; cands.forEach(function (c) { okc[c.id] = 1; });
       var picks = (cj.picks || []).filter(function (id, i, a) { return okc[id] && a.indexOf(id) === i; }).slice(0, 3);
@@ -208,6 +221,7 @@ module.exports = async function handler(req, res) {
       var reply = String(cj.reply || '').split(/(?<=[.!?요])\s+/).filter(function (x) { return !BAN.test(x); }).join(' ').trim().slice(0, 400); if (!reply) { res.status(200).json({ ok: false, why: 'empty' }); return; }
       var pr = (cp && cp.r) || {}, readyOk = !!cj.ready, forceChoices = null;
       if (!pr.date && dh) { pr.date = dh; if (cp && cp.r) cp.r.date = dh; }
+      if (cp && cp.r && pr.date) { if (nh != null) cp.r.backDate = nh > 0 ? addDaysIso(pr.date, nh) : null; else if (cp.r.backDate && (cp.r.backDate <= pr.date || cp.r.backDate > addDaysIso(pr.date, 2))) cp.r.backDate = null; }
       if (readyOk) { var miss = !pr.date ? '여행 날짜가 언제인가요?' : ''; if (miss) { readyOk = false; reply = miss; picks = []; forceChoices = []; } }
       res.status(200).json({ ok: true, reply: reply, picks: picks, choices: (forceChoices || cj.choices || []).map(function (c) { return String(c).slice(0, 14); }).filter(Boolean).slice(0, 5), ready: readyOk, must: must, parsed: cp ? cp.r : null, model: USED }); return;
     }
@@ -270,3 +284,4 @@ module.exports.cleanEdit = cleanEdit;
 module.exports.cleanRoom = cleanRoom;
 module.exports.cleanLine = cleanLine;
 module.exports.dateHint = dateHint;
+module.exports.nightsHint = nightsHint;
