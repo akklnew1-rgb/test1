@@ -100,7 +100,7 @@
   if (typeof document === 'undefined') return;
 
   /* ---------- 화면 ---------- */
-  var st = loadStamps(), photos = {}, lines = {}, el = null, open = null;
+  var st = loadStamps(), photos = {}, lines = {}, el = null, open = null, view = 'list';
   var tr = {};            // 먼저 다녀간 사람들의 답: { 미션id: { state:'loading'|'ok'|'fail', rows:[...] } }
   var uid = (function () { var u = null; try { u = localStorage.getItem('chat.uid'); } catch (e) { /* 무시 */ } if (!u) { u = 'u' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36).slice(-4); try { localStorage.setItem('chat.uid', u); } catch (e) { /* 무시 */ } } return u; })();
   function $(id) { return document.getElementById(id); }
@@ -141,7 +141,7 @@
       return F.get(F.query(F.ref(F.db, 'mtraces/' + m.id), F.limitToLast(60))).then(function (snap) {
         var arr = []; snap.forEach(function (c) { arr.push(c.val()); }); tr[m.id] = { state: 'ok', recs: arr };
       }).catch(function () { tr[m.id] = { state: 'fail' }; });
-    }).then(function () { if (el && !el.hidden && !$('msBody').querySelector('.ms-form')) render(); });
+    }).then(function () { if (el && !el.hidden && view === 'list' && !$('msBody').querySelector('.ms-form')) render(); });
   }
   function shareTrace(m, text) {
     if (m.kind === 'bingo') return Promise.resolve();
@@ -162,6 +162,7 @@
   }
 
   function render() {
+    view = 'list';
     var body = $('msBody'); body.textContent = '';
     var n = stampList(st).length, bar = mk('div', 'ms-prog');
     bar.appendChild(mk('b', '', '도장 ' + n + ' / ' + MISSIONS.length));
@@ -216,7 +217,7 @@
   function askLine(m) { // 도깨비 한마디를 인공지능에게 — 못 받으면 기본 글 그대로
     var p = placeOf(m);
     aiPost({ task: 'mission', place: { id: p.id, name: p.name }, mission: m.title, companions: [], rain: false }, 6000).then(function (j) {
-      if (j && j.line && open === m.id) { lines[m.id] = { line: j.line, hint: j.hint || m.hint }; var l = el.querySelector('.ms-form'); if (!l) render(); }
+      if (j && j.line && open === m.id) { lines[m.id] = { line: j.line, hint: j.hint || m.hint }; var l = el.querySelector('.ms-form'); if (view === 'list' && !l) render(); }
     });
   }
 
@@ -258,7 +259,7 @@
         saveStamps(st); open = null; delete tr[m.id];
         var p = placeOf(m), done = shareOn ? shareTrace(m, v.text) : Promise.resolve();
         render();
-        aiPost({ task: 'react', place: { id: p.id, name: p.name }, mission: m.title, answer: v.text }, 6000).then(function (j) { if (j && j.line) { st[m.id].react = j.line; saveStamps(st); if (el && !el.hidden && !$('msBody').querySelector('.ms-form')) render(); } });
+        aiPost({ task: 'react', place: { id: p.id, name: p.name }, mission: m.title, answer: v.text }, 6000).then(function (j) { if (j && j.line) { st[m.id].react = j.line; saveStamps(st); if (el && !el.hidden && view === 'list' && !$('msBody').querySelector('.ms-form')) render(); } });
         done.then(function () { loadTraces(m); });
       });
     });
@@ -269,7 +270,8 @@
   function postcard() {
     var list = stampList(st); if (!list.length) return;
     var body = $('msBody'); body.textContent = '';
-    var back = mk('button', 'ms-cancel', '← 미션으로'); back.type = 'button'; back.addEventListener('click', render); body.appendChild(back);
+    var back = mk('button', 'ms-cancel', '← 미션으로'); back.type = 'button'; back.addEventListener('click', function () { if (view === 'card' && history.state && history.state.ms === 2) history.back(); else render(); }); body.appendChild(back);
+    view = 'card'; try { history.pushState({ ms: 2 }, ''); } catch (e) { /* 무시 */ }
     var state = mk('p', 'ms-state', '도깨비가 엽서를 쓰는 중이에요…'); state.setAttribute('aria-live', 'polite'); body.appendChild(state);
     var stamps = list.map(function (m) { return { place: placeOf(m).name, mission: m.title, note: st[m.id].answer || st[m.id].note || '' }; });
     var fb0 = fallbackPostcard(list, st);
@@ -300,8 +302,24 @@
     return cv;
   }
 
-  function openRoom() { build(); open = null; render(); el.hidden = false; document.documentElement.classList.add('ms-open'); try { el.focus(); } catch (e) { /* 무시 */ } }
-  function close() { if (!el) return; el.hidden = true; document.documentElement.classList.remove('ms-open'); var t = $('tabMission'); if (t) try { t.focus(); } catch (e) { /* 무시 */ } }
+  /* 뒤로가기(휴대폰 아래 버튼·밀기): 창을 열 때 기록 한 칸을 쌓아 두고, 뒤로가면 앱을 떠나지 않고 이 창만 닫는다. 엽서 화면은 한 칸 더 쌓아 뒤로가면 미션 목록으로 돌아온다. */
+  function hide() { if (!el) return; el.hidden = true; view = 'list'; document.documentElement.classList.remove('ms-open'); var t = $('tabMission'); if (t) try { t.focus(); } catch (e) { /* 무시 */ } }
+  function openRoom() {
+    build(); open = null; render(); el.hidden = false; document.documentElement.classList.add('ms-open');
+    try { if (!(history.state && history.state.ms)) history.pushState({ ms: 1 }, ''); } catch (e) { /* 기록을 못 쌓아도 창은 열린다 */ }
+    try { el.focus(); } catch (e) { /* 무시 */ }
+  }
+  function close() { // 닫기 버튼: 쌓아 둔 기록을 걷어내며 닫는다
+    if (!el || el.hidden) return;
+    if (history.state && history.state.ms) { try { history.go(view === 'card' ? -2 : -1); return; } catch (e) { /* 아래에서 그냥 닫는다 */ } }
+    hide();
+  }
+  window.addEventListener('popstate', function () {
+    if (!el || el.hidden) return;
+    var ms = history.state && history.state.ms;
+    if (ms === 1) { if (view === 'card') render(); } // 엽서 → 목록
+    else if (!ms) hide();                           // 목록 → 앱 화면
+  });
 
   var tab = $('tabMission'); if (tab) tab.addEventListener('click', openRoom);
   api.open = openRoom; api.close = close;
