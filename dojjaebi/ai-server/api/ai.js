@@ -53,6 +53,18 @@ function cleanEdit(raw, places) {
 
 var EXPLAIN_SYS = '너는 동해시 여행 코스 앱의 안내자 "도째비"다. 아래 사실(facts)만 써서, 이 코스를 왜 이렇게 짰는지 3~4문장으로 쉽게 설명한다. 사실에 없는 장소·시간·날씨·가격은 절대 말하지 않는다. 존댓말, 영어·어려운 한자어 금지, 문장은 짧게. 마지막에 "고치고 싶으면 코스 고치기를 눌러 보세요" 로 끝낸다.';
 
+/* ---- 도깨비 미션 (task:'mission' · 'postcard') — 미션의 장소·할 일은 앱에 고정돼 있고, 여기서는 도깨비 한마디와 엽서 글만 쓴다. 장소 사실(역사·값·시간)은 지어내지 않는다. */
+var MBAN = /맛있|존맛|꿀맛|일품|유명|소문|대표|줄\s*서|1위|엄선|보증|실패\s*없|최고|할인|예약|무료/;
+function cleanLine(t, max) {
+  return String(t || '').replace(/https?:\/\/\S+|www\.\S+|\b[a-z0-9-]+\.(com|net|kr|co|me|io|xyz|link|site|shop|app)\b/gi, '').replace(/0\d{1,2}[\s\-.]?\d{3,4}[\s\-.]?\d{4}/g, '').replace(/\s+/g, ' ').trim().slice(0, max);
+}
+var MISSION_SYS = '너는 동해시 여행 앱의 도깨비 "도째비"다. 여행자가 장소에서 할 미션이 정해져 있다. 그 미션을 하고 싶어지게 하는 도깨비 한마디(line, 40자 안쪽)와 하는 요령 한마디(hint, 40자 안쪽)만 쓴다. ' +
+  '규칙: 쉬운 한국어 존댓말, 위트 있게. 장소의 역사·값·운영시간·맛 평가는 쓰지 않는다(입력에 없는 사실 금지). 위험한 곳으로 가라는 말, 사진 찍을 때 사람 얼굴을 담으라는 말은 하지 않는다. 비가 오면 우산·미끄럼에 한 마디 곁들인다. 영어·한자어 금지.';
+var MISSION_SCHEMA = { type: 'OBJECT', properties: { line: { type: 'STRING' }, hint: { type: 'STRING' } }, required: ['line', 'hint'] };
+var POSTCARD_SYS = '너는 동해시 여행 앱의 도깨비 "도째비"다. 여행자가 미션을 마치고 받는 엽서 글을 쓴다. 입력의 stamps(장소·미션·여행자가 남긴 메모)만 근거로 쓴다. ' +
+  '출력: title(14자 안쪽 제목), body(120자 안쪽, 2~3문장, 도깨비가 여행자에게 하는 말). 규칙: 쉬운 존댓말, 따뜻하고 위트 있게. 입력에 없는 장소·사실·시간·값을 지어내지 않는다. 가게·상품 홍보 금지. 영어·한자어 금지.';
+var POSTCARD_SCHEMA = { type: 'OBJECT', properties: { title: { type: 'STRING' }, body: { type: 'STRING' } }, required: ['title', 'body'] };
+
 var PARSE_SYS = '너는 동해시 여행 앱의 "여행 이야기 → 조건" 번역기다. 사용자가 쓴 한국어 문장에서 아래 항목만 뽑는다. 말에 없는 항목은 비워 두고 절대 짐작해서 채우지 않는다. 오늘 날짜는 사용자 메시지의 today 로 계산한다("내일", "이번 토요일" 등을 YYYY-MM-DD 로). back 은 "돌아갈 시각"(기차·버스 출발 또는 떠날 시각) 24시간 HH:MM — "6시 10분 기차" 처럼 저녁 여행이 자연스러우면 18:10. 시각 말이 없으면 빈 문자열. how 는 가는 교통: car(자가용)·bus·train 중 하나, 말이 없으면 빈 문자열. companions 는 부모님·아이·연인·친구·혼자 중에서만. interests 는 사진·먹거리 중에서만. knee 는 무릎·계단·다리·허리 등 걷기 힘들다는 말이 있을 때 true. rain 은 비 이야기가 있을 때 true. food 는 밥·식사·맛집 말이 있을 때 true, foodWord 는 물회·칼국수·국수·회덮밥·모듬회·미역국·죽 중 말한 음식 하나(없으면 빈 문자열). count 는 사람 수(말이 없으면 0). end 는 동해역에서 끝나면 donghae, 아니면 mukho. reply 에는 한 줄로 "이렇게 알아들었어요: …" 를 쉬운 말로 쓴다.';
 var PARSE_SCHEMA = { type: 'OBJECT', properties: { date: { type: 'STRING' }, arrive: { type: 'STRING' }, back: { type: 'STRING' }, how: { type: 'STRING' }, end: { type: 'STRING' }, companions: { type: 'ARRAY', items: { type: 'STRING' } }, interests: { type: 'ARRAY', items: { type: 'STRING' } }, knee: { type: 'BOOLEAN' }, rain: { type: 'BOOLEAN' }, food: { type: 'BOOLEAN' }, foodWord: { type: 'STRING' }, count: { type: 'INTEGER' }, reply: { type: 'STRING' } } };
 
@@ -190,6 +202,26 @@ module.exports = async function handler(req, res) {
       var ritems = cleanRoom(rraw, rvalid); if (!ritems) { res.status(200).json({ ok: false, why: 'parse' }); return; }
       res.status(200).json({ ok: true, items: ritems, total: rmsgs.length, writers: Object.keys(rvalid).length, model: USED }); return;
     }
+    if (b.task === 'mission') {
+      var mp = String((b.place && b.place.name) || '').slice(0, 24), mt = String(b.mission || '').slice(0, 60);
+      if (!mp || !mt) { res.status(400).json({ ok: false }); return; }
+      var mc = (Array.isArray(b.companions) ? b.companions : []).slice(0, 4).map(function (x) { return String(x).slice(0, 8); });
+      var mraw = await gemini(MISSION_SYS, '장소: ' + mp + '\n미션: ' + mt + '\n함께 가는 사람: ' + (mc.join(', ') || '정하지 않음') + '\n비: ' + (b.rain ? '온다' : '안 온다'), MISSION_SCHEMA, 300);
+      var mj; try { mj = JSON.parse(mraw); } catch (e) { res.status(200).json({ ok: false, why: 'parse' }); return; }
+      var ml = cleanLine(mj.line, 60), mh = cleanLine(mj.hint, 60);
+      if (!ml || MBAN.test(ml) || MBAN.test(mh)) { res.status(200).json({ ok: false, why: 'empty' }); return; }
+      res.status(200).json({ ok: true, line: ml, hint: mh, model: USED }); return;
+    }
+    if (b.task === 'postcard') {
+      var pst = (Array.isArray(b.stamps) ? b.stamps : []).slice(0, 8).map(function (x) { return { place: String(x.place || '').slice(0, 24), mission: String(x.mission || '').slice(0, 60), note: cleanLine(x.note, 60) }; }).filter(function (x) { return x.place; });
+      if (!pst.length) { res.status(400).json({ ok: false }); return; }
+      var pcm = (Array.isArray(b.companions) ? b.companions : []).slice(0, 4).map(function (x) { return String(x).slice(0, 8); });
+      var praw = await gemini(POSTCARD_SYS, 'stamps: ' + JSON.stringify(pst) + '\n함께 간 사람: ' + (pcm.join(', ') || '정하지 않음'), POSTCARD_SCHEMA, 400);
+      var pj; try { pj = JSON.parse(praw); } catch (e) { res.status(200).json({ ok: false, why: 'parse' }); return; }
+      var ptl = cleanLine(pj.title, 20), pbd = cleanLine(pj.body, 200);
+      if (!ptl || !pbd || MBAN.test(pbd)) { res.status(200).json({ ok: false, why: 'empty' }); return; }
+      res.status(200).json({ ok: true, title: ptl, body: pbd, model: USED }); return;
+    }
     if (b.task === 'explain') {
       var facts = JSON.stringify(b.facts || {}).slice(0, 3000);
       var t = await gemini(EXPLAIN_SYS, 'facts: ' + facts, null);
@@ -201,3 +233,4 @@ module.exports = async function handler(req, res) {
 };
 module.exports.cleanEdit = cleanEdit;
 module.exports.cleanRoom = cleanRoom;
+module.exports.cleanLine = cleanLine;

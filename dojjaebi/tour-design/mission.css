@@ -1,0 +1,34 @@
+/* 도깨비 미션 (2026-11-13) — 사랑방(.cr)처럼 화면 전체를 덮는 창. 색은 앱 변수를 그대로 써서 어두운 화면도 따라간다. */
+html.ms-open{ overflow:hidden; }
+.ms{ position:fixed; z-index:96; left:0; right:0; top:0; height:100dvh; width:100%; margin:0 auto; max-width:720px; display:flex; flex-direction:column; background:var(--paper); color:var(--ink); font-family:'Pretendard','Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',system-ui,sans-serif; line-height:1.5; word-break:keep-all; overflow-wrap:anywhere; outline:none; padding-top:var(--safe-t); }
+@media (min-width:900px) and (hover:hover){ .ms{ max-width:430px; top:24px; height:calc(100dvh - 48px); border-radius:30px; overflow:hidden; } }
+.ms[hidden]{ display:none; }
+.ms *{ box-sizing:border-box; }
+.ms-head{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px var(--gut,16px); border-bottom:1px solid var(--line); }
+.ms-head h2{ margin:0; font-size:1.25em; font-weight:800; letter-spacing:-.02em; }
+.ms-sub{ margin:2px 0 0; font-size:.82em; color:var(--muted); }
+.ms-x{ flex:none; min-height:48px; padding:0 16px; border:1px solid var(--line); border-radius:999px; background:var(--paper); color:var(--ink); font:inherit; font-size:.95em; font-weight:700; cursor:pointer; touch-action:manipulation; }
+.ms-note{ margin:0; padding:8px var(--gut,16px); background:var(--soft); border-bottom:1px solid var(--line); font-size:.82em; color:var(--muted); }
+.ms-body{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; padding:12px var(--gut,16px) 28px; display:flex; flex-direction:column; gap:14px; -webkit-overflow-scrolling:touch; }
+.ms-prog{ display:flex; align-items:center; gap:12px; }
+.ms-bar{ flex:1; height:10px; border-radius:999px; background:var(--soft); overflow:hidden; border:1px solid var(--line); }
+.ms-bar i{ display:block; height:100%; background:var(--brand); }
+.ms-place h3{ margin:4px 0 8px; font-size:1.1em; font-weight:800; }
+.ms-m{ margin:0 0 10px; padding:12px; border:1px solid var(--line); border-radius:16px; background:var(--paper); }
+.ms-m.done{ background:var(--brand-soft); border-color:var(--brand); }
+.ms-m h4{ margin:0 0 6px; font-size:1.02em; font-weight:800; }
+.ms-line{ margin:0 0 4px; font-size:.95em; }
+.ms-hint,.ms-memo{ margin:0 0 8px; font-size:.86em; color:var(--muted); }
+.ms-tag{ display:inline-block; margin:0 0 6px; padding:2px 10px; border-radius:999px; font-size:.8em; font-weight:800; background:var(--paper); border:1px solid var(--line); }
+.ms-tag.gps{ border-color:var(--brand); color:var(--brand-dark); }
+.ms-go,.ms-card-btn{ min-height:52px; width:100%; padding:0 16px; border:0; border-radius:14px; background:var(--brand); color:#fff; font:inherit; font-size:1em; font-weight:800; cursor:pointer; touch-action:manipulation; }
+.ms-card-btn:disabled{ background:var(--soft); color:var(--muted); cursor:default; }
+.ms-cancel{ min-height:48px; padding:0 14px; margin-top:8px; border:1px solid var(--line); border-radius:14px; background:var(--paper); color:var(--ink); font:inherit; font-weight:700; cursor:pointer; }
+.ms-form{ display:flex; flex-direction:column; gap:8px; }
+.ms-form label{ display:flex; flex-direction:column; gap:4px; font-size:.9em; font-weight:700; }
+.ms-form input[type=text]{ min-height:48px; padding:0 12px; border:1px solid var(--line); border-radius:12px; font:inherit; background:var(--paper); color:var(--ink); }
+.ms-form input[type=file]{ font:inherit; font-size:.9em; }
+.ms-thumb{ max-width:100%; max-height:160px; border-radius:12px; object-fit:cover; }
+.ms-thumb[hidden]{ display:none; }
+.ms-state{ margin:6px 0 0; font-size:.88em; color:var(--muted); }
+.ms-canvas{ width:100%; height:auto; border-radius:14px; border:1px solid var(--line); }
