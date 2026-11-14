@@ -555,18 +555,22 @@
   function backEarly(c) { var eff = c.backHow === 'car' && c.noLimit ? 22 * 60 : c.back; return c.backDate === c.date && eff < c.arrive; }
   function setHdr() { var t = $('top'); if (t) document.documentElement.style.setProperty('--hdr', t.offsetHeight + 'px'); }
   function skip5() { return !isMulti() && compOf(S.cond) === '혼자'; } // 혼자 당일치기: 숙소도 인원도 물을 게 없으니 5단계를 건너뜀
+  /* 2026-11-14: 입력 6장을 4장으로 — 화면 묶음: [언제 + 언제까지] [누구와 + 숙소] [꼭 가고 싶은 곳] [확인]. 안쪽 단계 번호(1~6)는 그대로 쓰고 한 번에 같이 보여 준다 */
+  var STEP_GROUP = { 0: [0], 1: [1, 2], 2: [1, 2], 3: [3, 5], 5: [3, 5], 4: [4], 6: [6] }, STEP_HEAD = { 0: 0, 1: 1, 2: 1, 3: 3, 5: 3, 4: 4, 6: 6 }, STEP_PAGE = { 1: 1, 3: 2, 4: 3, 6: 4 };
   function setStep(n, opt) {
     opt = opt || {};
-    if (n === 5 && skip5()) { S.cond.count = 1; n = 6; }
-    S.step = n;
+    var head = STEP_HEAD[n] != null ? STEP_HEAD[n] : n, show = STEP_GROUP[head].slice();
+    if (head === 3 && skip5()) { S.cond.count = 1; show = [3]; } // 혼자 당일치기: 숙소도 인원도 물을 게 없음
+    n = head; S.step = n;
     $('s-start').setAttribute('data-step', String(n));
-    for (var i = 0; i <= 6; i++) $('st' + i).hidden = (i !== n);
+    for (var i = 0; i <= 6; i++) { var pn = $('st' + i), on = show.indexOf(i) >= 0; pn.hidden = !on; pn.classList.toggle('grp-head', on && show.length > 1 && i === show[0]); pn.classList.toggle('grp-tail', on && show.length > 1 && i !== show[0]); }
+    show.forEach(function (i) { var pg = STEP_PAGE[n], pr = $('st' + i).querySelector('.st-prog'), ct = $('st' + i).querySelector('.st-count'); if (!pg) return; if (pr) { pr.setAttribute('aria-valuemax', '4'); pr.setAttribute('aria-valuenow', String(pg)); pr.style.setProperty('--p', String(pg * 25)); } if (ct) ct.textContent = pg + '/4'; });
     var m = $('stepMsg'); if (m) { m.hidden = true; m.textContent = ''; }
-    if (n === 4) renderMustList();
-    if (n === 5) renderStayUi();
+    if (show.indexOf(4) >= 0) renderMustList();
+    if (show.indexOf(5) >= 0) renderStayUi();
     if (n === 6) renderConfirm();
     setHdr();
-    var pane = $('st' + n);
+    var pane = $('st' + show[0]);
     pane.classList.remove('enter'); void pane.offsetWidth; pane.classList.add('enter'); // 살짝 밀려 들어옴 (움직임 줄이기 설정이면 CSS 에서 끔)
     window.scrollTo(0, 0);
     if (opt.focus !== false) { var h = n === 0 ? $('h-start') : $('hs' + n); if (h) h.focus({ preventScroll: true }); }
@@ -588,12 +592,13 @@
   }
   $('goNow').addEventListener('click', function () { startBranch('now'); });
   $('goLater').addEventListener('click', function () { startBranch('later'); });
-  $('stNext1').addEventListener('click', function () { if (pastBlock()) return; setStep(2); });
-  $('stNext2').addEventListener('click', function () { if (stepBlock()) { $('bTime').focus(); return; } setStep(3); });
-  $('stNext3').addEventListener('click', function () { setStep(4); });
-  $('stNext4').addEventListener('click', function () { setStep(5); });
-  $('stNext5').addEventListener('click', function () { setStep(6); });
-  [1, 2, 3, 4, 5, 6].forEach(function (n) { $('stBack' + n).addEventListener('click', function () { setStep(n === 6 && skip5() ? 4 : n - 1); }); });
+  $('stNext2').addEventListener('click', function () { if (pastBlock()) return; if (stepBlock()) { $('bTime').focus(); return; } setStep(3); }); // 1·2번 묶음의 아래 단추
+  $('stNext3').addEventListener('click', function () { setStep(4); }); // 혼자 당일치기일 때(숙소 칸이 없을 때) 3번 단추
+  $('stNext5').addEventListener('click', function () { setStep(4); }); // 누구와 + 숙소 묶음의 아래 단추
+  $('stNext4').addEventListener('click', function () { setStep(6); });
+  $('stSay').addEventListener('click', function () { setStep(0); showTyping(true); }); // 직접 고르다가도 말로 돌아가 도째비가 한 번에 채우게
+  var STEP_BACK = { 1: 0, 3: 1, 4: 3, 6: 4 };
+  [1, 3, 4, 6].forEach(function (n) { $('stBack' + n).addEventListener('click', function () { setStep(STEP_BACK[n]); }); });
   /* ---------- 5단계: 숙소 예약 여부 + 인원수 (2026-10-21, 사용자 요청: "누구랑 와서 어디서 잘지도 추천해 주기 편하지 않니") ---------- */
   function stayUi() { Array.prototype.forEach.call(document.querySelectorAll('#chipStay [data-stay]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-stay') === S.cond.stayBooked ? 'true' : 'false'); }); $('stayNote').hidden = S.cond.stayBooked !== 'none'; /* 2026-10-22(Fable 리뷰): 이 글은 "숙소 자리를 추천해 드려요" 라는 내용 — 아직 안 잡았을 때(none)만 맞는 말이라 조건이 거꾸로였음 */ }
   function renderStayUi() {
@@ -778,7 +783,7 @@
     if (r.food) found.push('식사');
     if (r.count) found.push(r.count + '명');
     S.found = found;
-    S.nextStep = 3; // 알아들은 내용을 마지막 단계에서 확인
+    S.nextStep = 6; // 알아들은 내용을 확인 화면에서 한 번에 보여 줌
     S.startNote = leadText + (found.length ? ' 알아들은 것: ' + found.join(' · ') + '.' : '') + ' 맞는지 보고 아래 단추를 눌러 주세요.';
     loadTrains();
     if (direct) { setStep(6, { focus: false }); if (stepBlock()) { show('s-start'); return; } var fut = S.cond.branch !== 'now' && S.cond.date > todayIso(); aiThenMake(fut ? 's-prep' : 's-course', r.__done); return; }

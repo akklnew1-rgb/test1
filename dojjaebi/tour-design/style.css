@@ -1910,3 +1910,9 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
 .rc-t{font-size:1.05rem;line-height:1.35}
 .rc-s{color:var(--muted);font-size:.9rem}
 .rc-go{min-height:52px}
+
+/* 2026-11-14: 묶어 보여 주는 입력 화면 — 위쪽은 아래 단추를, 아래쪽은 위 막대를 숨긴다 */
+.st.grp-head .st-foot{ display:none; }
+.st.grp-tail .st-bar{ display:none; }
+.st.grp-tail{ padding-top:8px; }
+.st-say{ width:100%; min-height:52px; margin:4px 0 10px; border-color:var(--brand); color:var(--brand); font-weight:700; }
