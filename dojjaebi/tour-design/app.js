@@ -678,7 +678,7 @@
     var cands = D.places.filter(function (p) { return dayOkFor(p) && !(c.rain && (!p.indoor || p.rainAvoid)); }).map(function (p) { return { id: p.id, name: p.short || p.name, region: p.region, indoor: !!p.indoor, stairs: !!p.stairs, tags: p.tags || [] }; });
     aiCall({ task: 'suggest', kind: 'must', with: c.companions, rain: !!c.rain, knee: !!c.knee, cands: cands }, 6000).then(function (j) {
       if (SG.m !== mine || !j || !j.ids || !j.ids.length) return;
-      mine.items = j.ids.map(function (id, i) { return { id: id, why: (j.whys || [])[i] || '' }; }).filter(function (x) { return PLACE[x.id]; }); mine.ai = true; sgMustPaint();
+      mine.items = j.ids.filter(function (id) { return PLACE[id]; }).map(function (id, i) { var p = PLACE[id], w = (j.whys || [])[i] || ''; if (p.stairsKnown === false && /계단|무릎|평지/.test(w)) w = ''; return { id: id, why: w || ((p.region || '') + ' · ' + (p.indoor ? '실내' : '야외')) }; }); // 계단 자료가 없는 곳을 "계단 없다"고 말하지 못하게 거름 mine.ai = true; sgMustPaint();
     });
   }
   var SG_ASK = { back: ['돌아가는 시각은 정하셨나요?', 2], comp: ['누구와 함께 가세요?', 3], arrive: ['동해에 몇 시쯤 도착하세요?', 1] };
