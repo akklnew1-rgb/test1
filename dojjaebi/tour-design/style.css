@@ -1906,3 +1906,7 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
 #s-start .qs-card.sm .qs-e .ic{ width:22px; height:22px; }
 .cf-l .ic{ width:20px; height:20px; vertical-align:-4px; color:var(--brand); }
 .rec-noimg .ic{ width:34px; height:34px; color:var(--muted); }
+.rain-cafe{margin:10px 0;display:grid;gap:8px;padding-top:12px;padding-bottom:14px;background:var(--brand-soft);border-radius:var(--r-m)}
+.rc-t{font-size:1.05rem;line-height:1.35}
+.rc-s{color:var(--muted);font-size:.9rem}
+.rc-go{min-height:52px}

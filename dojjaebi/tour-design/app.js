@@ -163,7 +163,7 @@
     if (id === 's-map') { renderMapList(); renderPoiUi(); setTimeout(function () { if (mapApi && mapApi.resize) mapApi.resize(); drawMap(); }, 60); }
     if (id === 's-start') { loadTrains(); renderStart(); renderWx(); var ns = S.nextStep; S.nextStep = null; setStep(ns != null ? ns : 0, { focus: ns != null }); }
     if (id === 's-stay') renderTownTab();
-    if (id === 's-course') { ovKakaoEnsure(); renderPicks(); }
+    if (id === 's-course') { ovKakaoEnsure(); renderRainCafe(); renderPicks(); }
     if (id === 's-watch') renderWatch();
     if (id === 's-prep') renderPrep();
     if (window.TourNav) { if (navBack) window.TourNav.quiet(id); else window.TourNav.screen(id); }
@@ -884,6 +884,18 @@
     });
   }
   /* 도째비가 대화에서 추천한 식당을 코스 화면에도 보여 준다(코스 계산에는 넣지 않는다 — 시간 계산은 점심·저녁 칸으로 이미 잡혀 있어서) */
+  /* 비 오는 날: 야외 볼거리 대신 가까운 카페로 안내한다(카페는 AI가 고르지 않고, 동네 탭의 카페 목록을 내 위치에서 가까운 순으로 보여 줌) */
+  function renderRainCafe() {
+    var box = $('rainBox'); if (!box) return;
+    if (!(S.cond && S.cond.rain)) { box.hidden = true; box.innerHTML = ''; return; }
+    box.hidden = false;
+    box.innerHTML = '<b class="rc-t">비가 와요. 걷는 곳은 줄이고 가까운 카페에서 쉬어 가요</b><span class="rc-s">카페는 도째비가 고르지 않고, 지금 있는 곳에서 가까운 순으로 보여 드려요. 영업 여부는 가기 전에 확인해 주세요.</span><button type="button" class="btn primary rc-go" id="rainCafeGo">가까운 카페 보기</button>';
+  }
+  document.addEventListener('click', function (ev) {
+    if (!ev.target.closest('#rainCafeGo')) return;
+    TN.kind = 'cafe'; TN.area = ''; TN.menu = ''; TN.pages = 1; show('s-stay');
+    setTimeout(function () { var n = $('townNear'); if (n && n.getAttribute('aria-pressed') !== 'true') n.click(); }, 60);
+  });
   function renderPicks() {
     var box = $('pickBox'); if (!box) return;
     if (!CH.picks.length) { box.hidden = true; return; }
