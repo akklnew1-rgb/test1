@@ -1125,11 +1125,12 @@
   function aMic(state, msg) { // state: '' | 'listening' | 'busy'
     var b = $('askMic'); b.classList.toggle('listening', state === 'listening'); b.classList.toggle('busy', state === 'busy');
     b.setAttribute('aria-pressed', state === 'listening' ? 'true' : 'false');
-    $('askMicTxt').textContent = msg || '한 번 누르고 말씀하세요';
+    $('askMicTxt').textContent = msg || '말로';
   }
   function aNote(msg) { var n = $('askNote'); n.textContent = msg || ''; n.hidden = !msg; }
   function showTyping(focus) { $('ask').classList.add('show-type'); $('typeToggle').setAttribute('aria-expanded', 'true'); if (focus) { try { $('askText').focus(); } catch (e) { /* 무시 */ } } }
   $('typeToggle').addEventListener('click', function () { aNote(''); showTyping(true); });
+  showTyping(false); // 2026-11-14: 첫 화면은 자판 입력이 기본(칸을 처음부터 보여 줌), 말로 하기는 옆의 작은 보조 단추
   function aBind() {
     arec.onresult = function (ev) {
       var t = '', fin = false;
