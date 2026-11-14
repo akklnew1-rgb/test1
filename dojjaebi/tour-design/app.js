@@ -400,7 +400,7 @@
     if (c.backDate === c.date && eff < c.arrive) body += '<p class="note warnline">도착 시각보다 앞이에요. 날짜나 시각을 다시 골라 주세요.</p>';
     $('outBody').innerHTML = body;
     $('inNote').textContent = c.how === 'train' ? '' :c.how === 'bus' ? D.stations.bus.name + '에서 시작해요.' : D.stations.park.name + '에서 시작해요.';
-    var CE = { '친구': ['🧑‍🤝‍🧑', '사진·카페·노을'], '연인': ['💑', '노을·카페를 천천히'], '혼자': ['🎒', '조용히 쉬어 가요'], '아이': ['👨‍👩‍👧', '쉬운 길, 체험 중심'], '부모님': ['👵', '덜 걷고 편안하게'] };
+    var CE = { '친구': ['<svg class="ic" aria-hidden="true"><use href="#i-pair"/></svg>', '사진·카페·노을'], '연인': ['<svg class="ic" aria-hidden="true"><use href="#i-pair"/></svg>', '노을·카페를 천천히'], '혼자': ['<svg class="ic" aria-hidden="true"><use href="#i-solo"/></svg>', '조용히 쉬어 가요'], '아이': ['<svg class="ic" aria-hidden="true"><use href="#i-family"/></svg>', '쉬운 길, 체험 중심'], '부모님': ['<svg class="ic" aria-hidden="true"><use href="#i-parent"/></svg>', '덜 걷고 편안하게'] };
     $('chipComp').innerHTML = COMPS.map(function (nm) { return '<button type="button" class="qs-card" aria-pressed="' + ((c.companions || []).indexOf(nm) >= 0 ? 'true' : 'false') + '" data-comp="' + nm + '"><span class="qs-e" aria-hidden="true">' + CE[nm][0] + '</span><b>' + nm + '</b><span>' + CE[nm][1] + '</span></button>'; }).join('');
     var comp0 = c.companions || [], paceNote = comp0.indexOf('부모님') >= 0 ? '부모님과 함께라 걷기 편한 곳 위주로 짜요' : comp0.indexOf('아이') >= 0 ? '아이와 함께라 쉬운 길 위주로 짜요' : '';
     var paceNow = c.knee ? 'easy' : c.hard ? 'hard' : 'normal';
@@ -927,13 +927,13 @@
     var mustN = (r.must || []).map(function (id) { var p = D.places.filter(function (q) { return q.id === id; })[0]; return p ? (p.short || p.name) : ''; }).filter(Boolean);
     var rows = '';
     var AUTO = '정하지 않아도 돼요 — 도째비가 정해요';
-    rows += cfRow('date', '📅', '여행 날짜', cfDateText(r), !r.date, '<label class="cf-lb" for="cfDate">가는 날</label><input type="date" class="cf-in" id="cfDate" min="' + todayIso() + '" value="' + esc(r.date || '') + '"><label class="cf-lb" for="cfDate2">오는 날 (당일치기면 비워 두세요)</label><input type="date" class="cf-in" id="cfDate2" min="' + esc(r.date || todayIso()) + '" max="' + esc(r.date ? (P.addDays(r.date, 2) || '') : '') + '" value="' + esc(r.backDate && r.backDate > r.date ? r.backDate : '') + '">');
-    rows += cfRow('comp', '👥', '누구와', esc(comp) || AUTO, false, COMPS.map(function (n) { return cfChip('comp', n, n, (r.companions || []).indexOf(n) >= 0); }).join(''));
-    rows += cfRow('how', '🚆', '오는 교통', r.how ? HOWN[r.how] : '정하지 않으면 기차로 잡아요', false, [['train', '기차'], ['bus', '버스'], ['car', '자가용']].map(function (h) { return cfChip('how', h[0], h[1], r.how === h[0]); }).join(''));
+    rows += cfRow('date', '<svg class="ic" aria-hidden="true"><use href="#i-calendar"/></svg>', '여행 날짜', cfDateText(r), !r.date, '<label class="cf-lb" for="cfDate">가는 날</label><input type="date" class="cf-in" id="cfDate" min="' + todayIso() + '" value="' + esc(r.date || '') + '"><label class="cf-lb" for="cfDate2">오는 날 (당일치기면 비워 두세요)</label><input type="date" class="cf-in" id="cfDate2" min="' + esc(r.date || todayIso()) + '" max="' + esc(r.date ? (P.addDays(r.date, 2) || '') : '') + '" value="' + esc(r.backDate && r.backDate > r.date ? r.backDate : '') + '">');
+    rows += cfRow('comp', '<svg class="ic" aria-hidden="true"><use href="#i-pair"/></svg>', '누구와', esc(comp) || AUTO, false, COMPS.map(function (n) { return cfChip('comp', n, n, (r.companions || []).indexOf(n) >= 0); }).join(''));
+    rows += cfRow('how', '<svg class="ic" aria-hidden="true"><use href="#i-train"/></svg>', '오는 교통', r.how ? HOWN[r.how] : '정하지 않으면 기차로 잡아요', false, [['train', '기차'], ['bus', '버스'], ['car', '자가용']].map(function (h) { return cfChip('how', h[0], h[1], r.how === h[0]); }).join(''));
     var rest = '';
-    rest += cfRow('arrive', '🕐', '동해에 도착', r.arrive != null ? hhmm(r.arrive) : AUTO, false, '<input type="time" class="cf-in" id="cfArrive" value="' + (r.arrive != null ? toTimeValue(r.arrive) : '') + '" aria-label="도착 시각">');
-    rest += cfRow('back', '🕑', r.how === 'car' ? '떠날 시각' : '돌아갈 시각', r.train != null ? hhmm(r.train) : AUTO, false, '<input type="time" class="cf-in" id="cfBack" value="' + (r.train != null ? toTimeValue(r.train) : '') + '" aria-label="돌아갈 시각">');
-    rest += cfRow('must', '📍', '꼭 가고 싶은 곳', mustN.length ? esc(mustN.join(' · ')) : '없어요 — 도째비가 골라요', false, D.places.map(function (p) { return cfChip('must', p.id, p.short || p.name, (r.must || []).indexOf(p.id) >= 0); }).join(''));
+    rest += cfRow('arrive', '<svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg>', '동해에 도착', r.arrive != null ? hhmm(r.arrive) : AUTO, false, '<input type="time" class="cf-in" id="cfArrive" value="' + (r.arrive != null ? toTimeValue(r.arrive) : '') + '" aria-label="도착 시각">');
+    rest += cfRow('back', '<svg class="ic" aria-hidden="true"><use href="#i-clock"/></svg>', r.how === 'car' ? '떠날 시각' : '돌아갈 시각', r.train != null ? hhmm(r.train) : AUTO, false, '<input type="time" class="cf-in" id="cfBack" value="' + (r.train != null ? toTimeValue(r.train) : '') + '" aria-label="돌아갈 시각">');
+    rest += cfRow('must', '<svg class="ic" aria-hidden="true"><use href="#i-pin"/></svg>', '꼭 가고 싶은 곳', mustN.length ? esc(mustN.join(' · ')) : '없어요 — 도째비가 골라요', false, D.places.map(function (p) { return cfChip('must', p.id, p.short || p.name, (r.must || []).indexOf(p.id) >= 0); }).join(''));
     // 처음엔 날짜·누구와·교통 3가지만. 나머지(도착·돌아갈 시각·꼭 가고 싶은 곳)는 선택이라 접어 둔다. 이미 값을 고쳤거나 연 행이 있으면 펼친 채로 둔다
     var restSet = r.arrive != null || r.train != null || (r.must && r.must.length) || ['arrive', 'back', 'must'].indexOf(CF.open) >= 0;
     if (restSet) CF.more = true;
@@ -969,10 +969,10 @@
   document.addEventListener('keydown', function (ev) { if (ev.key === 'Escape' && !$('cfSheet').hidden) cfShow(false); });
   $('cfGo').addEventListener('click', function () {
     if (!CF.r || cfMissing(CF.r)) return;
-    var gb = $('cfGo'); gb.disabled = true; gb.textContent = '🤖 도째비가 코스를 짜는 중…';
-    CF.r.__done = function () { gb.textContent = '✨ 이대로 코스 짜 주세요'; cfShow(false); };
+    var gb = $('cfGo'); gb.disabled = true; gb.textContent = '도째비가 코스를 짜는 중…';
+    CF.r.__done = function () { gb.textContent = '이대로 코스 짜 주세요'; cfShow(false); };
     applyParsed(CF.r, '도째비와 나눈 이야기에서 알아들었어요.', true);
-    if (!S.aiBusy) { gb.disabled = false; gb.textContent = '✨ 이대로 코스 짜 주세요'; cfShow(false); }
+    if (!S.aiBusy) { gb.disabled = false; gb.textContent = '이대로 코스 짜 주세요'; cfShow(false); }
   });
   $('chatMake').addEventListener('click', cfOpen);
   if ($('askSheet')) $('askSheet').addEventListener('click', cfOpen);
@@ -1305,11 +1305,11 @@
   }
   function aiNoteText() {
     var ap = aiActive();
-    if (S.aiFail) return '🤖 AI 연결이 고르지 않아 기본 규칙으로 짠 코스예요.';
+    if (S.aiFail) return '연결이 고르지 않아 기본 순서로 짠 코스예요.';
     if (!ap) return '';
-    if (S.aiState === 'rule-fallback') return '🤖 AI가 짠 순서가 시간·마감에 맞지 않아 기본 규칙으로 다시 짰어요.';
+    if (S.aiState === 'rule-fallback') return '도째비가 짠 순서가 시간·마감에 맞지 않아 기본 순서로 다시 짰어요.';
     var nm = (S.mustDropped || []).map(function (id) { var p = D.places.filter(function (q) { return q.id === id; })[0]; return p ? (p.short || p.name) : ''; }).filter(Boolean);
-    return '🤖 도째비(AI)가 이 순서로 짰어요' + (ap.summary ? ' — ' + ap.summary : '') + ' 시간·휴무·막차 마감은 앱이 계산해 확인했어요.' + (nm.length ? ' 시간이 모자라 뺀 곳: ' + nm.join('·') + '.' : '');
+    return '도째비가 이 순서로 짰어요' + (ap.summary ? ' — ' + ap.summary : '') + ' 시간·휴무·막차 마감은 앱이 계산해 확인했어요.' + (nm.length ? ' 시간이 모자라 뺀 곳: ' + nm.join('·') + '.' : '');
   }
   /* 제보는 코스를 자동으로 바꾸지 않는다: 코스 계산에 들어가는 것은 사람이 [코스 다시 짜기]로 받아들인(S.applied) 알림의 제보뿐 */
   function recomputeFx() { S.fx = P.effectsFromReports(REP.acceptedReports(S.reports, S.applied, S.simNow), S.simNow, true); }
@@ -1471,7 +1471,7 @@
     if (p.id === 'lighthouse' && S.cond.how === 'car') b.push('<span class="tag warn">#주차 자리가 거의 없어요(자가용이면 멀리 세우고 걸어야 할 수 있어요)</span>');
     if (p.id === 'samhwasa') b.push('<span class="tag warn">#주차장에서 걸어서 약 10분</span>');
     if (p.id === 'yongchu') b.push('<span class="tag warn">#입구에서 왕복 약 1시간 30분 걷는 길(관광공사 안내)</span>');
-    var ap2 = aiActive(), aw = ap2 && ap2.days.reduce(function (t, d) { return t || d.why[p.id]; }, ''); if (aw) b.push('<span class="tag good">🤖 ' + esc(aw) + '</span>');
+    var ap2 = aiActive(), aw = ap2 && ap2.days.reduce(function (t, d) { return t || d.why[p.id]; }, ''); if (aw) b.push('<span class="tag good">' + esc(aw) + '</span>');
     b.push(edTags(s));
     if (s.pre && S.plan && S.plan.multi && S.plan.days.some(function (d) { return d.sunrise && d.sunrise.place && d.sunrise.place.id === p.id; })) b.push('<span class="tag good">#새벽일출(어림시각)</span>');
     return b.join('');
@@ -1524,8 +1524,8 @@
   // 그것도 해시태그 줄(#묵호 #야외 #계단없음 사이)에 섞여서만 보여서 — 실제로는 반영됐어도 사용자 눈엔 "반영 안 됨"으로 보이던 원인.
   // 그래서 접힌 머리에도(다른 배지들과 같은 자리) 바로 보이는 ⭐ 배지를 추가한다.
   function mustBadgeHtml(p) {
-    if (S.cond.must && S.cond.must.indexOf(p.id) >= 0) return '<span class="must-badge">⭐ 꼭 갈 곳</span>';
-    if (S.mustFoodNear && S.mustFoodNear[p.id]) return '<span class="must-badge">⭐ 근처: ' + esc(S.mustFoodNear[p.id].join('·')) + '</span>';
+    if (S.cond.must && S.cond.must.indexOf(p.id) >= 0) return '<span class="must-badge">꼭 갈 곳</span>';
+    if (S.mustFoodNear && S.mustFoodNear[p.id]) return '<span class="must-badge">근처: ' + esc(S.mustFoodNear[p.id].join('·')) + '</span>';
     return '';
   }
   function foldHead(p, i, when, s, tomorrow, changed, num, open) {
@@ -1769,14 +1769,14 @@
     var nmq = esc(p.name);
     return '<li class="chap edrow' + (s.pin ? ' pinned' : '') + (bad ? ' bad' : '') + (S.changed[s.id] ? ' changed' : '') + '" data-id="' + p.id + '" data-di="' + di + '" data-k="' + k + '">' +
       '<div class="er-top"><span class="er-av">' + (meal ? '<svg viewBox="0 0 24 24" class="ic" aria-hidden="true"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M17 21V3c-2.5 1.5-3.5 5-3.5 8H17"/></svg>' : ART.svg(p.id)) + '</span><div class="er-t"><b>' + (meal ? '' : '<span class="er-n">' + (NUMS[s.id] || gi + 1) + '</span> ') + nmq + '</b><span class="er-sub">' + esc(sub) + '</span><span class="er-mv">' + esc(meal ? '앞 장소 근처 · 식당은 지도에서 직접 골라요' : moveLine(s)) + '</span></div>' +
-      (meal ? '<span class="er-chip">식사 시간</span>' : '') + (s.pin ? '<span class="er-chip pin">📌 고정</span>' : '') + '</div>' + iss +
+      (meal ? '<span class="er-chip">식사 시간</span>' : '') + (s.pin ? '<span class="er-chip pin">고정</span>' : '') + '</div>' + iss +
       '<div class="er-btns" role="group" aria-label="' + nmq + ' 고치기">' +
       '<button type="button" class="eb" data-ed="up"' + (k === 0 ? ' disabled' : '') + ' aria-label="' + nmq + ' 위로 올리기"><span aria-hidden="true">↑</span> 위로</button>' +
       '<button type="button" class="eb" data-ed="down"' + (k >= n - 1 ? ' disabled' : '') + ' aria-label="' + nmq + ' 아래로 내리기"><span aria-hidden="true">↓</span> 아래로</button>' +
       '<button type="button" class="eb" data-ed="rm" aria-label="' + nmq + ' 코스에서 빼기">빼기</button>' +
       '<button type="button" class="eb" data-ed="less"' + (s.visit <= ED.VISIT_MIN ? ' disabled' : '') + ' aria-label="' + nmq + ' 머무는 시간 10분 줄이기">− 10분</button>' +
       '<button type="button" class="eb" data-ed="more"' + (s.visit >= ED.VISIT_MAX ? ' disabled' : '') + ' aria-label="' + nmq + ' 머무는 시간 10분 늘리기">+ 10분</button>' +
-      (meal ? '' : '<button type="button" class="eb' + (s.pin ? ' on' : '') + '" data-ed="pin" aria-pressed="' + (s.pin ? 'true' : 'false') + '" aria-label="' + nmq + ' 자리 고정"><span aria-hidden="true">📌</span> 고정</button>') +
+      (meal ? '' : '<button type="button" class="eb' + (s.pin ? ' on' : '') + '" data-ed="pin" aria-pressed="' + (s.pin ? 'true' : 'false') + '" aria-label="' + nmq + ' 자리 고정">고정</button>') +
       '</div></li>';
   }
 
@@ -1809,7 +1809,7 @@
     var fx = ED.fixes(edEnv(), S.ed.hist.cur); S.ed.fixes = fx.fixes;
     var more = bl.slice(1, 4).map(function (x) { return '<p class="ew-p">' + esc(x.text) + '</p>'; }).join('') + (bl.length > 4 ? '<p class="ew-p">외 ' + (bl.length - 4) + '건</p>' : '');
     w.innerHTML = '<div class="ew-h"><span class="ew-ic" aria-hidden="true">!</span><b>' + esc(bl[0].text) + '</b></div>' + more +
-      (fx.fixes.length ? '<p class="ew-q">한 번 눌러서 고치기</p><div class="ew-fx">' + fx.fixes.map(function (f, i) { return '<button type="button" class="ew-b" data-fix="' + i + '"><b>' + esc(f.label) + '</b><small>' + esc(f.detail) + (f.partial ? ' · 일부만 풀려요' : '') + '</small></button>'; }).join('') + '</div>' : '<p class="ew-p">한 번에 고칠 방법을 못 찾았어요. 📌 고정을 풀거나 직접 빼 주세요.</p>');
+      (fx.fixes.length ? '<p class="ew-q">한 번 눌러서 고치기</p><div class="ew-fx">' + fx.fixes.map(function (f, i) { return '<button type="button" class="ew-b" data-fix="' + i + '"><b>' + esc(f.label) + '</b><small>' + esc(f.detail) + (f.partial ? ' · 일부만 풀려요' : '') + '</small></button>'; }).join('') + '</div>' : '<p class="ew-p">한 번에 고칠 방법을 못 찾았어요. 고정을 풀거나 직접 빼 주세요.</p>');
     w.hidden = false;
   }
   $('edWarn').addEventListener('click', function (ev) {
@@ -1836,7 +1836,7 @@
     for (var di = 0; di < spec.days.length; di++) { var r = ED.replan(env, spec, di); if (r.ok) { spec = r.spec; ok = true; } else why = r.why; }
     if (!ok) { flash(why || '다시 짜지 못했어요'); return; }
     if (JSON.stringify(spec) === JSON.stringify(S.ed.hist.cur)) { flash('이미 가장 좋은 짜임이에요'); return; }
-    edApply(spec, '나머지를 다시 짰어요 (📌 고정은 그대로)');
+    edApply(spec, '나머지를 다시 짰어요 (고정한 곳은 그대로)');
   });
 
   /* 줄(장) 단추: 위·아래·빼기·시간·고정·장소 넣기 */
@@ -3779,7 +3779,7 @@
     $('recList').innerHTML = all.map(function (p) {
       var n = recLikes(p, s), on = !!s.liked[p.id];
       return '<li class="rec-card" data-rid="' + esc(p.id) + '">' +
-        (p.photo ? '<img class="rec-img" src="' + esc(p.photo) + '" alt="' + esc(p.name) + ' 사진" loading="lazy">' : '<div class="rec-img rec-noimg" aria-hidden="true">🌊</div>') +
+        (p.photo ? '<img class="rec-img" src="' + esc(p.photo) + '" alt="' + esc(p.name) + ' 사진" loading="lazy">' : '<div class="rec-img rec-noimg" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-view"/></svg></div>') +
         '<div class="rec-body"><h3>' + esc(p.name) + (p.seed ? ' <span class="rec-ex">예시</span>' : '') + '</h3>' +
         '<p class="rec-line">' + esc(p.line) + '</p>' +
         (p.tags && p.tags.length ? '<p class="rec-tags">' + p.tags.map(function (t) { return '#' + esc(t) + '에게'; }).join(' ') + '</p>' : '') +
@@ -4019,7 +4019,7 @@
       var spec = S.ed.hist.cur, env = edEnv(), ok = false;
       for (var di = 0; di < spec.days.length; di++) { var rr = ED.replan(env, spec, di); if (rr.ok) { spec = rr.spec; ok = true; } }
       if (!ok || JSON.stringify(spec) === JSON.stringify(S.ed.hist.cur)) { S.plan = edRetimed(); renderCourse(); flash('이 제보를 반영해도 코스가 달라지지 않아요 (시간만 다시 계산했어요)'); return; }
-      edApply(spec, '제보를 반영해 나머지를 다시 짰어요 (📌 고정은 그대로)');
+      edApply(spec, '제보를 반영해 나머지를 다시 짰어요 (고정한 곳은 그대로)');
       return;
     }
     var prev = replan(); announceApply(al, prev);

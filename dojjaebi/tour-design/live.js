@@ -360,7 +360,7 @@
     // 마감에는 맞지만 15분 넘게 늦은 경우: 막힌 곳이 없어 고치는 방법이 비어 있으니 "나머지 다시 짜기" 하나는 늘 준다
     if (!out.length) {
       var rp = ED.replan(renv.env, renv.spec, 0);
-      if (rp.ok) out.push({ kind: 'replan', label: '남은 곳 다시 짜기', detail: '📌 고정한 곳은 그대로 두고, 남은 시간에 맞춰 남은 곳을 새로 짜요', spec: mergeBack(ctx, base, renv, rp.spec), sub: ED.retime(renv.env, rp.spec) });
+      if (rp.ok) out.push({ kind: 'replan', label: '남은 곳 다시 짜기', detail: '고정한 곳은 그대로 두고, 남은 시간에 맞춰 남은 곳을 새로 짜요', spec: mergeBack(ctx, base, renv, rp.spec), sub: ED.retime(renv.env, rp.spec) });
     }
     return { base: base, fixes: out, problems: res.problems || [], rt: res.rt };
   }
