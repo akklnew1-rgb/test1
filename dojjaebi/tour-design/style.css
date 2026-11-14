@@ -1916,3 +1916,21 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
 .st.grp-tail .st-bar{ display:none; }
 .st.grp-tail{ padding-top:8px; }
 .st-say{ width:100%; min-height:52px; margin:4px 0 10px; border-color:var(--brand); color:var(--brand); font-weight:700; }
+
+/* 2026-11-14: 입력 도우미 카드(도째비의 제안) — 시각 제안 · 꼭 가고 싶은 곳 후보 · 확인 화면 되묻기 */
+.sg{margin:12px 0;padding:14px;border:1.5px dashed var(--brand,#0f6e73);border-radius:var(--r-m,14px);background:var(--brand-soft,#eaf6f5);display:grid;gap:8px}
+.sg[hidden]{display:none}
+.sg-t{font-weight:800;font-size:1em}
+.sg-q{margin:0;font-size:1.05em;line-height:1.55;font-weight:600}
+.sg-tags{display:flex;flex-wrap:wrap;gap:6px}
+.sg-tags span{font-size:.82em;padding:2px 9px;border-radius:99px;background:#fff;border:1px solid rgba(0,0,0,.12)}
+.sg-b{display:flex;gap:8px;flex-wrap:wrap}
+.sg-b .btn{min-height:48px;flex:1 1 140px}
+.sg-src{margin:0;font-size:.8em;opacity:.75}
+.sg-list{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.sg-pick{display:flex;align-items:center;gap:10px;width:100%;min-height:56px;text-align:left;padding:10px 12px;border-radius:12px;border:1.5px solid rgba(0,0,0,.14);background:#fff;font:inherit;color:inherit;cursor:pointer}
+.sg-pick b{display:block}
+.sg-pick span.w{display:block;font-size:.86em;opacity:.8}
+.sg-pick i{margin-left:auto;font-style:normal;font-weight:800;white-space:nowrap}
+.sg-pick[aria-pressed="true"]{border-color:var(--brand,#0f6e73);background:#e3f3f1}
+@media (prefers-color-scheme:dark){.sg-tags span,.sg-pick{background:#1d2a2b}.sg-pick[aria-pressed="true"]{background:#16393b}}

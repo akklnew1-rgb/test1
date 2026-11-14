@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=52">
+<link rel="stylesheet" href="style.css?v=53">
 <link rel="stylesheet" href="ds.css?v=3">
 <link rel="stylesheet" href="chat.css?v=3">
 <link rel="stylesheet" href="mission.css?v=2">
@@ -272,6 +272,7 @@
       <h2 id="hs3" tabindex="-1">누구와 함께?</h2>
       <p class="note" id="startNote" hidden></p>
       <div class="qs-grid two" id="chipComp" role="group" aria-label="함께 가는 사람"></div>
+      <div class="sg" id="sugTime" hidden aria-live="polite"></div>
       <details class="more" id="moreBox">
         <summary>더 고르기 (선택)</summary>
         <div id="paceBox"></div>
@@ -288,6 +289,7 @@
       <p class="st-tag">꼭 갈 곳 (선택)</p>
       <h2 id="hs4" tabindex="-1">꼭 가고 싶은 곳이 있어요?</h2>
       <p class="note">원하는 만큼 골라요. 안 골라도 괜찮아요 — 도째비가 알맞게 짜 드려요. 식당·카페는 코스에 직접 넣진 않지만, 그 근처로 동선을 짜 드려요.</p>
+      <div class="sg" id="sugMust" hidden aria-live="polite"></div>
       <div class="sh-chips" id="mvCat" role="group" aria-label="무엇을 고를까요">
         <button type="button" class="qs-card sm" data-mvcat="place" aria-pressed="true"><span class="qs-e" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-view"/></svg></span><b>볼거리</b></button>
         <button type="button" class="qs-card sm" data-mvcat="eat" aria-pressed="false"><span class="qs-e" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-fork"/></svg></span><b>맛집</b></button>
@@ -339,6 +341,7 @@
       <p class="st-tag">확인</p>
       <h2 id="hs6" tabindex="-1">이렇게 짜 드릴까요?</h2>
       <ul class="confirm-list" id="confirmList"></ul>
+      <div class="sg" id="sugAsk" hidden aria-live="polite"></div>
     </div>
     <div class="st-foot"><button type="button" class="btn primary cta" id="makeCourse">도째비, 코스 짜 줘</button></div>
   </div>
@@ -854,7 +857,7 @@
 <script src="ai.js?v=3"></script>
 <script src="art.js"></script>
 <script src="tourapi.js?v=5"></script>
-<script src="app.js?v=63"></script>
+<script src="app.js?v=64"></script>
 <script src="cam.js?v=3"></script>
 <script src="chatfilter.js?v=1"></script>
 <script type="module" src="chat.js?v=4"></script>

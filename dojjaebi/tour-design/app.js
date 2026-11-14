@@ -566,9 +566,9 @@
     for (var i = 0; i <= 6; i++) { var pn = $('st' + i), on = show.indexOf(i) >= 0; pn.hidden = !on; pn.classList.toggle('grp-head', on && show.length > 1 && i === show[0]); pn.classList.toggle('grp-tail', on && show.length > 1 && i !== show[0]); }
     show.forEach(function (i) { var pg = STEP_PAGE[n], pr = $('st' + i).querySelector('.st-prog'), ct = $('st' + i).querySelector('.st-count'); if (!pg) return; if (pr) { pr.setAttribute('aria-valuemax', '4'); pr.setAttribute('aria-valuenow', String(pg)); pr.style.setProperty('--p', String(pg * 25)); } if (ct) ct.textContent = pg + '/4'; });
     var m = $('stepMsg'); if (m) { m.hidden = true; m.textContent = ''; }
-    if (show.indexOf(4) >= 0) renderMustList();
+    if (show.indexOf(4) >= 0) { renderMustList(); sgMustRender(); }
     if (show.indexOf(5) >= 0) renderStayUi();
-    if (n === 6) renderConfirm();
+    if (n === 6) { renderConfirm(); sgAskRender(); }
     setHdr();
     var pane = $('st' + show[0]);
     pane.classList.remove('enter'); void pane.offsetWidth; pane.classList.add('enter'); // 살짝 밀려 들어옴 (움직임 줄이기 설정이면 CSS 에서 끔)
@@ -599,6 +599,123 @@
   $('stSay').addEventListener('click', function () { setStep(0); showTyping(true); }); // 직접 고르다가도 말로 돌아가 도째비가 한 번에 채우게
   var STEP_BACK = { 1: 0, 3: 1, 4: 3, 6: 4 };
   [1, 3, 4, 6].forEach(function (n) { $('stBack' + n).addEventListener('click', function () { setStep(STEP_BACK[n]); }); });
+  /* ---------- 입력 도우미 "도째비의 제안" (2026-11-14, 제미나이·지피티 의견 종합) ----------
+   * 1) 누구와 화면: 안 정한 도착·떠날 시각을 날씨·함께 가는 사람을 보고 제안 — 눌러야 들어간다(자동 저장 없음).
+   * 2) 꼭 가고 싶은 곳 화면: 우리 자료 22곳 안에서만 최대 3곳 후보 — 식당·가게는 고르지 않는다.
+   * 3) 확인 화면: 코스에 꼭 필요한데 빈 것 하나만 한 줄로 되묻기 — 안 답해도 코스 만들기는 항상 눌린다.
+   * 인공지능(제미나이)이 6초 안에 못 답하면 같은 일을 정해 둔 규칙으로 하고, 어느 쪽인지 화면에 적는다. 장소 id 는 서버와 앱에서 두 번 걸러 목록 밖 값은 못 들어온다. */
+  var SG = { t: null, m: null, a: null };
+  function sgWeather() {
+    var c = S.cond, w = S.wx, f = S.fc && S.fc.days && S.fc.days[c.date];
+    if (w && !w.error && w.temp != null && c.date === todayIso()) return Math.round(w.temp) + '℃ ' + (w.text || '');
+    if (f) return f.tmin + '~' + f.tmax + '℃ ' + (f.text || '') + (f.pop != null ? ' 비 ' + f.pop + '%' : '');
+    return ''; // 실제 날씨를 모르면 말하지 않는다
+  }
+  function sgSlow(c) { var a = c.companions || []; return a.indexOf('부모님') >= 0 || a.indexOf('아이') >= 0 || !!c.knee; }
+  function sgElder(c) { return (c.companions || []).indexOf('부모님') >= 0 || !!c.knee; }
+  function sgTags(c) { var t = [], a = c.companions || []; a.forEach(function (x) { if (x !== '혼자') t.push(x + (((x.charCodeAt(x.length - 1) - 44032) % 28) ? '과' : '와') + ' 함께'); }); if (c.knee) t.push('계단 걱정'); if (c.rain) t.push('비 와요'); if (sgWeather()) t.push('날씨 반영'); return t.slice(0, 4); }
+  function sgTagHtml(c) { var t = sgTags(c); return t.length ? '<div class="sg-tags">' + t.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div>' : ''; }
+  function sgSrc(ai) { return '<p class="sg-src">' + (ai ? '인공지능(제미나이)이 낸 제안이에요' : '정해 둔 규칙으로 낸 제안이에요') + ' · 고르는 건 내 몫이에요</p>'; }
+  function sgTimeRule(c, need) {
+    var slow = sgSlow(c), r = {}, arr = c.arrive;
+    if (need.arrive) { arr = c.how === 'car' ? (slow ? 600 : 570) : (slow ? 660 : 630); r.arrive = toTimeValue(arr); }
+    if (need.back) r.back = toTimeValue(Math.min(1260, arr + (c.rain ? 240 : slow ? 360 : 480)));
+    r.reason = c.rain ? '비가 와서 짧게 잡았어요' : slow ? '함께 가는 분을 생각해 여유 있게 잡았어요' : '하루를 넉넉히 쓰는 시간이에요';
+    return r;
+  }
+  function sgTimeNeed(c) { return { arrive: !c.arriveTouched, back: !c.backTouched && !c.noLimit && nDays(c) === 1 }; }
+  function sgTimePaint() {
+    var box = $('sugTime'), t = SG.t; if (!box) return;
+    if (!t || t.gone) { box.hidden = true; return; }
+    box.hidden = false; var c = S.cond;
+    if (!t.res) { box.innerHTML = '<b class="sg-t">도째비의 제안</b><p class="sg-q">도째비가 시간을 살펴보고 있어요…</p>'; return; }
+    var r = t.res, parts = []; if (r.arrive) parts.push('도착 ' + r.arrive); if (r.back) parts.push('떠남 ' + r.back);
+    box.innerHTML = '<b class="sg-t">도째비의 제안</b><p class="sg-q">' + esc(parts.join(' · ')) + '<br><small>' + esc(r.reason || '') + '</small></p>' + sgTagHtml(c) +
+      '<div class="sg-b"><button type="button" class="btn primary" data-sgtime="1">이대로 넣기</button><button type="button" class="btn" data-sgx="t">괜찮아요</button></div>' + sgSrc(t.ai);
+  }
+  function sgTimeRender() {
+    var box = $('sugTime'); if (!box) return; var c = S.cond, need = sgTimeNeed(c);
+    if ((!need.arrive && !need.back) || !(c.companions || []).length) { box.hidden = true; if (SG.t && !SG.t.gone) SG.t = null; return; }
+    var key = [c.date, c.how, (c.companions || []).join(), c.count, c.rain, c.knee, need.arrive, need.back, sgWeather()].join('|');
+    if (SG.t && SG.t.key === key) { sgTimePaint(); return; }
+    var mine = SG.t = { key: key, res: null, ai: false, gone: false };
+    sgTimePaint();
+    aiCall({ task: 'suggest', kind: 'time', how: c.how, date: c.date, arrive: need.arrive ? '' : toTimeValue(c.arrive), back: need.back ? '' : toTimeValue(c.back), needArrive: need.arrive, needBack: need.back, with: c.companions, count: c.count || 1, rain: !!c.rain, knee: !!c.knee, weather: sgWeather(), days: nDays(c) }, 6000).then(function (j) {
+      if (SG.t !== mine) return;
+      if (j && (j.arrive || j.back)) { mine.res = { arrive: j.arrive, back: j.back, reason: j.reason }; mine.ai = true; } else mine.res = sgTimeRule(c, need);
+      sgTimePaint();
+    });
+  }
+  function sgMustRule(c) {
+    var elder = sgElder(c), ints = c.interests || [], out = [];
+    D.places.forEach(function (p) {
+      if (!dayOkFor(p)) return; if (c.rain && (!p.indoor || p.rainAvoid)) return; if (elder && p.stairs) return;
+      var s = (p.value || 0), why = [];
+      (p.tags || []).forEach(function (g) { if (ints.indexOf(g) >= 0) { s += 20; why.push(g + ' 관심사에 맞아요'); } });
+      if (c.rain && p.indoor) why.push('비 걱정 없는 실내예요');
+      if (elder && p.stairsKnown !== false && !p.stairs) why.push('계단 부담이 적어요(자료 기준)');
+      out.push({ id: p.id, s: s, why: why[0] || ((p.region || '') + ' · ' + (p.indoor ? '실내' : '야외')) });
+    });
+    out.sort(function (a, b) { return b.s - a.s; });
+    return out.slice(0, 3);
+  }
+  function sgMustPaint() {
+    var box = $('sugMust'), m = SG.m; if (!box) return;
+    if (!m || !m.items || !m.items.length) { box.hidden = true; return; }
+    box.hidden = false; var must = S.cond.must || [];
+    box.innerHTML = '<b class="sg-t">도째비가 골라 봤어요</b><p class="sg-q"><small>함께 가는 사람·관심사에 맞춰 3곳까지만 보여 드려요. 식당·카페는 고르지 않아요.</small></p>' + sgTagHtml(S.cond) + '<ul class="sg-list">' + m.items.map(function (it) {
+      var p = PLACE[it.id], on = must.indexOf(it.id) >= 0; if (!p) return '';
+      return '<li><button type="button" class="sg-pick" data-sgmust="' + esc(it.id) + '" aria-pressed="' + on + '"><span><b>' + esc(p.short || p.name) + '</b><span class="w">' + esc(it.why || '') + '</span></span><i>' + (on ? '넣었어요' : '+ 넣기') + '</i></button></li>';
+    }).join('') + '</ul>' + sgSrc(m.ai);
+  }
+  function sgMustRender() {
+    var box = $('sugMust'); if (!box) return; var c = S.cond;
+    if (!((c.companions || []).length || (c.interests || []).length || c.rain || c.knee)) { box.hidden = true; return; } // 아무 조건도 모르면 맞춤 후보를 내지 않는다
+    var key = [c.date, (c.companions || []).join(), (c.interests || []).join(), c.rain, c.knee].join('|');
+    if (SG.m && SG.m.key === key) { sgMustPaint(); return; }
+    var mine = SG.m = { key: key, items: null, ai: false }, rule = sgMustRule(c);
+    mine.items = rule; sgMustPaint(); // 규칙 후보를 먼저 보여 주고, 인공지능 답이 오면 바꾼다
+    var cands = D.places.filter(function (p) { return dayOkFor(p) && !(c.rain && (!p.indoor || p.rainAvoid)); }).map(function (p) { return { id: p.id, name: p.short || p.name, region: p.region, indoor: !!p.indoor, stairs: !!p.stairs, tags: p.tags || [] }; });
+    aiCall({ task: 'suggest', kind: 'must', with: c.companions, rain: !!c.rain, knee: !!c.knee, cands: cands }, 6000).then(function (j) {
+      if (SG.m !== mine || !j || !j.ids || !j.ids.length) return;
+      mine.items = j.ids.map(function (id, i) { return { id: id, why: (j.whys || [])[i] || '' }; }).filter(function (x) { return PLACE[x.id]; }); mine.ai = true; sgMustPaint();
+    });
+  }
+  var SG_ASK = { back: ['돌아가는 시각은 정하셨나요?', 2], comp: ['누구와 함께 가세요?', 3], arrive: ['동해에 몇 시쯤 도착하세요?', 1] };
+  function sgMissing(c) { var m = []; if (!c.backTouched && !c.noLimit) m.push('back'); if (!(c.companions || []).length) m.push('comp'); if (!c.arriveTouched) m.push('arrive'); return m; }
+  function sgAskPaint() {
+    var box = $('sugAsk'), a = SG.a; if (!box) return;
+    if (!a || a.gone || !a.field) { box.hidden = true; return; }
+    box.hidden = false;
+    box.innerHTML = '<b class="sg-t">도째비가 하나만 여쭤볼게요</b><p class="sg-q">' + esc(a.q) + '</p><div class="sg-b"><button type="button" class="btn primary" data-sgask="' + esc(a.field) + '">알려 줄게요</button><button type="button" class="btn" data-sgx="a">이대로 짜 주세요</button></div>' + sgSrc(a.ai);
+  }
+  function sgAskRender() {
+    var box = $('sugAsk'); if (!box) return; var c = S.cond, miss = sgMissing(c);
+    if (!miss.length) { box.hidden = true; SG.a = null; return; }
+    var key = miss.join() + '|' + c.date;
+    if (SG.a && SG.a.key === key) { sgAskPaint(); return; }
+    var mine = SG.a = { key: key, field: miss[0], q: SG_ASK[miss[0]][0], ai: false, gone: false }; sgAskPaint();
+    aiCall({ task: 'suggest', kind: 'ask', missing: miss, with: c.companions, date: c.date, how: c.how }, 5000).then(function (j) {
+      if (SG.a !== mine || !j || !j.field || miss.indexOf(j.field) < 0) return;
+      mine.field = j.field; mine.q = j.q; mine.ai = true; sgAskPaint();
+    });
+  }
+  document.addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-sgtime],[data-sgx],[data-sgmust],[data-sgask]'); if (!b) return; var c = S.cond;
+    if (b.hasAttribute('data-sgtime')) {
+      var t = SG.t; if (!t || !t.res) return;
+      if (t.res.arrive) { c.arrive = P.toMin(t.res.arrive); c.arriveTouched = true; syncBack(c); }
+      if (t.res.back) backEdited(P.toMin(t.res.back));
+      t.gone = true; loadTrains(); renderStart(); return;
+    }
+    if (b.hasAttribute('data-sgx')) { var k = b.getAttribute('data-sgx'); if (k === 't' && SG.t) { SG.t.gone = true; sgTimePaint(); } if (k === 'a' && SG.a) { SG.a.gone = true; sgAskPaint(); } return; }
+    if (b.hasAttribute('data-sgmust')) {
+      var id = b.getAttribute('data-sgmust'), must = c.must || (c.must = []), i = must.indexOf(id); if (i >= 0) must.splice(i, 1); else must.push(id);
+      renderMustList(); sgMustPaint(); return;
+    }
+    if (b.hasAttribute('data-sgask')) { var f = b.getAttribute('data-sgask'); setStep(SG_ASK[f] ? SG_ASK[f][1] : 1, { focus: false }); }
+  });
+  var sgRS = renderStart; renderStart = function () { sgRS.apply(this, arguments); try { sgTimeRender(); } catch (e) { /* 도우미가 안 돼도 입력은 그대로 */ } };
   /* ---------- 5단계: 숙소 예약 여부 + 인원수 (2026-10-21, 사용자 요청: "누구랑 와서 어디서 잘지도 추천해 주기 편하지 않니") ---------- */
   function stayUi() { Array.prototype.forEach.call(document.querySelectorAll('#chipStay [data-stay]'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-stay') === S.cond.stayBooked ? 'true' : 'false'); }); $('stayNote').hidden = S.cond.stayBooked !== 'none'; /* 2026-10-22(Fable 리뷰): 이 글은 "숙소 자리를 추천해 드려요" 라는 내용 — 아직 안 잡았을 때(none)만 맞는 말이라 조건이 거꾸로였음 */ }
   function renderStayUi() {

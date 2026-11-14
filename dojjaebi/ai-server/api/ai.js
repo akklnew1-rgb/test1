@@ -69,6 +69,42 @@ var REACT_SYS = '너는 동해시 여행 앱의 도깨비 "도째비"다. 여행
   '규칙: 쉬운 한국어 존댓말, 위트 있고 따뜻하게. 답을 평가·채점하거나 놀리지 않는다. 답에 없는 사실, 장소의 역사·값·운영시간을 지어내지 않는다. 답 속 연락처·링크·욕설은 되풀이하지 않는다. 영어·한자어 금지.';
 var REACT_SCHEMA = { type: 'OBJECT', properties: { line: { type: 'STRING' } }, required: ['line'] };
 
+/* 2026-11-14: 입력 단계 도우미 — 빈 시각 제안(time) · 꼭 가고 싶은 곳 후보(must) · 확인 화면 되묻기(ask). 식당·가게는 절대 고르지 않고, 장소는 앱이 보낸 cands 안에서만 고른다. */
+var SUG_SYS = '너는 동해시 여행 앱의 도깨비 "도째비"다. 입력의 kind 에 따라 한 가지만 한다. 쉬운 존댓말, 영어·어려운 한자어 금지, 사실에 없는 날씨·기차 시각·가격·맛·인기는 절대 말하지 않는다. ' +
+  'kind=time: 입력(how, date, arrive, back, with, count, rain, weather, days)을 보고 도착 시각 arrive 나 돌아갈 시각 back 을 24시간 HH:MM 으로 제안한다(필요한 것만, 08:00~22:00). 어르신·아이와 함께면 너무 이르거나 늦지 않게 여유 있게, 비가 오면 짧게 잡는다. reason 에 이유 한 줄(35자 안쪽). ' +
+  'kind=must: 입력 cands(id,name,region,indoor,stairs,tags) 안에서만 최대 3곳을 ids 로 고르고, whys 에 곳마다 이유 한 줄(28자 안쪽)을 같은 순서로 쓴다. 어르신·무릎·계단 걱정이면 stairs 가 true 인 곳을 피하고, 비가 오면 indoor 인 곳 위주로 고른다. 식당·카페·가게는 고르지 않는다. ' +
+  'kind=ask: 입력 missing 목록에서 코스에 가장 필요한 하나만 field 로 돌려주고, q 에 그것을 묻는 한 줄 질문(40자 안쪽)을 쓴다. 답을 강요하지 않는 부드러운 말투.';
+var SUG_SCHEMA = { type: 'OBJECT', properties: { arrive: { type: 'STRING' }, back: { type: 'STRING' }, reason: { type: 'STRING' }, ids: { type: 'ARRAY', items: { type: 'STRING' } }, whys: { type: 'ARRAY', items: { type: 'STRING' } }, field: { type: 'STRING' }, q: { type: 'STRING' } } };
+function cleanSuggest(raw, b) {
+  var j; try { j = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (e) { return null; } if (!j) return null;
+  var kind = b.kind;
+  if (kind === 'time') {
+    var out = {}, okT = function (t) { var m = /^(\d\d):(\d\d)$/.exec(String(t || '')); if (!m) return null; var v = +m[1] * 60 + +m[2]; return v >= 480 && v <= 1320 ? String(t) : null; };
+    var a = okT(j.arrive), bk = okT(j.back);
+    if (!b.needArrive) a = null; if (!b.needBack) bk = null; // 비어 있지 않은(사용자가 정한) 칸은 건드리지 않음
+    if (a && bk && a >= bk) bk = null;
+    if (!a && !bk) return null;
+    var why = cleanLine(j.reason, 40); if (!why || MBAN.test(why)) return null;
+    if (a) out.arrive = a; if (bk) out.back = bk; out.reason = why; return out;
+  }
+  if (kind === 'must') {
+    var cands = Array.isArray(b.cands) ? b.cands : [], byId = {}; cands.forEach(function (c) { byId[String(c.id)] = c; });
+    var elder = /부모|어르신/.test(String(b.with || '')) || !!b.knee, ids = [], whys = [];
+    (Array.isArray(j.ids) ? j.ids : []).forEach(function (id, i) {
+      id = String(id); var c = byId[id]; if (!c || ids.indexOf(id) >= 0 || ids.length >= 3) return;
+      if (b.rain && !c.indoor) return; if (elder && c.stairs) return;
+      var w = cleanLine((j.whys || [])[i], 34); if (MBAN.test(w || '')) w = '';
+      ids.push(id); whys.push(w || '');
+    });
+    return ids.length ? { ids: ids, whys: whys } : null;
+  }
+  if (kind === 'ask') {
+    var miss = Array.isArray(b.missing) ? b.missing.map(String) : [], f = String(j.field || ''), q = cleanLine(j.q, 50);
+    if (miss.indexOf(f) < 0 || !q || MBAN.test(q)) return null;
+    return { field: f, q: q };
+  }
+  return null;
+}
 var PARSE_SYS = '너는 동해시 여행 앱의 "여행 이야기 → 조건" 번역기다. 사용자가 쓴 한국어 문장에서 아래 항목만 뽑는다. 말에 없는 항목은 비워 두고 절대 짐작해서 채우지 않는다. 오늘 날짜는 사용자 메시지의 today 로 계산한다("내일", "이번 토요일" 등을 YYYY-MM-DD 로). back 은 "돌아갈 시각"(기차·버스 출발 또는 떠날 시각) 24시간 HH:MM — "6시 10분 기차" 처럼 저녁 여행이 자연스러우면 18:10. 시각 말이 없으면 빈 문자열. how 는 가는 교통: car(자가용)·bus·train 중 하나, 말이 없으면 빈 문자열. companions 는 부모님·아이·연인·친구·혼자 중에서만. interests 는 사진·먹거리 중에서만. knee 는 무릎·계단·다리·허리 등 걷기 힘들다는 말이 있을 때 true. rain 은 비 이야기가 있을 때 true. food 는 밥·식사·맛집 말이 있을 때 true, foodWord 는 물회·칼국수·국수·회덮밥·모듬회·미역국·죽 중 말한 음식 하나(없으면 빈 문자열). count 는 사람 수(말이 없으면 0). end 는 동해역에서 끝나면 donghae, 아니면 mukho. reply 에는 한 줄로 "이렇게 알아들었어요: …" 를 쉬운 말로 쓴다.';
 var PARSE_SCHEMA = { type: 'OBJECT', properties: { date: { type: 'STRING' }, backDate: { type: 'STRING' }, arrive: { type: 'STRING' }, back: { type: 'STRING' }, how: { type: 'STRING' }, end: { type: 'STRING' }, companions: { type: 'ARRAY', items: { type: 'STRING' } }, interests: { type: 'ARRAY', items: { type: 'STRING' } }, knee: { type: 'BOOLEAN' }, rain: { type: 'BOOLEAN' }, food: { type: 'BOOLEAN' }, foodWord: { type: 'STRING' }, count: { type: 'INTEGER' }, reply: { type: 'STRING' } } };
 
@@ -204,6 +240,15 @@ module.exports = async function handler(req, res) {
       var sm = String(cj2.summary || '').replace(/\s+/g, ' ').trim().slice(0, 120); if (BAN2.test(sm)) sm = '';
       res.status(200).json({ ok: true, days: outDays, summary: sm, model: USED }); return;
     }
+    if (b.task === 'suggest') {
+      var sk = String(b.kind || ''); if (['time', 'must', 'ask'].indexOf(sk) < 0) { res.status(400).json({ ok: false }); return; }
+      var sin = { kind: sk, how: String(b.how || '').slice(0, 8), date: String(b.date || '').slice(0, 10), arrive: String(b.arrive || '').slice(0, 5), back: String(b.back || '').slice(0, 5), needArrive: !!b.needArrive, needBack: !!b.needBack, with: (Array.isArray(b.with) ? b.with : []).slice(0, 4).map(function (x) { return String(x).slice(0, 8); }).join(', '), count: Math.min(20, +b.count || 1), rain: !!b.rain, knee: !!b.knee, weather: String(b.weather || '').slice(0, 40), days: Math.min(3, +b.days || 1),
+        cands: (Array.isArray(b.cands) ? b.cands : []).slice(0, 40).map(function (p) { return { id: String(p.id).slice(0, 24), name: String(p.name || '').slice(0, 16), region: String(p.region || '').slice(0, 8), indoor: !!p.indoor, stairs: !!p.stairs, tags: (Array.isArray(p.tags) ? p.tags : []).slice(0, 3).map(function (x) { return String(x).slice(0, 6); }) }; }),
+        missing: (Array.isArray(b.missing) ? b.missing : []).slice(0, 6).map(function (x) { return String(x).slice(0, 12); }) };
+      var sraw = await gemini(SUG_SYS, JSON.stringify(sin), SUG_SCHEMA, 500, 5500);
+      var sr = cleanSuggest(sraw, sin); if (!sr) { res.status(200).json({ ok: false, why: 'empty' }); return; }
+      sr.ok = true; sr.kind = sk; sr.model = USED; res.status(200).json(sr); return;
+    }
     if (b.task === 'chat') {
       var msgs = (Array.isArray(b.messages) ? b.messages : []).slice(-8).map(function (m) { return (m && m.role === 'bot' ? '도째비: ' : '사용자: ') + String(m && m.text || '').slice(0, 300); });
       var cands = (Array.isArray(b.cands) ? b.cands : []).slice(0, 30).map(function (c) { return { id: String(c.id), name: String(c.name || '').slice(0, 30), menu: String(c.menu || '').slice(0, 20), area: String(c.area || '').slice(0, 12) }; });
@@ -287,5 +332,6 @@ module.exports = async function handler(req, res) {
 module.exports.cleanEdit = cleanEdit;
 module.exports.cleanRoom = cleanRoom;
 module.exports.cleanLine = cleanLine;
+module.exports.cleanSuggest = cleanSuggest;
 module.exports.dateHint = dateHint;
 module.exports.nightsHint = nightsHint;
