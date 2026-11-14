@@ -10,7 +10,7 @@
  *
  *  retime(env, spec)  → frame 과 같은 모양의 코스(+ issues, late, edited:true). 순서는 건드리지 않는다(사용자 순서 그대로).
  *  fixes(env, spec)   → 마감·휴무 같은 문제가 있을 때 "한 번 눌러 고치는 방법" 1~3개. 방법마다 실제로 적용해서 문제가 풀리는지 다시 계산해 본 것만 돌려준다.
- *  replan(env, spec, dayIdx, opts) → 고정(📌)한 곳과 그 순서를 지키면서 나머지를 다시 짠다(planner.js o.must).
+ *  replan(env, spec, dayIdx, opts) → 고정()한 곳과 그 순서를 지키면서 나머지를 다시 짠다(planner.js o.must).
  *  suggest(env, spec, dayIdx, index, query) → 장소 넣기 시트: 길을 덜 돌아가는 순 + 이름 검색.
  *  applyIntents(env, spec, intents) → "말로 고치기" 의 제안(ai.js aiEditIntent 결과). 적용 전에 보여 줄 diff 를 함께 돌려준다.
  */
@@ -278,7 +278,7 @@
     if (rem.length) cands.push({ kind: 'remove', label: by[rem[0].it.id].short + ' 빼기', detail: '코스에서 뺄 곳: ' + by[rem[0].it.id].name + (rem[0].it.pin ? ' (고정이 풀려요)' : ''), spec: rem[0].spec });
     // 4) 나머지 다시 짜기 (고정 유지)
     var rp = replan(env, spec, dv);
-    if (rp.ok) { var cr2 = check(rp.spec); if (cr2 && cr2.left === 0) cands.push({ kind: 'replan', label: '나머지 다시 짜기 (고정 유지)', detail: '📌 고정한 곳과 그 순서는 그대로 두고 나머지를 새로 짜요', spec: rp.spec }); }
+    if (rp.ok) { var cr2 = check(rp.spec); if (cr2 && cr2.left === 0) cands.push({ kind: 'replan', label: '나머지 다시 짜기 (고정 유지)', detail: '고정한 곳과 그 순서는 그대로 두고 나머지를 새로 짜요', spec: rp.spec }); }
     else if (spec.days[dv].items.some(function (it) { return it.pin; })) {
       var rp2 = replan(env, spec, dv, { noPins: true });
       if (rp2.ok) { var cr3 = check(rp2.spec); if (cr3 && cr3.left === 0) cands.push({ kind: 'replan', label: '고정 풀고 다시 짜기', detail: '고정한 곳 때문에 시간이 안 맞아요. 고정을 풀고 새로 짜요', spec: rp2.spec }); }

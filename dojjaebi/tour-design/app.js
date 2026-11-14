@@ -1964,7 +1964,7 @@
     res.msgs.forEach(function (m) { rows.push('<p class="nl-m">' + esc(m) + '</p>'); });
     if (res.ok && res.issues.length) rows.push('<p class="nl-m bad">이렇게 바꾸면: ' + esc(res.issues[0].text) + ' — 바꾼 뒤에 위쪽 안내에서 고칠 방법을 고를 수 있어요</p>');
     if (!res.ok && !rows.length) rows.push('<p class="nl-m">바뀌는 게 없어요.</p>');
-    box.innerHTML = '<p class="nl-h"><b>이렇게 바꿀까요?</b> ' + (src === 'ai' ? '<span class="simchip ai">AI</span>' : '<span class="simchip">' + (aiUrl() ? '규칙' : '시연') + '</span>') + '</p>' + (src === 'ai' && reply ? '<p class="nl-m">' + esc(reply) + '</p>' : '') + rows.join('') +
+    box.innerHTML = '<p class="nl-h"><b>이렇게 바꿀까요?</b> ' + (src === 'ai' ? '<span class="simchip ai">도째비</span>' : '<span class="simchip">' + (aiUrl() ? '규칙' : '시연') + '</span>') + '</p>' + (src === 'ai' && reply ? '<p class="nl-m">' + esc(reply) + '</p>' : '') + rows.join('') +
       (res.ok ? '<div class="nl-act"><button type="button" class="btn primary" id="nlOk">이대로 바꾸기</button><button type="button" class="btn" id="nlNo">그만두기</button></div>' : '<div class="nl-act"><button type="button" class="btn" id="nlNo">닫기</button></div>');
     box.hidden = false;
   }
@@ -3927,7 +3927,7 @@
     var al = REP.alerts(arr, S.simNow).filter(function (a) { return a.key === r.type + '|' + r.placeId; })[0];
     var tail = al && al.state === 'active' ? '같은 곳을 본 기기 ' + al.devices + '대가 모여 <b>근처 여행자에게 알림이 갔어요</b>. 열려 있는 다른 창의 코스는 자동으로 바뀌지 않고, 그 창에서 [코스 다시 짜기]를 눌러야 바뀌어요.' : '제보를 받았어요. 같은 곳을 본 <b>다른 기기의 제보가 1건 더</b> 오면 근처 여행자에게 알림이 가요.';
     res.className = 'panel result';
-    res.innerHTML = '<p><b>AI 분류 결과 (시연 규칙)</b></p><p>종류 <b>' + TYPE_NAME[rep.type] + '</b> · 장소 <b>' + esc(pn) + '</b>' + (rep.minutes ? ' · 기다림 <b>' + rep.minutes + '분</b>' : '') + '<br><span class="note">' + esc(r.why) + '</span></p>' +
+    res.innerHTML = '<p><b>도째비 분류 결과 (시연 규칙)</b></p><p>종류 <b>' + TYPE_NAME[rep.type] + '</b> · 장소 <b>' + esc(pn) + '</b>' + (rep.minutes ? ' · 기다림 <b>' + rep.minutes + '분</b>' : '') + '<br><span class="note">' + esc(r.why) + '</span></p>' +
       '<p>' + tail + '</p>' + (o.pre ? '<p class="note">시연: 먼저 다녀간 여행자(가상) 1명의 제보도 함께 넣었어요.</p>' : '') +
       '<p class="note">' + esc(r.maskNote) + (near.state === 'demo' ? ' · 시연: 근처라고 쳤어요' : ' · 위치는 근처 확인에만 쓰고 저장하지 않았어요') + (rep.type === 'crowd' ? ' · 붐빔 알림은 마지막 제보 60분 뒤 사라져요.' : '') + '</p>';
     $('repText').value = ''; S.presetSim = null;
