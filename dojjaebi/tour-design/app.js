@@ -861,6 +861,7 @@
   }
   function chatSend(text) {
     text = String(text || '').trim(); if (!text || CH.busy) return;
+    if (CH.picksShown) { CH.picks = []; CH.picksShown = false; } // 지난번에 보여 준 추천이 새 질문 뒤에 또 나오지 않게
     var n = $('askNote'); n.hidden = true;
     $('ask').classList.add('talking'); $('chatMake').hidden = true; chatEl('me', esc(text)); CH.msgs.push({ role: 'user', text: text }); $('askText').value = '';
     var typing = chatEl('bot typing', '도째비가 생각하고 있어요…'); CH.busy = true; $('askGo').disabled = true;
@@ -886,6 +887,7 @@
   function renderPicks() {
     var box = $('pickBox'); if (!box) return;
     if (!CH.picks.length) { box.hidden = true; return; }
+    CH.picksShown = true; // 코스 화면에 한 번 보여 줬으면, 다음 질문부터는 새 추천만 모은다
     box.hidden = false; box.innerHTML = '<b class="pick-t">도째비가 이야기 중에 알려 준 곳</b><span class="pick-s">식당·숙소는 공공데이터라 평점·후기는 몰라요. 메뉴판과 지도를 보고 정해 주세요.</span>';
     CH.picks.forEach(function (x) { box.appendChild(chatCard(x)); });
   }
