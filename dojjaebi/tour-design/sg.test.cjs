@@ -29,7 +29,7 @@ async function run(label, mock, expectAi, apply) {
     assert.ok(/^\d\d:\d\d$/.test($('sTime').value) && $('sTime').value >= '09:00', label + ': 도착 칸 채워짐 ' + $('sTime').value);
   } else { $('sugTime').querySelector('[data-sgx]').click(); assert.ok($('sugTime').hidden, label + ': 괜찮아요로 닫힘'); }
   // 2) 꼭 가고 싶은 곳 후보
-  $('stNext5').click(); await wait(80);
+  $('stNext5').click(); await wait(200);
   assert.ok(!$('st4').hidden && !$('sugMust').hidden, label + ': 후보 보임');
   const picks = [...$('sugMust').querySelectorAll('[data-sgmust]')]; assert.ok(picks.length >= 1 && picks.length <= 3, label + ': 후보 1~3곳 ' + picks.length);
   picks[0].click(); assert.strictEqual($('sugMust').querySelector('[data-sgmust]').getAttribute('aria-pressed'), 'true');
