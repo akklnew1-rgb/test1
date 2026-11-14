@@ -112,7 +112,7 @@ var COMPOSE_SYS = '너는 동해시 여행 앱 "도째비 길동무"의 코스 �
   '(1) 목록에 없는 장소·식당·카페는 절대 넣지 않는다. 식사 시간은 앱이 따로 넣으니 식당은 다루지 않는다. 새벽 일출은 앱이 따로 넣으니 일출만을 위한 장소는 넣지 않는다. ' +
   '(2) days[i].banned 에 있는 id 는 그 날 쓰지 않는다. 같은 장소를 다른 날에 또 넣지 않는다. ' +
   '(3) 하루 장소 수는 days[i].count 안쪽(보통 4~6곳, 시간이 짧으면 2~3곳). 같은 권역(region)끼리 이어서 도는 동선으로, 갔다가 떠난 권역에 다시 돌아가지 않는다. group 이 같은 곳은 하루에 한 곳만. 먼 권역(망상·대진, 추암·북평, 삼화)은 시간이 넉넉할 때만. ' +
-  '(4) knee 이거나 동행에 부모님이 있으면 stairs·trail 이 true 인 곳을 뺀다. rain 이면 rainAvoid 가 true 인 곳을 뺀다. 아이·친구·연인·혼자의 취향과 interests 를 tags 와 맞춰 고른다. must 는 반드시 넣는다. ' +
+  '(4) knee 이거나 동행에 부모님이 있으면 stairs·trail 이 true 인 곳을 뺀다. rain 이면 rainAvoid 가 true 인 곳을 빼고, indoor 가 true 인 곳을 먼저 고르며 indoor 가 아닌 야외는 하루 두 곳 이내로 짧게만 넣는다(비 맞으며 오래 걷는 곳은 넣지 않는다). 아이·친구·연인·혼자의 취향과 interests 를 tags 와 맞춰 고른다. must 는 반드시 넣는다. ' +
   '(5) 하루의 첫 장소는 도착 시각에, 마지막 장소는 돌아갈 시각 한 시간 전에 끝나게 시간을 가늠한다(visit 은 머무는 분). 너무 많이 넣어 서두르게 하지 않는다. ' +
   '(6) why 는 각 장소를 넣은 이유를 한 줄(30자 이내)로, places 에 적힌 사실(tags, visit, indoor, region, openText)과 동선 이유만 근거로 쓴다. "맛있다·유명하다·최고" 같은 평가와 추측은 쓰지 않는다. 쉬운 말로. ' +
   '(6-1) moves[A][B] 는 앱이 계산한 A에서 B까지 이동 분(걷기·버스·택시 중 실제 쓰는 방식)이고 fromStation[X] 는 출발역에서 X까지 분이다. 이 숫자를 그대로 쓰고 이동 시간을 짐작하지 않는다. 한 구간이 20분을 넘는 연결은 피하고, 하루 이동 합계가 90분을 넘지 않게 하며, 장소 머무는 시간(visit)+이동 분의 합이 days[i].window 안에 들어가게 곳 수를 줄인다. (6-2) approx 에 "A>B" 로 적힌 구간은 길 데이터가 없어 직선거리로 어림한 값이라 실제와 다를 수 있다. 그런 구간은 20% 넉넉히 보고 가능하면 피한다. note 가 있는 장소는 그 내용을 지킨다. (7) summary 에는 이 코스를 왜 이렇게 짰는지 한두 문장(80자 이내)으로 쓴다.';
@@ -189,11 +189,15 @@ module.exports = async function handler(req, res) {
       var craw2 = await gemini(COMPOSE_SYS, '조건: ' + JSON.stringify({ how: cc.how, arrive: cc.arrive, back: cc.back, companions: cc.companions, knee: !!cc.knee, rain: !!cc.rain, interests: cc.interests, must: cc.must, stay: cc.stay }) + '\ndays: ' + JSON.stringify(cdays) + '\nplaces: ' + JSON.stringify(cpl) + '\nmoves: ' + JSON.stringify(mv) + '\nfromStation: ' + JSON.stringify(fs0) + '\napprox: ' + JSON.stringify(apx), COMPOSE_SCHEMA, 1800, 14000);
       var cj2; try { cj2 = JSON.parse(craw2); } catch (e) { res.status(200).json({ ok: false, why: 'parse' }); return; }
       var okid = {}; cpl.forEach(function (p) { okid[p.id] = 1; });
+      var mustSet = {}; (Array.isArray(cc.must) ? cc.must : []).forEach(function (x) { mustSet[String(x)] = 1; });
       var BAN2 = /맛있|존맛|꿀맛|일품|유명|소문|대표|줄\s*서|1위|엄선|보증|실패\s*없|최고/, used = {};
       var outDays = (cj2.days || []).slice(0, cdays.length).map(function (d, di) {
         var ban = {}; cdays[di].banned.forEach(function (x) { ban[x] = 1; });
         var ids = [], why = [];
-        (d.ids || []).forEach(function (id, k) { if (!okid[id] || ban[id] || used[id]) return; used[id] = 1; ids.push(id); var w = String((d.why || [])[k] || '').replace(/\s+/g, ' ').trim().slice(0, 40); why.push(BAN2.test(w) ? '' : w); });
+        var outdoorN = 0;
+        (d.ids || []).forEach(function (id, k) { if (!okid[id] || ban[id] || used[id]) return;
+          if (cc.rain && !mustSet[id]) { var pi = cpl.filter(function (q) { return q.id === id; })[0]; if (pi && pi.rainAvoid) return; if (pi && !pi.indoor && ++outdoorN > 2) return; } // 비 오면 야외는 하루 두 곳까지, 야외로 표시된 곳은 뺀다
+          used[id] = 1; ids.push(id); var w = String((d.why || [])[k] || '').replace(/\s+/g, ' ').trim().slice(0, 40); why.push(BAN2.test(w) ? '' : w); });
         return { ids: ids.slice(0, 7), why: why.slice(0, 7) };
       });
       if (!outDays.some(function (d) { return d.ids.length; })) { res.status(200).json({ ok: false, why: 'empty' }); return; }
