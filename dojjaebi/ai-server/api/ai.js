@@ -114,7 +114,7 @@ function knownHints(kn, today) {
   var bits = ['날짜 ' + d];
   if (['train', 'bus', 'car'].indexOf(kn.how) >= 0) bits.push('이동수단 ' + ({ train: '기차', bus: '버스', car: '자가용' })[kn.how]);
   if (Array.isArray(kn.companions) && kn.companions.length) bits.push('함께 가는 사람 ' + kn.companions.slice(0, 4).map(function (x) { return String(x).slice(0, 8); }).join(', '));
-  if (/^\d{1,4}$/.test(String(kn.arrive || ''))) bits.push('도착 ' + Math.floor(+kn.arrive / 60) + '시 ' + (+kn.arrive % 60) + '분');
+  if (/^\d{1,4}$/.test(String(kn.arrive || ''))) bits.push('도착 ' + Math.floor(+kn.arrive / 60) + '시' + (+kn.arrive % 60 ? ' ' + (+kn.arrive % 60) + '분' : ''));
   out.text = bits.join(' · '); return out;
 }
 var PARSE_SYS = '너는 동해시 여행 앱의 "여행 이야기 → 조건" 번역기다. 사용자가 쓴 한국어 문장에서 아래 항목만 뽑는다. 말에 없는 항목은 비워 두고 절대 짐작해서 채우지 않는다. 오늘 날짜는 사용자 메시지의 today 로 계산한다("내일", "이번 토요일" 등을 YYYY-MM-DD 로). back 은 "돌아갈 시각"(기차·버스 출발 또는 떠날 시각) 24시간 HH:MM — "6시 10분 기차" 처럼 저녁 여행이 자연스러우면 18:10. 시각 말이 없으면 빈 문자열. how 는 가는 교통: car(자가용)·bus·train 중 하나, 말이 없으면 빈 문자열. companions 는 부모님·아이·연인·친구·혼자 중에서만. interests 는 사진·먹거리 중에서만. knee 는 무릎·계단·다리·허리 등 걷기 힘들다는 말이 있을 때 true. rain 은 비 이야기가 있을 때 true. food 는 밥·식사·맛집 말이 있을 때 true, foodWord 는 물회·칼국수·국수·회덮밥·모듬회·미역국·죽 중 말한 음식 하나(없으면 빈 문자열). count 는 사람 수(말이 없으면 0). end 는 동해역에서 끝나면 donghae, 아니면 mukho. reply 에는 한 줄로 "이렇게 알아들었어요: …" 를 쉬운 말로 쓴다.';

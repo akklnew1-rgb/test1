@@ -10,7 +10,7 @@ console.log('머무는 기간 시험 통과');
 // 2026-11-15: 앞서 말한 날짜가 최근 8개 대화 밖으로 밀려도 앱이 아는 조건(known)으로 이어 간다
 { const { knownHints } = require('./api/ai.js'), a = require('assert');
   let k = knownHints({ date: '2026-11-16', backDate: '', how: 'car', companions: ['친구'], arrive: '600' }, '2026-11-15');
-  a.strictEqual(k.date, '2026-11-16'); a.strictEqual(k.nights, null); a.ok(/자가용/.test(k.text) && /친구/.test(k.text) && /도착 10시 0분/.test(k.text));
+  a.strictEqual(k.date, '2026-11-16'); a.strictEqual(k.nights, null); a.ok(/자가용/.test(k.text) && /친구/.test(k.text) && /도착 10시(?! 0분)/.test(k.text));
   k = knownHints({ date: '2026-11-20', backDate: '2026-11-21' }, '2026-11-15'); a.strictEqual(k.nights, 1);
   a.strictEqual(knownHints({ date: '2026-11-10' }, '2026-11-15').date, ''); // 지난 날짜는 안 씀
   a.strictEqual(knownHints(null, '2026-11-15').date, ''); a.strictEqual(knownHints({ date: 'x' }, '2026-11-15').date, '');
