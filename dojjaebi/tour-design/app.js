@@ -1145,8 +1145,9 @@
   function hereAsk() {
     var card = $('hereCard'); if (!card) return;
     if (window.TOUR_BUNDLE || !navigator.geolocation || hereGet()) { card.hidden = true; return; }
-    card.hidden = false;
+    card.hidden = false; try { $('hereYes').focus(); } catch (e) { /* 무시 */ }
     $('hereNo').addEventListener('click', function () { hereSet('no'); card.hidden = true; });
+    card.addEventListener('keydown', function (e) { if (e.key === 'Escape') { hereSet('no'); card.hidden = true; } });
     $('hereYes').addEventListener('click', function () {
       var b = $('hereYes'); b.disabled = true; b.textContent = '확인하는 중…';
       function done(msg) { hereSet('done'); card.hidden = true; $('ask').classList.add('talking'); if (msg) chatEl('bot', msg); }

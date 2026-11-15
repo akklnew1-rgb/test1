@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=56">
+<link rel="stylesheet" href="style.css?v=57">
 <link rel="stylesheet" href="ds.css?v=3">
 <link rel="stylesheet" href="chat.css?v=3">
 <link rel="stylesheet" href="mission.css?v=2">
@@ -108,10 +108,6 @@
         <h2 class="ask-h" id="askH">도째비와 이야기해 보세요</h2>
         <div class="chat" id="chat" role="log" aria-live="polite" aria-label="도째비와 대화">
           <div class="bub bot">안녕하세요, 도째비예요. 동해 여행을 편하게 말씀해 주세요. 맛집이 궁금하면 물어보셔도 돼요.</div>
-        </div>
-        <div class="here" id="hereCard" hidden>
-          <p class="here-t"><b>지금 동해에 계세요?</b> 위치를 한 번 확인하면, 동해 안이실 때 오늘 날짜와 도착 시각을 따로 묻지 않아요. 위치는 이 폰 안에서만 쓰고 어디로도 보내지 않아요.</p>
-          <div class="here-b"><button type="button" class="btn primary" id="hereYes">위치 확인하기</button><button type="button" class="btn" id="hereNo">나중에</button></div>
         </div>
         <button type="button" class="btn primary cta" id="chatMake" hidden>조건 확인하고 코스 짜기</button>
         <label for="askText" class="visually-hidden">도째비에게 할 말</label>
@@ -706,6 +702,13 @@
 </div>
 
 <!-- 장소 넣기(아래에서 올라오는 창) -->
+<div id="hereCard" class="here-ov" role="dialog" aria-modal="true" aria-labelledby="hereT" hidden>
+  <div class="here-box">
+    <h2 class="here-t" id="hereT">지금 동해에 계세요?</h2>
+    <p class="here-p">위치를 한 번 확인하면, 동해 안이실 때 오늘 날짜와 도착 시각을 따로 묻지 않아요. 위치는 이 폰 안에서만 쓰고 어디로도 보내지 않아요.</p>
+    <div class="here-b"><button type="button" class="btn primary" id="hereYes">위치 확인하기</button><button type="button" class="btn" id="hereNo">나중에</button></div>
+  </div>
+</div>
 <div id="addSheet" class="sheet" role="dialog" aria-modal="true" aria-labelledby="shTitle" hidden>
   <div class="sh-back" data-sh="close"></div>
   <div class="sh-card" id="shCard" tabindex="-1">
@@ -861,7 +864,7 @@
 <script src="ai.js?v=4"></script>
 <script src="art.js"></script>
 <script src="tourapi.js?v=5"></script>
-<script src="app.js?v=73"></script>
+<script src="app.js?v=74"></script>
 <script src="cam.js?v=3"></script>
 <script src="chatfilter.js?v=1"></script>
 <script type="module" src="chat.js?v=4"></script>
