@@ -349,6 +349,9 @@
     // o.crowd = { 장소id: 값 } 또는 o.crowdFn(isoDate) → 그 맵. 값이 없으면 아무 일도 없다.
     var crowdMap = o.crowd || (o.crowdFn ? o.crowdFn(dinfo && dinfo.iso) : null) || null;
     var CROWD_BUSY = 80, CROWD_MAXB = 10;
+    /* 2026-11-15: '한적한 곳' 조건 — 붐빔 50을 넘는 곳은 넘은 만큼 순위를 깎는다(1배: 80이면 -30, 100이면 -50 — 0.3배는 실제 붐빔 값(70~80대)에서 코스가 안 바뀌어 올림). 감점이라 가지치기 상한(위쪽 한계)은 그대로 맞다. 붐빔 자료가 없으면 아무것도 못 한다 */
+    var QUIET = (o.interests || []).indexOf('한적') >= 0 && !!crowdMap;
+    function quietPen(id) { var cr = crowdMap && crowdMap[id]; return QUIET && cr > 50 ? (cr - 50) * 1 : 0; }
     function crowdBonus(id, startVisit) { var cr = crowdMap && crowdMap[id]; return cr > CROWD_BUSY ? (cr - CROWD_BUSY) * 0.5 * Math.max(0, Math.min(1, (840 - startVisit) / 360)) : 0; }
     // 먼 권역(망상·대진 / 추암·북평 / 삼화)은 코스 전체 시간(처음 출발 ~ 기차 15분 전)이 5시간 30분 이상일 때만 후보. "여기 왔어요" 뒤 다시 짤 때 흔들리지 않게 처음 출발 시각은 고정된 첫 장에서 거꾸로 구한다.
     var farOK = deadline - win0 >= FAR_WINDOW;
@@ -454,7 +457,7 @@
         if (leave > p.open[1] || leave > deadline) continue;
         var vp = vals[p.id] * gk(p);
         // 보고 싶은 곳을 먼저(기차가 늦어져도 좋은 곳은 이미 본 상태): 값 x 남은 시간 비례 가산
-        var inc = vp - delay * 0.25 - wait * 0.05 + Math.max(0, vp) * (deadline - leave) * 0.006 - farPen(l.min) - regionPen(seq, p.region) + crowdBonus(p.id, startVisit);
+        var inc = vp - delay * 0.25 - wait * 0.05 + Math.max(0, vp) * (deadline - leave) * 0.006 - farPen(l.min) - regionPen(seq, p.region) + crowdBonus(p.id, startVisit) - quietPen(p.id);
         opts.push({ p: p, l: l, arr: arr, wait: wait, startVisit: startVisit, delay: delay, leave: leave, inc: inc - l.min * 0.03 + tourBonus(l) });
       }
       opts.sort(function (x, y) { return y.inc - x.inc; });

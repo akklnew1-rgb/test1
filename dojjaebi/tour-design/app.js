@@ -406,7 +406,7 @@
     var paceNow = c.knee ? 'easy' : c.hard ? 'hard' : 'normal';
     function paceBtn(v, nm, sub) { return '<button type="button" class="pace-b" aria-pressed="' + (paceNow === v ? 'true' : 'false') + '" data-pace="' + v + '"><b>' + nm + '</b><span>' + sub + '</span></button>'; }
     $('paceBox').innerHTML = paceNote ? '<p class="pace-note">' + esc(paceNote) + '</p>' : '<div class="pace-h" id="paceH">얼마나 걷고 싶으세요?</div><div class="pace-seg" role="group" aria-labelledby="paceH">' + paceBtn('easy', '살랑살랑', '평지·실내 위주') + paceBtn('normal', '가벼운 산책', '기본 · 30분 안') + paceBtn('hard', '땀나는 탐방', '등산길 포함') + '</div>';
-    $('chipMore').innerHTML = chip('점심·저녁 시간 넣기', c.food, 'data-food="1"') + chip('사진·노을', c.interests.indexOf('사진') >= 0, 'data-like="사진"') + chip('먹거리 구경', c.interests.indexOf('먹거리') >= 0, 'data-like="먹거리"') + chip('날씨가 안 좋아요' + (S.wxRain ? ' (기상청)' : ''), c.rain, 'data-rain="1"');
+    $('chipMore').innerHTML = chip('점심·저녁 시간 넣기', c.food, 'data-food="1"') + chip('사진·노을', c.interests.indexOf('사진') >= 0, 'data-like="사진"') + chip('먹거리 구경', c.interests.indexOf('먹거리') >= 0, 'data-like="먹거리"') + chip('한적한 곳 위주', c.interests.indexOf('한적') >= 0, 'data-like="한적"') + chip('날씨가 안 좋아요' + (S.wxRain ? ' (기상청)' : ''), c.rain, 'data-rain="1"');
     if (c.rain || c.food || c.knee || c.hard || c.interests.length) $('moreBox').open = true;
     var sn = $('startNote'); sn.hidden = !S.startNote; sn.textContent = S.startNote || '';
     var sm = $('stepMsg'); if (sm && !sm.hidden && !backEarly(c)) sm.hidden = true;
@@ -1442,7 +1442,7 @@
   var PLACE_NOTE = { lighthouse: '주차 자리가 거의 없어 자가용이면 멀리 세우고 걸어 올라가야 할 수 있다(현장 경험). 자가용 일행이면 가능하면 다른 곳과 걸어서 묶는다.', samhwasa: '주차장에서 절까지 걸어서 약 10분 들어간다(이동 분에 더해 둠).', yongchu: '차는 무릉계곡 입구(삼화사 쪽)까지만 간다. 입구에서 폭포까지 걸어서 왕복 약 1시간 30분이고 visit 100분은 그 걷기를 포함한 값이다.' };
   /* ---------- AI 가 코스를 짠다 (2026-10-22): 장소 고르기·순서·이유는 AI, 시간·마감·휴무·이동 계산과 검증은 앱(planner)이 한다 ---------- */
   var AIP = null; // { key, days:[{ids, why:{id:글}}], summary }
-  function aiKey() { var c = S.cond; return [c.date, c.backDate || c.date, (c.companions || []).slice().sort().join(','), c.how, c.knee ? 1 : 0, c.hard ? 1 : 0, c.rain ? 1 : 0].join('|'); }
+  function aiKey() { var c = S.cond; return [c.date, c.backDate || c.date, (c.companions || []).slice().sort().join(','), c.how, c.knee ? 1 : 0, c.hard ? 1 : 0, c.rain ? 1 : 0, (c.interests || []).indexOf('한적') >= 0 ? 1 : 0].join('|'); }
   function aiActive() { return AIP && AIP.key === aiKey() ? AIP : null; }
   function aiCompose() {
     var c = S.cond, n = Math.max(1, nDays(c)), days = [], base = planOpts({ must: [] }), i;
@@ -1451,7 +1451,7 @@
       oo.date = P.addDays(c.date, i); oo.must = []; oo.onlyMust = false; oo.mustByDay = null;
       if (n > 1) { oo.fixed = []; oo.mode = 'normal'; oo.now = i ? 540 : c.arrive; oo.train = i === n - 1 ? base.train : 1260; oo.max = 8; }
       var r = P.plan(D, oo), len = (oo.train - 15 - oo.now) / 60;
-      days.push({ date: oo.date, window: toTimeValue(oo.now) + '~' + toTimeValue(Math.max(oo.now, oo.train - 15)), count: len >= 7 ? '5~6' : len >= 4 ? '4~5' : len >= 2.5 ? '3~4' : '2~3', banned: (r.skipped || []).map(function (x) { return x.id; }) });
+      days.push({ date: oo.date, window: toTimeValue(oo.now) + '~' + toTimeValue(Math.max(oo.now, oo.train - 15)), count: len >= 7 ? '5~6' : len >= 4 ? '4~5' : len >= 2.5 ? '3~4' : '2~3', banned: (r.skipped || []).map(function (x) { return x.id; }), crowd: quietCrowd(oo.date) });
     }
     var LG = P.makeLegger(base), moves = {}, approx = [], st0 = D.stations[base.start] || D.stations.mukho, fromStn = {};
     D.places.forEach(function (p) { var row = {}; D.places.forEach(function (q) { if (q.id === p.id) return; try { var l = LG.legAt(P.realPos(p), q, base.slow, 720); if (l && l.min != null) { row[q.id] = Math.round(l.min); if (!l.real && l.mode !== 'walk') approx.push(p.id + '>' + q.id); } } catch (e) { /* 계산 못 하면 비움 */ } }); moves[p.id] = row; try { var s0 = LG.legAt(st0, p, base.slow, 720); if (s0 && s0.min != null) fromStn[p.id] = Math.round(s0.min); } catch (e2) { /* 무시 */ } });
@@ -1482,6 +1482,8 @@
   function recomputeFx() { S.fx = P.effectsFromReports(REP.acceptedReports(S.reports, S.applied, S.simNow), S.simNow, true); }
   /* ---------- 관광지 집중률 예측 (한국관광공사, 하루 한 값 · 실시간 아님) ----------
      /api/crowd(서버가 하루 한 번 받아 둔 값) → 못 받으면 묶음의 CROWD_SNAPSHOT → 그것도 없으면 아무것도 안 보인다. 예측이 있는 날(오늘~+29일)만 보여 준다. 계산은 crowd.js */
+  /* 한적한 곳 조건일 때만, 그날 장소별 붐빔 예상(0~100)을 AI 에 알려 준다 */
+  function quietCrowd(iso) { var m = (S.cond.interests || []).indexOf('한적') >= 0 && S.crowd ? CR.ratesFor(S.crowd, iso) : null, out = {}; if (!m) return out; Object.keys(m).forEach(function (k) { if (m[k] != null) out[k] = Math.round(m[k]); }); return out; }
   function crowdFn(isoDate) { return S.crowd ? CR.ratesFor(S.crowd, isoDate) : null; }
   function loadCrowd() {
     function use(d) {

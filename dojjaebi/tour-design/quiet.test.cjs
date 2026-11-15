@@ -1,0 +1,11 @@
+const assert = require('assert'), P = require('./planner.js'), D = require('./places.js');
+const base = { how: 'car', backHow: 'car', start: 'park', end: 'park', backDate: '2026-11-21', date: '2026-11-21', now: 600, train: 20 * 60, interests: [], avoidTrail: true, mode: 'normal', fixed: [], slow: false };
+const ids = p => (P.plan(D, Object.assign({}, base, p)).stops || []).filter(s => s.id && !/^meal/.test(s.id)).map(s => s.id);
+const crowd = {}; D.places.forEach(p => { crowd[p.id] = 35; }); Object.assign(crowd, { lighthouse: 80, skyvalley: 75, nolgol: 82, chuam: 80, mangsang: 55 });
+const busy = Object.keys(crowd).filter(k => crowd[k] >= 70), n = a => a.filter(i => busy.includes(i)).length;
+const a = ids({ crowd }), b = ids({ crowd, interests: ['한적'] }), c = ids({ interests: ['한적'] }), d = ids({});
+assert.ok(n(b) < n(a), '한적 조건이면 붐비는 곳이 줄어야 함: ' + n(a) + ' → ' + n(b));
+assert.ok(b.length >= 4, '코스가 비지 않음: ' + b.join(','));
+assert.deepStrictEqual(c, d, '붐빔 자료가 없으면 한적 조건이 아무것도 바꾸지 않음(없는 걸 있는 척 안 함)');
+assert.deepStrictEqual(ids({ crowd, interests: [] }), a);
+console.log('한적한 곳 조건 시험 통과 · 붐비는 곳', n(a), '→', n(b));
