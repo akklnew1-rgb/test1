@@ -1465,7 +1465,8 @@
     }
     var sn = window.CROWD_SNAPSHOT;
     if (location.protocol.indexOf('http') !== 0) { use(sn); return; }
-    fetch('/api/crowd', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) { if (CR.valid(j)) use(j); else use(sn); }).catch(function () { use(sn); });
+    var cu = window.DOJJAEBI_AI_URL ? String(window.DOJJAEBI_AI_URL).replace(/\/api\/ai\/?$/, '/api/crowd') : '/api/crowd'; // 열쇠를 가진 중계 서버에서 받는다(이 앱 쪽에는 /api 가 없다)
+    fetch(cu, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (j) { if (CR.valid(j)) use(j); else use(sn); }).catch(function () { use(sn); });
   }
   function stopDate(s) { var pl = S.plan; if (!pl) return S.cond.date; return pl.multi ? (pl.days[s && s.day || 0] || pl.days[0]).date : (pl.date || S.cond.date); }
   function crowdOf(s) { return S.crowd && s && s.place && !isSlot(s) ? CR.rateFor(S.crowd, s.id, stopDate(s)) : null; }
