@@ -1954,3 +1954,10 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
 #ask .pchip .pc-s{ padding:0; font-size:.9rem; color:var(--muted); }
 #ask .pchip:active{ background:var(--brand-soft); border-color:var(--brand); }
 #ask.talking .ask-chips{ display:none !important; }
+
+/* 첫 실행 위치 확인 카드 (2026-11-15) */
+#ask .here { margin: 10px 0 12px; padding: 12px 14px; border: 1px dashed var(--line, #c9d6d6); border-radius: 14px; background: var(--card, #fff); }
+#ask .here-t { margin: 0 0 10px; font-size: 15px; line-height: 1.55; }
+#ask .here-b { display: flex; gap: 8px; }
+#ask .here-b .btn { min-height: 48px; flex: 1; }
+#ask.talking .here { display: none !important; }

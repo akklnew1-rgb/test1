@@ -1130,6 +1130,33 @@
   function aNote(msg) { var n = $('askNote'); n.textContent = msg || ''; n.hidden = !msg; }
   function showTyping(focus) { $('ask').classList.add('show-type'); $('typeToggle').setAttribute('aria-expanded', 'true'); if (focus) { try { $('askText').focus(); } catch (e) { /* 무시 */ } } }
   $('typeToggle').addEventListener('click', function () { aNote(''); showTyping(true); });
+  /* 2026-11-15: 첫 실행 때 위치를 한 번 확인 — 동해 안(중심에서 20km)이면 오늘 날짜·도착 시각(지금)을 따로 묻지 않는다.
+     위치는 이 기기 안에서만 계산하고 어디로도 보내지 않는다. 한 번 답하면(확인·나중에) 다시 묻지 않는다(localStorage tour.here.v1). */
+  var HERE_KEY = 'tour.here.v1', DH_LAT = 37.5247, DH_LNG = 129.1143, DH_KM = 20;
+  function hereKm(la, lo) { var R = 6371, r = Math.PI / 180, dLa = (la - DH_LAT) * r, dLo = (lo - DH_LNG) * r, x = Math.sin(dLa / 2) * Math.sin(dLa / 2) + Math.cos(DH_LAT * r) * Math.cos(la * r) * Math.sin(dLo / 2) * Math.sin(dLo / 2); return 2 * R * Math.asin(Math.sqrt(x)); }
+  function hereGet() { try { return localStorage.getItem(HERE_KEY) || ''; } catch (e) { return ''; } }
+  function hereSet(v) { try { localStorage.setItem(HERE_KEY, v); } catch (e) { /* 무시 */ } }
+  function hereApply() {
+    var d = new Date(), m = Math.max(7 * 60, Math.min(20 * 60, d.getHours() * 60 + d.getMinutes()));
+    CH.cond = CH.cond || {}; CH.cond.date = todayIso(); CH.cond.backDate = ''; CH.cond.arrive = m;
+    var c = S.cond; c.date = todayIso(); c.backDate = c.date; c.backDateTouched = true; c.arrive = m; c.arriveTouched = true; try { syncBack(c); } catch (e) { /* 무시 */ }
+    chatEl('bot', '동해에 계시네요! 오늘 일정으로 잡았어요. 누구와 함께 오셨나요?');
+  }
+  function hereAsk() {
+    var card = $('hereCard'); if (!card) return;
+    if (window.TOUR_BUNDLE || !navigator.geolocation || hereGet()) { card.hidden = true; return; }
+    card.hidden = false;
+    $('hereNo').addEventListener('click', function () { hereSet('no'); card.hidden = true; });
+    $('hereYes').addEventListener('click', function () {
+      var b = $('hereYes'); b.disabled = true; b.textContent = '확인하는 중…';
+      function done(msg) { hereSet('done'); card.hidden = true; $('ask').classList.add('talking'); if (msg) chatEl('bot', msg); }
+      navigator.geolocation.getCurrentPosition(function (p) {
+        if (hereKm(p.coords.latitude, p.coords.longitude) <= DH_KM) { done(''); hereApply(); }
+        else done('지금은 동해 밖에 계시네요. 언제 동해에 오실 예정인가요?');
+      }, function () { done('위치를 확인하지 못했어요. 언제 동해에 오실 예정인지 말씀해 주세요.'); }, { enableHighAccuracy: false, maximumAge: 60000, timeout: 8000 });
+    });
+  }
+  hereAsk();
   showTyping(false); // 2026-11-14: 첫 화면은 자판 입력이 기본(칸을 처음부터 보여 줌), 말로 하기는 옆의 작은 보조 단추
   function aBind() {
     arec.onresult = function (ev) {
