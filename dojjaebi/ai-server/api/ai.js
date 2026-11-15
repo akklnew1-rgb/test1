@@ -105,6 +105,18 @@ function cleanSuggest(raw, b) {
   }
   return null;
 }
+/* 2026-11-15: 대화가 길어져 처음 말한 날짜가 최근 8개 밖으로 밀려도, 앱이 이미 알고 있는 조건(known)으로 날짜·머무는 기간을 이어 간다. */
+function knownHints(kn, today) {
+  kn = kn && typeof kn === 'object' ? kn : {}; var out = { date: '', nights: null, text: '' };
+  var iso = function (v) { return /^\d{4}-\d{2}-\d{2}$/.test(String(v || '')) ? String(v) : ''; };
+  var d = iso(kn.date); if (!d || (today && d < today)) return out; out.date = d;
+  var bd = iso(kn.backDate); if (bd && bd > d && bd <= addDaysIso(d, 2)) out.nights = Math.round((new Date(bd + 'T00:00:00Z') - new Date(d + 'T00:00:00Z')) / 86400000);
+  var bits = ['날짜 ' + d];
+  if (['train', 'bus', 'car'].indexOf(kn.how) >= 0) bits.push('이동수단 ' + ({ train: '기차', bus: '버스', car: '자가용' })[kn.how]);
+  if (Array.isArray(kn.companions) && kn.companions.length) bits.push('함께 가는 사람 ' + kn.companions.slice(0, 4).map(function (x) { return String(x).slice(0, 8); }).join(', '));
+  if (/^\d{1,4}$/.test(String(kn.arrive || ''))) bits.push('도착 ' + Math.floor(+kn.arrive / 60) + '시 ' + (+kn.arrive % 60) + '분');
+  out.text = bits.join(' · '); return out;
+}
 var PARSE_SYS = '너는 동해시 여행 앱의 "여행 이야기 → 조건" 번역기다. 사용자가 쓴 한국어 문장에서 아래 항목만 뽑는다. 말에 없는 항목은 비워 두고 절대 짐작해서 채우지 않는다. 오늘 날짜는 사용자 메시지의 today 로 계산한다("내일", "이번 토요일" 등을 YYYY-MM-DD 로). back 은 "돌아갈 시각"(기차·버스 출발 또는 떠날 시각) 24시간 HH:MM — "6시 10분 기차" 처럼 저녁 여행이 자연스러우면 18:10. 시각 말이 없으면 빈 문자열. how 는 가는 교통: car(자가용)·bus·train 중 하나, 말이 없으면 빈 문자열. companions 는 부모님·아이·연인·친구·혼자 중에서만. interests 는 사진·먹거리 중에서만. knee 는 무릎·계단·다리·허리 등 걷기 힘들다는 말이 있을 때 true. rain 은 비 이야기가 있을 때 true. food 는 밥·식사·맛집 말이 있을 때 true, foodWord 는 물회·칼국수·국수·회덮밥·모듬회·미역국·죽 중 말한 음식 하나(없으면 빈 문자열). count 는 사람 수(말이 없으면 0). end 는 동해역에서 끝나면 donghae, 아니면 mukho. reply 에는 한 줄로 "이렇게 알아들었어요: …" 를 쉬운 말로 쓴다.';
 var PARSE_SCHEMA = { type: 'OBJECT', properties: { date: { type: 'STRING' }, backDate: { type: 'STRING' }, arrive: { type: 'STRING' }, back: { type: 'STRING' }, how: { type: 'STRING' }, end: { type: 'STRING' }, companions: { type: 'ARRAY', items: { type: 'STRING' } }, interests: { type: 'ARRAY', items: { type: 'STRING' } }, knee: { type: 'BOOLEAN' }, rain: { type: 'BOOLEAN' }, food: { type: 'BOOLEAN' }, foodWord: { type: 'STRING' }, count: { type: 'INTEGER' }, reply: { type: 'STRING' } } };
 
@@ -258,7 +270,8 @@ module.exports = async function handler(req, res) {
       var cwd = ctoday ? '일월화수목금토'[new Date(ctoday + 'T00:00:00Z').getUTCDay()] + '요일' : '';
       var dh = '', nh = null, umsgs = msgs.filter(function (m) { return !/^도째비:/.test(m); }).reverse();
       umsgs.some(function (m) { dh = dateHint(m, ctoday); return !!dh; }); umsgs.some(function (m) { nh = nightsHint(m, ctoday); return nh != null; });
-      var craw = await gemini(CHAT_SYS, 'today: ' + ctoday + ' ' + cwd + (dh ? '\n날짜 확정: 사용자가 이미 날짜를 말했다(' + dh + '). parsed.date 에 이 값을 넣고 날짜는 다시 묻지 말 것.' : '') + (dh && nh != null ? '\n머무는 기간 확정: ' + (nh ? nh + '박 ' + (nh + 1) + '일(' + dh + ' ~ ' + addDaysIso(dh, nh) + ')' : '당일치기') + '. 이 기간은 다시 묻지 말 것.' : '') + '\njoke_state: ' + (function () { var all = msgs.join(' '), food = /맛집|식당|먹|밥|회|메뉴|국수|탕/.test(all), stay = /숙소|호텔|펜션|모텔|민박|리조트|숙박|잘 곳/.test(all), bot = msgs.filter(function (m) { return /^도째비:/.test(m); }).join(' '), fj = /입맛|혀|쇠도/.test(bot), sj = /침대|잠을 안/.test(bot), last = msgs[msgs.length - 1] || ''; var lf = /맛집|식당|먹|밥|회|메뉴|국수|탕|해산물|고기|면|분식|중식/.test(last), ls = /숙소|호텔|펜션|모텔|민박|리조트|숙박|잘 곳/.test(last); if (ls && stay && !sj) return '이번 답은 숙소 이야기이니 도깨비 잠자리 농담을 한 문장 넣을 것'; if (lf && food && !fj && !ls) return '이번 답은 식당 이야기이니 도깨비 입맛 농담을 한 문장 넣을 것'; return '이번 답에는 도깨비 농담을 넣지 말 것'; })() + '\nplaces: ' + JSON.stringify(cplaces) + '\ncands: ' + JSON.stringify(cands) + '\n대화:\n' + msgs.join('\n'), CHAT_SCHEMA, 1100, 9000);
+      var kh = knownHints(b.known, ctoday); if (!dh && kh.date) { dh = kh.date; if (nh == null && kh.nights != null) nh = kh.nights; }
+      var craw = await gemini(CHAT_SYS, 'today: ' + ctoday + ' ' + cwd + (kh.text ? '\n이미 확정된 조건(앞서 사용자가 말했고 앱이 기억함): ' + kh.text + '. 이 조건은 다시 묻지 말 것.' : '') + (dh ? '\n날짜 확정: 사용자가 이미 날짜를 말했다(' + dh + '). parsed.date 에 이 값을 넣고 날짜는 다시 묻지 말 것.' : '') + (dh && nh != null ? '\n머무는 기간 확정: ' + (nh ? nh + '박 ' + (nh + 1) + '일(' + dh + ' ~ ' + addDaysIso(dh, nh) + ')' : '당일치기') + '. 이 기간은 다시 묻지 말 것.' : '') + '\njoke_state: ' + (function () { var all = msgs.join(' '), food = /맛집|식당|먹|밥|회|메뉴|국수|탕/.test(all), stay = /숙소|호텔|펜션|모텔|민박|리조트|숙박|잘 곳/.test(all), bot = msgs.filter(function (m) { return /^도째비:/.test(m); }).join(' '), fj = /입맛|혀|쇠도/.test(bot), sj = /침대|잠을 안/.test(bot), last = msgs[msgs.length - 1] || ''; var lf = /맛집|식당|먹|밥|회|메뉴|국수|탕|해산물|고기|면|분식|중식/.test(last), ls = /숙소|호텔|펜션|모텔|민박|리조트|숙박|잘 곳/.test(last); if (ls && stay && !sj) return '이번 답은 숙소 이야기이니 도깨비 잠자리 농담을 한 문장 넣을 것'; if (lf && food && !fj && !ls) return '이번 답은 식당 이야기이니 도깨비 입맛 농담을 한 문장 넣을 것'; return '이번 답에는 도깨비 농담을 넣지 말 것'; })() + '\nplaces: ' + JSON.stringify(cplaces) + '\ncands: ' + JSON.stringify(cands) + '\n대화:\n' + msgs.join('\n'), CHAT_SCHEMA, 1100, 9000);
       var cj; try { cj = JSON.parse(craw); } catch (e) { res.status(200).json({ ok: false, why: 'parse' }); return; }
       var okc = {}; cands.forEach(function (c) { okc[c.id] = 1; });
       var picks = (cj.picks || []).filter(function (id, i, a) { return okc[id] && a.indexOf(id) === i; }).slice(0, 3);
@@ -333,5 +346,6 @@ module.exports.cleanEdit = cleanEdit;
 module.exports.cleanRoom = cleanRoom;
 module.exports.cleanLine = cleanLine;
 module.exports.cleanSuggest = cleanSuggest;
+module.exports.knownHints = knownHints;
 module.exports.dateHint = dateHint;
 module.exports.nightsHint = nightsHint;
