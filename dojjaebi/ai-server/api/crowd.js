@@ -17,7 +17,7 @@ async function fetchRows(area, sg, key, doFetch) {
     var r = await doFetch(url, { signal: ctl.signal }), txt = await r.text(), j;
     try { j = JSON.parse(txt); } catch (e) { throw new Error('응답 형식 오류(이 서비스 활용신청이 승인 전이거나 열쇠가 다를 수 있어요)'); }
     var h = j && j.response && j.response.header;
-    if (!h || (h.resultCode !== '0000' && h.resultCode !== '00')) throw new Error('관광공사 응답 ' + (h ? h.resultCode + ' ' + h.resultMsg : '없음'));
+    if (!h || (h.resultCode !== '0000' && h.resultCode !== '00')) throw new Error('관광공사 응답 ' + (h ? h.resultCode + ' ' + h.resultMsg : '없음 ' + txt.replace(/\s+/g, ' ').slice(0, 90)));
     var it = j.response.body && j.response.body.items && j.response.body.items.item;
     return !it ? [] : (Array.isArray(it) ? it : [it]);
   } finally { clearTimeout(t); }
