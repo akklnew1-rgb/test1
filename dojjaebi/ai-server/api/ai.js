@@ -290,6 +290,10 @@ module.exports = async function handler(req, res) {
       if (!pr.date && dh) { pr.date = dh; if (cp && cp.r) cp.r.date = dh; }
       if (cp && cp.r && cp.r.arrive == null && /^(\d{1,2}):(\d{2})$/.test(String(b.now || '')) && umsgs.some(function (m) { return HERE_RE.test(m); })) { var nm = String(b.now).split(':'); cp.r.arrive = +nm[0] * 60 + +nm[1]; }
       if (cp && cp.r && pr.date) { if (nh != null) cp.r.backDate = nh > 0 ? addDaysIso(pr.date, nh) : null; else if (cp.r.backDate && (cp.r.backDate <= pr.date || cp.r.backDate > addDaysIso(pr.date, 2))) cp.r.backDate = null; }
+      /* 한 번에 날짜·누구와·도착·돌아갈 시각을 다 말했는데 모델이 또 '꼭 가고 싶은 곳'을 묻는 경우(말 속에 취향이 섞이면 가끔 그런다) — 코드로 곧바로 코스 단계로 보낸다 */
+      if (!readyOk && umsgs.length === 1 && cp && cp.r && pr.date && (cp.r.companions || []).length && cp.r.arrive != null && cp.r.train != null && !must.length && /가고\s*싶은\s*곳/.test(reply)) {
+        readyOk = true; picks = []; forceChoices = []; reply = '가고 싶은 곳은 따로 안 말씀하셔서 도째비가 골라 볼게요. 말씀하신 조건대로 이대로 코스를 짜 드릴까요?';
+      }
       if (readyOk) { var miss = !pr.date ? '여행 날짜가 언제인가요?' : ''; if (miss) { readyOk = false; reply = miss; picks = []; forceChoices = []; } }
       res.status(200).json({ ok: true, reply: reply, picks: picks, choices: (forceChoices || cj.choices || []).map(function (c) { return String(c).slice(0, 14); }).filter(Boolean).slice(0, 5), ready: readyOk, must: must, parsed: cp ? cp.r : null, model: USED }); return;
     }
