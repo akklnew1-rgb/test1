@@ -1945,3 +1945,12 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
 #ask #typeToggle{ display:none !important; }
 #ask .ask-row #askMic.listening{ background:#c2410c !important; border-color:#c2410c !important; color:#fff !important; }
 @media (prefers-color-scheme:dark){ #ask .ask-row #askMic{ background:#1a222d; border-color:#2d3748; color:#8fd3e3; } #ask .ask-row #askMic.listening{ color:#121820 !important; } }
+
+/* 2026-11-14: 예시 문장 카드 — 사진 없는 세로 목록(누르면 바로 보냄). 사진이 있으면 관광지 소개 배너로 오해돼서 뺐다 */
+#ask .ask-chips{ display:flex !important; flex-direction:column; flex-wrap:nowrap; overflow:visible; gap:8px; padding:0; margin:0 0 12px; scroll-snap-type:none; }
+#ask .ask-try{ margin:4px 0 0; font-size:.9rem; color:var(--muted); font-weight:600; }
+#ask .ask-chips .pchip{ flex:none; width:100%; min-height:56px !important; padding:10px 14px !important; border-radius:14px; display:flex; flex-direction:column; justify-content:center; gap:2px; text-align:left; background:var(--paper); border:1.5px solid var(--line); }
+#ask .pchip .pc-t{ padding:0; font-size:1.05rem; font-weight:800; line-height:1.3; }
+#ask .pchip .pc-s{ padding:0; font-size:.9rem; color:var(--muted); }
+#ask .pchip:active{ background:var(--brand-soft); border-color:var(--brand); }
+#ask.talking .ask-chips{ display:none !important; }
