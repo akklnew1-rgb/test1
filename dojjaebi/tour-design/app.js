@@ -992,7 +992,7 @@
     var typing = chatEl('bot typing', '도째비가 생각하고 있어요…'); CH.busy = true; $('askGo').disabled = true;
     var all = CH.msgs.filter(function (m) { return m.role === 'user'; }).map(function (m) { return m.text; }).join(' ');
     var cands = chatCands(all, text), byId = {}; cands.forEach(function (x) { byId[x.key] = x; });
-    aiCall({ task: 'chat', messages: CH.msgs.slice(-8), known: CH.cond || {}, today: todayIso(), places: D.places.map(function (p) { return { id: p.id, name: p.short || p.name }; }), cands: cands.map(function (x) { return { id: x.key, name: x.name, menu: x.kind === 'lodge' ? (x.type || '숙소') : (MENU_GROUPS.filter(function (g) { return g[0] === menuOf(x); })[0] || ['', '', ''])[1], area: x.dong }; }) }, 22000).then(function (j) {
+    aiCall({ task: 'chat', messages: CH.msgs.slice(-8), known: CH.cond || {}, today: todayIso(), now: (function (d) { return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); })(new Date()), places: D.places.map(function (p) { return { id: p.id, name: p.short || p.name }; }), cands: cands.map(function (x) { return { id: x.key, name: x.name, menu: x.kind === 'lodge' ? (x.type || '숙소') : (MENU_GROUPS.filter(function (g) { return g[0] === menuOf(x); })[0] || ['', '', ''])[1], area: x.dong }; }) }, 22000).then(function (j) {
       CH.busy = false; $('askGo').disabled = false; if (typing.parentNode) typing.parentNode.removeChild(typing);
       if (j && j.reply) {
         var b = chatEl('bot', esc(j.reply)); CH.msgs.push({ role: 'bot', text: j.reply });

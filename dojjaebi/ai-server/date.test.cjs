@@ -15,3 +15,7 @@ console.log('머무는 기간 시험 통과');
   a.strictEqual(knownHints({ date: '2026-11-10' }, '2026-11-15').date, ''); // 지난 날짜는 안 씀
   a.strictEqual(knownHints(null, '2026-11-15').date, ''); a.strictEqual(knownHints({ date: 'x' }, '2026-11-15').date, '');
   console.log('앞서 알던 조건 이어 가기 시험 통과'); }
+{ const a = require('assert'); const { dateHint } = require('./api/ai.js');
+  ['지금 동해야', '이미 도착했어요', '동해에 와 있어요', '지금 여기 묵호예요'].forEach(function (t) { a.strictEqual(dateHint(t, '2026-11-15'), '2026-11-15', t); });
+  a.strictEqual(dateHint('다음주 토요일 가요', '2026-11-15') !== '2026-11-15', true);
+  console.log('지금 와 있다 = 오늘 시험 통과'); }
