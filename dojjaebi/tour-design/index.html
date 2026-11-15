@@ -11,7 +11,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
-<link rel="stylesheet" href="style.css?v=57">
+<link rel="stylesheet" href="style.css?v=58">
 <link rel="stylesheet" href="ds.css?v=3">
 <link rel="stylesheet" href="chat.css?v=3">
 <link rel="stylesheet" href="mission.css?v=2">
@@ -354,6 +354,10 @@
     <h2 id="h-prep">여행 준비</h2>
     <p class="note" id="prepWhen"></p>
   </div>
+  <section class="pad-in" aria-labelledby="h-pc">
+    <h3 id="h-pc">출발 전 점검</h3>
+    <ul class="pc-list" id="prepCheck"></ul>
+  </section>
   <section class="pad-in">
     <h3>확인된 것들</h3>
     <ul class="fact-list" id="prepFacts"></ul>
@@ -366,7 +370,7 @@
     <h3>미리 보는 코스</h3>
     <div class="prep-grid" id="prepPreview"></div>
   </section>
-  <div class="pad-in"><button type="button" class="btn ghost wide" id="prepNotify">가까워지면 알려 주세요</button></div>
+  <p class="note pad-in" id="prepNote">이 화면은 열 때마다 그때의 예보와 붐빔 예상으로 다시 점검해요.</p>
   <div class="st-foot"><button type="button" class="btn primary cta" id="prepGoCourse">코스 자세히 보기</button></div>
 </section>
 
@@ -864,7 +868,7 @@
 <script src="ai.js?v=4"></script>
 <script src="art.js"></script>
 <script src="tourapi.js?v=5"></script>
-<script src="app.js?v=74"></script>
+<script src="app.js?v=75"></script>
 <script src="cam.js?v=3"></script>
 <script src="chatfilter.js?v=1"></script>
 <script type="module" src="chat.js?v=4"></script>

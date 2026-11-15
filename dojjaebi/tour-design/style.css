@@ -1963,3 +1963,11 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
 .here-p{ margin:0 0 18px; font-size:17px; line-height:1.6; color:var(--muted); }
 .here-b{ display:flex; flex-direction:column; gap:10px; }
 .here-b .btn{ min-height:56px; font-size:18px; width:100%; }
+
+/* 출발 전 점검 (2026-11-15) */
+.pc-list{ list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+.pc-row{ padding:12px 14px; border:1px solid var(--line); border-radius:14px; background:var(--paper); }
+.pc-top{ display:flex; align-items:center; gap:10px; }
+.pc-v{ margin:8px 0 0; font-size:16px; line-height:1.55; }
+.pc-btn{ margin-top:10px; width:100%; min-height:52px; }
+.fact-tag.f-none{ background:var(--soft); color:var(--muted); }

@@ -1492,6 +1492,7 @@
       S.crowd = d;
       if (!$('s-start').hidden) renderStart();
       if (S.plan) { if (!S.ed && !S.fixed.length) replan({ noHighlight: true }); else renderCourse(); } // 늦게 도착하면 아침 먼저 규칙까지 반영해 다시 짠다(고친 코스는 그대로, 이름표만)
+      if (!$('s-prep').hidden) renderPrep();
     }
     var sn = window.CROWD_SNAPSHOT;
     if (location.protocol.indexOf('http') !== 0) { use(sn); return; }
@@ -1588,6 +1589,37 @@
     out.push({ k: 'wear', t: '날씨에 맞는 옷 준비' });
     return out;
   }
+  /* 2026-11-15: 출발 전 점검 — 실제로 있는 자료(예보·붐빔 예상·기차 시간표)만으로 줄마다 '괜찮아요/주의/아직 몰라요'를 보여 주고, 주의면 코스를 바로 바꾸는 버튼을 단다 */
+  function prepCheckRows() {
+    var c = S.cond, rows = [], fcd = S.fc && S.fc.days && S.fc.days[c.date];
+    if (fcd) {
+      var wet = (fcd.pop != null && +fcd.pop >= 60) || /비|눈|소나기/.test(fcd.text || ''), pop = fcd.pop != null ? ' (비 올 확률 ' + fcd.pop + '%)' : '';
+      if (wet && !c.rain) rows.push({ s: 'warn', k: '날씨', v: '비 소식이 있어요' + pop + '. 실내 곳을 먼저 넣어 짜 볼까요?', act: 'rain', btn: '비 오는 날 코스로 바꾸기' });
+      else if (wet) rows.push({ s: 'ok', k: '날씨', v: '비 소식에 맞춰 실내 곳 위주로 짰어요' + pop });
+      else rows.push({ s: 'ok', k: '날씨', v: fcd.tmin + '~' + fcd.tmax + '℃ · 비 걱정은 크지 않아요' + pop });
+    } else rows.push({ s: 'none', k: '날씨', v: '예보는 오늘부터 모레까지만 나와요. 날짜가 가까워지면 다시 열어 보세요' });
+    var rates = S.crowd ? CR.ratesFor(S.crowd, c.date) : null, pl = S.plan;
+    if (rates && pl) {
+      var first = pl.multi ? pl.days[0].plan : pl, busy = placeStops(first.stops || []).filter(function (s) { return rates[s.place.id] != null && rates[s.place.id] >= 70; });
+      var quiet = (c.interests || []).indexOf('한적') >= 0, names = busy.slice(0, 3).map(function (s) { return s.place.short || s.place.name; }).join('·');
+      if (busy.length && !quiet) rows.push({ s: 'warn', k: '붐빔', v: '붐빔 예상이 높은 곳이 ' + busy.length + '곳 있어요 (' + names + '). 한적한 곳 위주로 바꿀까요?', act: 'quiet', btn: '한적한 곳 위주로 바꾸기' });
+      else if (quiet) rows.push({ s: 'ok', k: '붐빔', v: '붐비는 곳을 줄여 짰어요' + (busy.length ? ' (그래도 ' + busy.length + '곳은 붐빔 예상이 높아요: ' + names + ')' : '') });
+      else rows.push({ s: 'ok', k: '붐빔', v: '붐빔 예상이 높은 곳은 없어요' });
+    } else rows.push({ s: 'none', k: '붐빔', v: '붐빔 예상은 날짜가 가까워지면 나와요 (한국관광공사 · 30일 앞까지)' });
+    if (c.how === 'train' || c.backHow === 'train') rows.push(realTrains(c) ? { s: 'ok', k: '기차', v: '코레일 시간표를 확인했어요' } : { s: 'none', k: '기차', v: '시간표가 아직 안 나왔어요. 예매 전이면 날짜가 가까워질 때 다시 확인해 주세요' });
+    return rows;
+  }
+  function renderPrepCheck() {
+    $('prepCheck').innerHTML = prepCheckRows().map(function (r) {
+      var tag = r.s === 'ok' ? '괜찮아요' : r.s === 'warn' ? '주의' : '아직 몰라요', cls = r.s === 'ok' ? 'f-ok' : r.s === 'warn' ? 'f-guess' : 'f-none';
+      return '<li class="pc-row"><div class="pc-top"><span class="fact-k">' + esc(r.k) + '</span><span class="fact-tag ' + cls + '">' + tag + '</span></div><p class="pc-v">' + esc(r.v) + '</p>' + (r.act ? '<button type="button" class="btn pc-btn" data-pc="' + r.act + '">' + esc(r.btn) + '</button>' : '') + '</li>';
+    }).join('');
+  }
+  $('prepCheck').addEventListener('click', function (ev) {
+    var b = ev.target.closest('[data-pc]'); if (!b) return; var c = S.cond, k = b.getAttribute('data-pc');
+    if (k === 'rain') c.rain = true; else if (k === 'quiet' && (c.interests || []).indexOf('한적') < 0) c.interests = (c.interests || []).concat('한적');
+    replan(); renderPrep(); flash(k === 'rain' ? '실내 곳을 먼저 넣어 다시 짰어요.' : '붐비는 곳을 줄여 다시 짰어요.');
+  });
   function renderPrep() {
     var c = S.cond, d = P.dayCount(todayIso(), c.date) - 1;
     $('prepDday').textContent = d <= 0 ? '오늘!' : 'D-' + d;
@@ -1612,10 +1644,10 @@
       return '<li><label class="todo-row"><input type="checkbox" data-todo="' + x.k + '"' + (on ? ' checked' : '') + '> ' + esc(x.t) + '</label></li>';
     }).join('');
     $('prepPreview').innerHTML = prepPreviewHtml(S.plan);
+    renderPrepCheck();
   }
   $('prepTodo').addEventListener('change', function (ev) { var t = ev.target.closest('[data-todo]'); if (!t) return; lsSet('tour.prep.' + t.getAttribute('data-todo'), t.checked ? '1' : '0'); });
   $('prepGoCourse').addEventListener('click', function () { show('s-course'); });
-  $('prepNotify').addEventListener('click', function () { flash('여행 전날 알려 드릴게요 (시연 — 실제 알림은 아직 연결하지 않았어요).'); });
 
   /* ---------- 코스 화면 ---------- */
   var ART = window.TourArt;
@@ -4753,5 +4785,5 @@
   }
 
   // 시험용 접근(자동 점검에서만 쓴다)
-  window.__tour = { map: function () { return mapApi; }, pois: function () { return buildPois().length; }, ov: function () { return { OVS: OVS, OA: OA, TN: TN }; }, ovPlay: ovPlay, townAdd: townAdd, state: S, replan: replan, ingest: ingest, ED: ED, edEnv: function () { return edEnv(); }, live: function () { return lv; }, liveStart: lvStart, liveAsk: lvOpenAsk };
+  window.__tour = { makePlan: function () { S.plan = buildPlan(); return S.plan; }, map: function () { return mapApi; }, pois: function () { return buildPois().length; }, ov: function () { return { OVS: OVS, OA: OA, TN: TN }; }, ovPlay: ovPlay, townAdd: townAdd, state: S, replan: replan, ingest: ingest, ED: ED, edEnv: function () { return edEnv(); }, live: function () { return lv; }, liveStart: lvStart, liveAsk: lvOpenAsk };
 })();
