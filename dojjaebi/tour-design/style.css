@@ -2067,3 +2067,5 @@ h3{ letter-spacing:-.02em; }
 
 /* 첫 화면 제목: 크기·자간을 풀어 글자가 뭉개지지 않게 */
 #s-start .hero .hero-txt h1{ font-size:clamp(23px,6.6vw,29px) !important; letter-spacing:-.01em !important; line-height:1.28 !important; text-shadow:0 1px 10px rgba(0,0,0,.45); }
+/* 사진 아래 모서리를 둥글게 하면 다크모드에서 바탕이 쐐기처럼 비쳐서, 아래는 평평하게(입력 카드가 위로 겹쳐 모서리를 만든다) */
+#s-start .hero{ border-radius:0 !important; }
