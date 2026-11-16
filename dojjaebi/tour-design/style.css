@@ -2052,3 +2052,10 @@ h3{ letter-spacing:-.02em; }
 #s-start .hero .hero-meta .hero-credit{ background:none !important; padding:0; color:rgba(255,255,255,.78) !important; font-size:11px !important; text-shadow:0 1px 4px rgba(0,0,0,.6) !important; }
 #s-start .intro-card{ margin:-30px var(--gut) 0; padding:14px 14px 6px; border-radius:20px; background:#fff; box-shadow:0 16px 36px rgba(10,59,75,.18); position:relative; z-index:4; }
 @media (prefers-color-scheme: dark){ #s-start .intro-card{ background:#16242d; box-shadow:inset 0 0 0 1px #243a44; } #s-start .hero .wx{ background:rgba(17,29,36,.94) !important; } #s-start .hero .wx b,#s-start .hero .wx span{ color:#eef4f6 !important; } }
+
+/* 마감 보정: 비 오는 날 카페 안내 상자는 양옆 여백·둥근 모서리로, 점검 줄 이름은 줄바꿈 없이, 아래 고정 단추 뒤 바탕은 새 바탕색으로 */
+.rain-cafe{ margin:12px var(--gut); padding:14px 14px 16px; border-radius:18px; background:var(--brand-soft); }
+.pc-top .fact-k{ white-space:nowrap; font-weight:700; }
+.st-foot{ background:linear-gradient(to top, var(--bg) 72%, rgba(237,243,244,0)); }
+#s-start .hero .hero-txt h1{ letter-spacing:-.035em; }
+@media (prefers-color-scheme: dark){ .st-foot{ background:linear-gradient(to top, var(--bg) 72%, rgba(12,22,28,0)); } .rain-cafe{ background:#143240; } }
