@@ -97,6 +97,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     var d = new Date(ts), n = new Date(), s = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
     return d.toDateString() === n.toDateString() ? s : '어제 ' + s;
   }
+  function dt(ts) { var d = new Date(ts); return (d.getMonth() + 1) + '/' + d.getDate() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
   function nearEnd() { var l = $('crList'); return l.scrollHeight - l.scrollTop - l.clientHeight < 120; }
   function scrollEnd(force) { var l = $('crList'); if (l && (force || nearEnd())) l.scrollTop = l.scrollHeight; }
 
@@ -118,7 +119,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     if (aiNote && (aiNote.found.length || aiNote.t !== '')) {
       var who = {}; aiNote.found.forEach(function (m) { who[m.u] = 1; });
       $('crList').insertAdjacentHTML('beforeend', '<li class="cr-ai">' +
-        (aiNote.found.length ? '<span class="cr-aitag">사랑방에 이런 이야기가 있어요 · 이용자 ' + Object.keys(who).length + '명</span><ul class="cr-aif">' + aiNote.found.map(function (m) { return '<li><time>' + hm(m.ts) + '</time> ' + esc(m.t) + '</li>'; }).join('') + '</ul>' : '') +
+        (aiNote.found.length ? '<span class="cr-aitag">사랑방에 이런 이야기가 있어요 · 이용자 ' + Object.keys(who).length + '명</span><ul class="cr-aif">' + aiNote.found.map(function (m) { return '<li><time>' + dt(m.ts) + '</time> ' + esc(m.t) + '</li>'; }).join('') + '</ul>' : '') +
         (aiNote.t === null ? '<span class="cr-aitag">AI 안내</span><p class="cr-t">도째비가 살펴보는 중이에요…</p>' : aiNote.t ? '<span class="cr-aitag">AI 안내예요 · 이용자 글이 아니에요</span><p class="cr-t">' + esc(aiNote.t) + '</p>' : '') + '</li>');
     }
     if (stick || aiNote) scrollEnd(true);
