@@ -2155,3 +2155,11 @@ html{ background:#e9f3f5; }
   #s-start .pchip .pc-t,#ask .pchip .pc-t{ color:#3b2a20; }
   #s-start .qs-e,#s-start .qs-card .ic{ color:#b5472f; }
 }
+
+/* 길안내 화면 '끝내기' 알약: 다크에서 글자색이 밝아져 흰 바탕과 겹쳐 안 보이던 것을 고침(어두운 바탕 + 밝은 글자, 눌린 상태는 강조색) */
+@media (prefers-color-scheme: dark){
+  .lv-pill{ background:#2a4653; color:#f1f7f9; border-color:#4a7d8f; box-shadow:0 2px 10px rgba(0,0,0,.35); }
+  .lv-pill .ic{ color:#f1f7f9; }
+  .lv-pill[aria-pressed="true"]{ background:#71d1e3; border-color:#71d1e3; color:#142d3a; }
+  .lv-pill[aria-pressed="true"] .ic{ color:#142d3a; }
+}
