@@ -425,7 +425,7 @@ module.exports = async function handler(req, res) {
       try {
         var pu = 'https://api.data.go.kr/openapi/tn_pubr_prkplce_info_api?serviceKey=' + (/%/.test(dk) ? dk : encodeURIComponent(dk)) + '&pageNo=' + pg + '&numOfRows=1000&type=json';
         var pr = await fetch(pu, { signal: pctl.signal }), ptxt = await pr.text(), pj; try { pj = JSON.parse(ptxt); } catch (e) { res.status(200).json({ ok: false, why: 'notjson', status: pr.status, head: ptxt.slice(0, 200).replace(dk, '***') }); return; }
-        var pbody = (pj.response && pj.response.body) || {}, pitems = pbody.items || [];
+        var pbody = (pj.response && pj.response.body) || pj.body || {}, pitems = pbody.items || pj.items || pj.data || [];
         if (!Array.isArray(pitems)) pitems = pitems.item || [];
         var dong = pitems.filter(function (x) { return /동해시/.test(String(x.rdnmadr || '') + String(x.lnmadr || '') + String(x.institutionNm || '')); });
         res.status(200).json({ ok: true, page: pg, hdr: JSON.stringify((pj.response && pj.response.header) || pj.header || (pj.items ? null : pj)).slice(0, 300), total: pbody.totalCount, got: pitems.length, fields: pitems[0] ? Object.keys(pitems[0]) : [], items: dong }); return;
