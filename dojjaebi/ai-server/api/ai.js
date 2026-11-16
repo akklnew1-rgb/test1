@@ -13,7 +13,7 @@ async function gemini(system, user, schema, maxTok, perMs) {
   // 환경변수에 열쇠만이 아니라 AI Studio 의 curl 예시 줄 전체를 붙여 넣었어도 열쇠 부분만 뽑아 쓴다
   var raw = String(process.env.GEMINI_API_KEY || '').trim(), mm = raw.match(/x-goog-api-key:\s*([^\s'"\\]+)/i) || raw.match(/[?&]key=([^&\s'"\\]+)/i);
   var key = mm ? mm[1] : (/\s/.test(raw) ? '' : raw); if (!key) throw new Error('no key');
-  var body = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { temperature: 0.2, maxOutputTokens: maxTok || 700 } };
+  var body = { systemInstruction: { parts: [{ text: system }] }, contents: [{ role: 'user', parts: [{ text: user }] }], generationConfig: { temperature: 0.2, maxOutputTokens: maxTok || 700, thinkingConfig: { thinkingBudget: 0 } } };
   if (schema) { body.generationConfig.responseMimeType = 'application/json'; body.generationConfig.responseSchema = schema; }
   var models = [MODEL, 'gemini-flash-lite-latest', 'gemini-flash-latest', 'gemini-flash-lite-latest'].filter(function (m, i, a) { return m && a.indexOf(m) === i; }), last = 'gemini';
   for (var i = 0; i < models.length; i++) {
