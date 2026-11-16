@@ -2163,3 +2163,20 @@ html{ background:#e9f3f5; }
   .lv-pill[aria-pressed="true"]{ background:#71d1e3; border-color:#71d1e3; color:#142d3a; }
   .lv-pill[aria-pressed="true"] .ic{ color:#142d3a; }
 }
+
+/* ===== 다크모드 생기 올리기: 회색기 뺀 맑은 바다색(채도↑), 카드는 한 단계 밝게, 강조는 선명한 물빛 + 일출 주황 한 점 ===== */
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#0f3d52; --paper:#17506a; --soft:#1d5d79; --line:#2f7894; --ink:#ffffff; --muted:#cfe6ee;
+    --brand:#5fe0f0; --brand-dark:#c9f6fc; --brand-soft:#1d5d79; --c1:#ffae5c;
+    --wz:#5fe0f0; --wz-soft:#1d5d79; --wz-line:#3d93b0; --wz-ink:#ffffff; }
+  html{ background:#0a2e3f; } body{ background:linear-gradient(180deg,#0f3d52 0%,#124863 100%) fixed; color:var(--ink); }
+  .top,.tabs{ background:#134862; box-shadow:0 1px 0 #2f7894; } .tabs{ box-shadow:0 -1px 0 #2f7894; }
+  .btn,.chip,.qs-card,.pc-row,.nx-row,.wx,.intro-card{ background:#17506a; box-shadow:inset 0 0 0 1px #2f7894; }
+  .btn.primary{ background:linear-gradient(180deg,#7ceaf6,#4dcfe3); color:#06303d; box-shadow:0 6px 16px rgba(95,224,240,.22); }
+  .chip[aria-pressed="true"],.chip[aria-checked="true"]{ background:#1d5d79; color:#ffffff; box-shadow:inset 0 0 0 2px #5fe0f0; }
+  .bub.me{ background:#1d6a88; color:#ffffff; }
+  .bub.bot{ background:#17506a; }
+  .tab[aria-current="page"]{ color:#5fe0f0; } .tab[aria-current="page"]::before{ background:#ffae5c; }
+  .wordmark{ background:linear-gradient(100deg,#9ff1fa,#ffae5c); -webkit-background-clip:text; background-clip:text; }
+  .lv-pill{ background:#17506a; border-color:#3d93b0; }
+}
