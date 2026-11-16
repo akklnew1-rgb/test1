@@ -233,6 +233,11 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
       return m.pl === id || nm.some(function (n) { return n && m.t.indexOf(n) >= 0; });
     });
   }
+  /* 요약 아래 '이용자가 남긴 글' 원문(글쓴이 이름 없이 날짜·시각과 글만) — 요약이 맞는지 직접 확인할 수 있게 */
+  function rawList(list) {
+    var li = list.slice(-12).reverse().map(function (m) { var d = new Date(m.ts); return '<li><time>' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2) + '</time> ' + esc(m.t) + (m.d ? ' <em>(예시)</em>' : '') + '</li>'; }).join('');
+    return '<details class="rs-raw"><summary>이용자가 남긴 글 ' + list.length + '개 그대로 보기</summary><ul>' + li + '</ul></details>';
+  }
   function sumShow(out, html) { out.innerHTML = html; }
   function summary(id, name, out, btn) { loadArch(function () { summaryGo(id, name, out, btn); }); }
   function summaryGo(id, name, out, btn) {
@@ -245,7 +250,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     var sig = list.length + ':' + list[list.length - 1].k, c = sumCache[id];
     if (c && c.sig === sig && Date.now() - c.at < 90000) { sumShow(out, c.html); return; }
     var url = window.DOJJAEBI_AI_URL;
-    if (!url) { sumShow(out, '<p class="rs-none">AI 연결이 없어서 요약을 못 해요. 사랑방에서 직접 읽어 보세요.</p>'); return; }
+    if (!url) { sumShow(out, '<p class="rs-none">AI 연결이 없어서 요약을 못 해요. 아래 글을 직접 읽어 보세요.</p>' + rawList(list)); return; }
     var who = {}, nw = 0, body = list.slice(-40).map(function (m) { if (who[m.u] == null) who[m.u] = nw++; return { w: who[m.u], t: m.t }; });
     var hasDemo = list.some(function (m) { return m.d; });
     if (btn) btn.disabled = true;
@@ -261,11 +266,12 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
         var d = new Date(), t = ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
         var html = (li ? '<ul class="rs-list">' + li + '</ul>' : '<p class="rs-none">요약할 만한 내용이 아직 없어요.</p>') +
           '<p class="rs-foot">이용자 글 ' + (+j.total || list.length) + '개(글쓴이 ' + (+j.writers || nw) + '명)를 AI가 요약했어요 · ' + t + ' 기준. 사실과 다를 수 있고 도째비의 추천이 아니에요.' + (hasDemo ? ' <b>시연용 예시 글이 들어 있어요.</b>' : '') + '</p>';
+        html += rawList(list);
         sumCache[id] = { sig: sig, at: Date.now(), html: html };
         sumShow(out, html);
         if (btn) btn.textContent = '다시 요약하기';
       })
-      .catch(function () { sumShow(out, '<p class="rs-none">요약을 못 불러왔어요. 잠시 뒤에 다시 눌러 보시거나 사랑방에서 직접 읽어 보세요.</p>'); })
+      .catch(function () { sumShow(out, '<p class="rs-none">요약을 못 불러왔어요. 아래 글을 직접 읽어 보세요.</p>' + rawList(list)); })
       .then(function () { clearTimeout(to); if (btn) btn.disabled = false; });
   }
 
