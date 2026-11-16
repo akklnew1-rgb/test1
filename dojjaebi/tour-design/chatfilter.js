@@ -33,9 +33,16 @@
   }
 
   var ADJ = ['길 잃은', '바람 쐬는', '배고픈', '졸린', '신난', '느긋한', '두리번거리는', '노을 보는', '파도 구경하는', '사진 찍는', '걷다 지친', '커피 찾는'];
+  /* 남에게 보이는 글에만 더하는 거름: 돈·투자·대출 말은 광고나 사기 글로 이어질 수 있어 다른 여행자에게는 보이지 않게 한다(본인 폰 기록에는 남음) */
+  var MONEY = ['계좌', '대출', '투자', '입금', '송금', '코인', '비트코인', '주식', '선물옵션', '로또', '복권', '당첨', '수익률', '원금', '급전'];
+  function checkShare(text) {
+    var r = check(text); if (!r.ok) return r;
+    var q = squash(r.text); for (var i = 0; i < MONEY.length; i++) if (q.indexOf(squash(MONEY[i])) >= 0) return { ok: false, money: true, why: '돈 얘기가 있는 글은 다른 여행자에게 보이지 않아요(내 기록에는 남아요)' };
+    return r;
+  }
   function hash(s) { var h = 5381; s = String(s); for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0; return h; }
   function nick(seed) { var h = hash(seed); return ADJ[h % ADJ.length] + ' 도깨비 ' + (100 + (Math.floor(h / 13) % 900)); }
 
-  var api = { check: check, nick: nick, MAX: MAX };
+  var api = { check: check, checkShare: checkShare, nick: nick, MAX: MAX };
   if (typeof module !== 'undefined' && module.exports) module.exports = api; else root.ChatFilter = api;
 })(typeof self !== 'undefined' ? self : this);

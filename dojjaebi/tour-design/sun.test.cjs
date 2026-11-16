@@ -14,3 +14,9 @@ const chuam = D.places.find(p => p.id === 'chuam'); const a1 = AI.aiAnswer(chuam
 assert.ok(a1.found && a1.text.indexOf(S.hm(S.rise('2026-11-16'))) >= 0 && !/\{일출\}|06:25|시연용/.test(a1.text), a1.text);
 assert.ok(a2.text.indexOf(S.hm(S.rise('2026-11-21'))) >= 0 && a1.text !== a2.text, '날짜마다 다른 답');
 console.log('일출 시각 시험 통과 · 동해 11/16', S.hm(S.rise('2026-11-16')), S.hm(S.set('2026-11-16')));
+// 남에게 보이는 글: 돈·투자 말은 거르고 평범한 소원은 통과
+const CF = require('./chatfilter.js');
+assert.ok(CF.checkShare('오늘 같은 날이 자주 오게 해 주세요').ok, '평범한 소원 통과');
+for (const t of ['로또 1등 되게 해주세요', '계좌 알려드려요', '코인 대박', '대 출 받고 싶어요']) { const r = CF.checkShare(t); assert.ok(!r.ok && r.money, '돈 얘기 거름: ' + t); }
+assert.ok(CF.check('로또 1등 되게 해주세요').ok, '내 기록용 검사(check)는 그대로 통과');
+console.log('돈 얘기 거름 시험 통과');

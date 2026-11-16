@@ -21,7 +21,7 @@
     { id: 'nolgol-1', place: 'nolgol', kind: 'text', title: '벽화 속 인물이 도깨비를 만나면 뭐라고 할까?', ask: '첫마디를 한 문장으로', max: 30, ph: '예: 어머, 도깨비가 길을 잃었나?', line: '벽 속 사람들이 도깨비한테 뭐라고 할지 궁금해요.', hint: '길이 좁으니 지나가는 분께 길을 비켜 주세요.' },
     { id: 'nolgol-2', place: 'nolgol', kind: 'bingo', title: '골목에서 찾아보기', ask: '눈에 띈 것을 2개 이상 골라 주세요', items: ['벽화', '계단', '바다 한 조각', '알록달록한 색'], min: 2, line: '걷다 보면 하나씩 눈에 들어와요. 없는 건 안 골라도 돼요.', hint: '오르막은 무리하지 말고 쉬엄쉬엄 올라가요.' },
     { id: 'lighthouse-1', place: 'lighthouse', kind: 'pick', title: '오늘 바다를 한 단어로', ask: '오늘 바다는 어떤 느낌인가요?', options: ['설렘', '자유', '그리움', '시원함'], line: '도깨비는 바다 앞에서 말을 잠깐 멈춰요.', hint: '바람이 센 날은 난간에서 한 걸음 떨어져 주세요.' },
-    { id: 'lighthouse-2', place: 'lighthouse', kind: 'text', title: '바다를 보며 도깨비에게 소원 한 줄', ask: '소원을 한 줄로 (돈 얘기는 빼고요)', max: 20, ph: '예: 오늘 같은 날이 자주 오게 해 주세요', line: '도깨비가 소원을 하나쯤은 귀담아들어요.', hint: '길게 안 써도 돼요.' }
+    { id: 'lighthouse-2', place: 'lighthouse', kind: 'text', title: '바다를 보며 도깨비에게 소원 한 줄', ask: '소원을 한 줄로', max: 20, ph: '예: 오늘 같은 날이 자주 오게 해 주세요', line: '도깨비가 소원을 하나쯤은 귀담아들어요.', hint: '길게 안 써도 돼요.' }
   ];
   var NEAR_M = 500; // 이 안이면 "현장 확인" (휴대폰 위치 오차를 넉넉히 본다)
   var KEY = 'dojjaebi.mission.v2';
@@ -85,7 +85,7 @@
   }
   function recentTexts(records, myUid, filter, n) { // text → 최근 글 n개 (검사 규칙 통과한 것만)
     var o = othersOf(records, myUid).sort(function (a, b) { return (+b.ts || 0) - (+a.ts || 0); }), out = [];
-    for (var i = 0; i < o.length && out.length < (n || 3); i++) { if (!filter || filter.check(o[i].t).ok) out.push(o[i].t); }
+    for (var i = 0; i < o.length && out.length < (n || 3); i++) { if (!filter || (filter.checkShare || filter.check)(o[i].t).ok) out.push(o[i].t); }
     return out;
   }
   function fallbackReact(m, answer) {
@@ -253,12 +253,14 @@
     ok.addEventListener('click', function () {
       var v = validateAnswer(m, getVal(), root.ChatFilter); if (!v.ok) { msg.textContent = v.why; return; }
       ok.disabled = true; msg.textContent = '휴대폰 위치를 확인하는 중이에요…';
-      var shareOn = !!(share && share.checked);
+      var shareOn = !!(share && share.checked), moneyHold = false;
+      if (shareOn && root.ChatFilter && root.ChatFilter.checkShare && m.kind === 'text' && root.ChatFilter.checkShare(v.text).money) { shareOn = false; moneyHold = true; }
       getPos().then(function (pos) {
         st[m.id] = { ts: Date.now(), via: judge(m, pos), answer: v.text, shared: shareOn && m.kind !== 'bingo', react: fallbackReact(m, v.text) };
         saveStamps(st); open = null; delete tr[m.id];
         var p = placeOf(m), done = shareOn ? shareTrace(m, v.text) : Promise.resolve();
         render();
+        if (moneyHold) { var nb = $('msBody'); if (nb) nb.insertBefore(mk('p', 'ms-note', '돈 얘기가 있는 글은 다른 여행자에게 보이지 않아요. 내 기록에는 남아요.'), nb.firstChild); }
         aiPost({ task: 'react', place: { id: p.id, name: p.name }, mission: m.title, answer: v.text }, 6000).then(function (j) { if (j && j.line) { st[m.id].react = j.line; saveStamps(st); if (el && !el.hidden && view === 'list' && !$('msBody').querySelector('.ms-form')) render(); } });
         done.then(function () { loadTraces(m); });
       });
