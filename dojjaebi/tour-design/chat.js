@@ -1,13 +1,13 @@
 /*
  * 동해 사랑방 (2026-11-09) — 로그인 없이 이름만 받아 동해 사람들과 한 줄씩 얘기하는 방.
  *  - 방은 하나. 장소 카드에서 들어오면 그 장소 이름이 붙은 채로 열리고 "이 장소 얘기만" 볼 수 있다.
- *  - 저장소: Firebase 실시간 데이터베이스(dojjaebi 프로젝트) 의 /msgs. 글은 지우지 않고 데이터로 쌓는다(방 화면엔 최근 30일, 장소 요약·추천엔 1년치를 쓴다). 신고가 쌓인 글만 가린다.
+ *  - 저장소: Firebase 실시간 데이터베이스(dojjaebi 프로젝트) 의 /msgs. 글은 지우지 않고 데이터로 쌓는다(방 화면엔 최근 3일·80개, 나머지는 /arch 보관함에 쌓아 장소 요약·추천엔 1년치를 쓴다). 신고가 쌓인 글만 가린다.
  *  - 검사 규칙(링크·전화번호·욕설·도배)은 chatfilter.js. 신고 3번이면 모두에게 가려진다.
  *  - 시연용 예시 글: 주소 뒤에 ?seed=1 을 붙여 한 번 열면 '예시' 표시가 붙은 글이 들어간다(진짜 이용자 글과 구분).
  *  - 나라 밖 서비스(gstatic)에서 받아 오므로 인터넷이 막히면 "연결이 안 돼요"가 뜨고 나머지 화면은 그대로 쓴다.
  */
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-app.js';
-import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, remove, runTransaction } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-database.js';
+import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, remove, runTransaction, get, set } from 'https://www.gstatic.com/firebasejs/13.2.0/firebase-database.js';
 
 (function () {
   'use strict';
@@ -19,7 +19,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     appId: '1:968561148026:web:80d087555b2726b11bbbc3'
   };
   var F = window.ChatFilter;
-  var DAY = 30 * 24 * 3600 * 1000, DATA_DAY = 365 * 24 * 3600 * 1000, HIDE_AT = 3, GAP_MS = 5000, KEEP = 500; // 글은 지우지 않고 데이터로 쌓는다. 방 화면은 최근 30일, 요약·추천 자료는 1년치
+  var DAY = 3 * 24 * 3600 * 1000, DATA_DAY = 365 * 24 * 3600 * 1000, HIDE_AT = 3, GAP_MS = 5000, KEEP = 80, ARCH_N = 300; // 방 화면은 최근 3일·80개만 받아 데이터를 아낀다. 오래된 글은 따로 /arch 에 쌓아 두고 요약·추천이 필요할 때만 한 번에 받는다(5분 재사용) // 글은 지우지 않고 데이터로 쌓는다. 방 화면은 최근 30일, 요약·추천 자료는 1년치
 
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* 저장 못 해도 괜찮음 */ } }
@@ -49,7 +49,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     el.id = 'chatRoom'; el.className = 'cr'; el.hidden = true;
     el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'crTitle'); el.tabIndex = -1;
     el.innerHTML =
-      '<header class="cr-head"><div class="cr-ht"><h2 id="crTitle">동해 사랑방</h2><p class="cr-sub">이름도 얼굴도 몰라도 괜찮아요. 글은 30일 동안 남아 다른 여행자의 추천에 쓰여요.</p></div>' +
+      '<header class="cr-head"><div class="cr-ht"><h2 id="crTitle">동해 사랑방</h2><p class="cr-sub">이름도 얼굴도 몰라도 괜찮아요. 방에는 최근 3일 글이 보이고, 글은 따로 남아 다른 여행자의 추천에 쓰여요.</p></div>' +
       '<button type="button" class="cr-x" data-cr="close" aria-label="사랑방 닫기"><span aria-hidden="true">✕</span> 닫기</button></header>' +
       '<p class="cr-note" id="crNote">이용자가 남긴 글이에요. 도째비의 추천이 아니에요. 가게·숙소 정보는 가시기 전에 꼭 확인하세요.</p>' +
       '<div class="cr-chips" id="crChips" role="group" aria-label="글 골라 보기"><button type="button" class="cr-chip" data-crf="all" aria-pressed="true">전체</button><button type="button" class="cr-chip" data-crf="place" aria-pressed="false" hidden></button></div>' +
@@ -141,7 +141,10 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     var rec = { u: uid, n: nick, t: r.text, ts: serverTimestamp() };
     if (ctx && tagOn) { rec.pl = ctx.id; rec.pn = ctx.name; }
     var btn = el.querySelector('.cr-send'); btn.disabled = true; setMsg('');
-    push(ref(db, 'msgs'), rec).then(function () {
+    var pr = push(ref(db, 'msgs'), rec);
+    pr.then(function () {
+      var ar = { u: rec.u, t: rec.t, ts: Date.now() }; if (rec.pl) { ar.pl = rec.pl; ar.pn = rec.pn; }
+      set(ref(db, 'arch/' + pr.key), ar).catch(function () { /* 보관 실패는 무시 */ });
       lastSend = Date.now(); lastText = r.text; inp.value = ''; btn.disabled = false; render(true);
     }).catch(function () { btn.disabled = false; setMsg('보내지 못했어요. 인터넷을 확인해 주세요.', true); });
   }
@@ -154,7 +157,8 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     }
     reported[k] = 1; lsSet('chat.reported', JSON.stringify(reported)); render(false);
     setMsg('신고했어요. 여러 사람이 신고하면 글이 모두에게 가려져요.');
-    if (db) runTransaction(ref(db, 'msgs/' + k + '/r'), function (v) { return (v || 0) + 1; }).catch(function () { /* 못 보내도 내 화면에선 가려짐 */ });
+    if (db) { runTransaction(ref(db, 'msgs/' + k + '/r'), function (v) { return (v || 0) + 1; }).catch(function () { /* 못 보내도 내 화면에선 가려짐 */ });
+      runTransaction(ref(db, 'arch/' + k + '/r'), function (v) { return v === null ? null : (v || 0) + 1; }).catch(function () { /* 무시 */ }); }
   }
 
   function onClick(ev) {
@@ -208,17 +212,30 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
   /* ---- 장소 카드의 "사랑방 얘기 요약" (AI 중계 task:'room') ----
    * 그 장소 이름이 붙은 최근 24시간 글만 보낸다. 글쓴이는 번호(0,1,2…)로만 보내고, "이용자 N명"은 중계 함수가 번호를 세어 돌려준다.
    * 요약은 도째비의 추천이 아니라 이용자가 한 말을 전하는 것 — 화면에도 그렇게 적는다. 같은 장소는 90초 동안 결과를 다시 쓴다. */
+  /* 보관함(/arch): 방 화면과 따로 쌓는 글 모음. 필요할 때만 최근 ARCH_N 개를 한 번 받고 5분 동안 다시 쓴다 */
+  var arch = [], archAt = 0, archBusy = null;
+  function loadArch(cb) {
+    if (!db) { cb && cb(); return; }
+    if (Date.now() - archAt < 300000) { cb && cb(); return; }
+    if (archBusy) { if (cb) archBusy.push(cb); return; }
+    archBusy = cb ? [cb] : [];
+    get(query(ref(db, 'arch'), limitToLast(ARCH_N))).then(function (snap) {
+      var a = []; snap.forEach(function (c) { var v = c.val() || {}; v.k = c.key; v.ts = +v.ts || 0; a.push(v); }); arch = a; archAt = Date.now();
+    }).catch(function () { /* 못 받으면 방 화면 글만 쓴다 */ }).then(function () { var w = archBusy || []; archBusy = null; w.forEach(function (f) { f(); }); });
+  }
+  function pool() { var seen = {}, out = []; arch.concat(msgs).forEach(function (m) { if (seen[m.k] && seen[m.k].r >= (m.r || 0)) return; seen[m.k] = m; }); Object.keys(seen).forEach(function (k) { out.push(seen[k]); }); return out.sort(function (a, b) { return a.ts - b.ts; }); }
   var placeNames = {}; // 장소 id → 이름들(글에 장소 이름이 들어 있으면 그 장소 얘기로 센다). 앱이 setPlaces 로 알려 준다
   var sumCache = {}, MOOD = { good: '좋았다는 말', bad: '아쉬웠다는 말', info: '알려 준 말', ask: '궁금해하는 말' };
   function roomMsgs(id) {
     var cut = Date.now() - DATA_DAY, nm = placeNames[id] || [];
-    return msgs.filter(function (m) {
+    return pool().filter(function (m) {
       if (!m.t || m.ts < cut || (m.r || 0) >= HIDE_AT || reported[m.k]) return false;
       return m.pl === id || nm.some(function (n) { return n && m.t.indexOf(n) >= 0; });
     });
   }
   function sumShow(out, html) { out.innerHTML = html; }
-  function summary(id, name, out, btn) {
+  function summary(id, name, out, btn) { loadArch(function () { summaryGo(id, name, out, btn); }); }
+  function summaryGo(id, name, out, btn) {
     id = String(id); name = String(name || '이 장소');
     var list = roomMsgs(id);
     if (!list.length) {
@@ -255,9 +272,10 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
   /* AI 대화(맛집·숙소 질문)에 쓸 최근 이용자 글: 글쓴이는 번호로만, 신고 많은 글·예시 글 제외, 최근 1년 최대 n개 */
   function recent(n) {
     var cut = Date.now() - DATA_DAY, who = {}, nw = 0;
-    return msgs.filter(function (m) { return m.t && !m.d && m.ts >= cut && (m.r || 0) < HIDE_AT && !reported[m.k]; }).slice(-(n || 40)).map(function (m) { if (who[m.u] == null) who[m.u] = nw++; return { w: who[m.u], t: String(m.t).slice(0, 80) }; });
+    return pool().filter(function (m) { return m.t && !m.d && m.ts >= cut && (m.r || 0) < HIDE_AT && !reported[m.k]; }).slice(-(n || 40)).map(function (m) { if (who[m.u] == null) who[m.u] = nw++; return { w: who[m.u], t: String(m.t).slice(0, 80) }; });
   }
   function setPlaces(list) { (list || []).forEach(function (p) { if (p && p.id) placeNames[String(p.id)] = [p.name, p.short].filter(function (x, i, a) { return x && a.indexOf(x) === i && x.length >= 3; }); }); }
+  setTimeout(function () { loadArch(); }, 2500); // 대화 AI 가 쓸 수 있게 미리 한 번
   window.TourChat = { open: open, close: close, summary: summary, recent: recent, setPlaces: setPlaces };
   if (window.TourNav) window.TourNav.register('chatRoom', close);
   var tab = document.getElementById('tabRoom');
