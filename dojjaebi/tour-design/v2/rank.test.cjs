@@ -13,4 +13,6 @@ ok(A('동해 여행 어디가 좋아요?',P).mode==='recent'&&A('동해 여행 �
 ok(A('동해 여행 어디가 좋아요?',P).list.every(p=>!R.isQuestion(p.t)),'최근 글에 질문 없음');
 ok(A('곰치국 먹고 싶어요',P).mode==='match','딱 맞는 글은 match');
 ok(A('아무거나',[]).mode==='none','글 0개');
+ok(R.isQuestion('혼자 힐링하고 싶다')&&R.isQuestion('오늘 당일치기로 힐링하고 싶다 추천좀')&&R.isQuestion('묵호 코스 짜 주세요'),'부탁말도 질문');
+ok(!R.isQuestion('곰치국 해장에 좋아요 호불호는 좀 갈려요')&&!R.isQuestion('대우칼국수 줄이 길어요')&&!R.isQuestion('묵호에 비와요'),'경험글은 질문 아님');
 console.log('fail='+f);process.exit(f?1:0);
