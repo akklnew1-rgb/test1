@@ -2133,3 +2133,16 @@ html{ background:#e9f3f5; }
   .bub.me{ background:#263842; color:#e6f7fb; box-shadow:none; }
   .bub.bot{ background:#202a31; }
 }
+
+/* ===== 2026-11-16 다크모드 최종(두 AI 비교: 제미나이 #161d22 는 아직 어두워서 지피티의 더 밝은 청록 슬레이트 값 채택. 강조 단추 글자는 어두운 색) ===== */
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#203844; --paper:#2a4653; --soft:#31515f; --line:#3d5f6e; --muted:#c2d7df;
+    --brand:#71d1e3; --brand-dark:#bff0fa; --brand-soft:#31515f; --wz:#71d1e3; --wz-soft:#31515f; --wz-line:#4a7d8f; }
+  html{ background:#182c36; }
+  .top,.tabs{ background:#27414d; box-shadow:0 1px 0 #3d5f6e; } .tabs{ box-shadow:0 -1px 0 #3d5f6e; }
+  .btn,.chip,.qs-card,.pc-row,.nx-row,.wx,.intro-card{ background:#2a4653; box-shadow:inset 0 0 0 1px #3d5f6e; }
+  .btn.primary{ background:#71d1e3; color:#142d3a; }
+  .chip[aria-pressed="true"],.chip[aria-checked="true"]{ background:#31515f; color:#d6f5fb; box-shadow:inset 0 0 0 1.5px #71d1e3; }
+  .bub.me{ background:#31515f; color:#eaf8fb; }
+  .bub.bot{ background:#2a4653; }
+}
