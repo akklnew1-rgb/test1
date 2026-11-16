@@ -700,7 +700,7 @@
     var mine = SG.a = { key: key, field: miss[0], q: SG_ASK[miss[0]][0], ai: false, gone: false }; sgAskPaint();
     aiCall({ task: 'suggest', kind: 'ask', missing: miss, with: c.companions, date: c.date, how: c.how }, 5000).then(function (j) {
       if (SG.a !== mine || !j || !j.field || miss.indexOf(j.field) < 0) return;
-      mine.field = j.field; mine.q = j.q; mine.ai = true; sgAskPaint();
+      mine.field = j.field; mine.q = SG_ASK[j.field][0]; mine.ai = true; sgAskPaint(); /* 질문 글은 AI가 쓰지 않고 정해 둔 문장만(AI가 '도해시'처럼 글자를 틀린 적이 있음) */
     });
   }
   document.addEventListener('click', function (ev) {
