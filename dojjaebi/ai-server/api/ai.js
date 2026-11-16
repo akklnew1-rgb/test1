@@ -72,7 +72,7 @@ var REACT_SCHEMA = { type: 'OBJECT', properties: { line: { type: 'STRING' } }, r
 /* 2026-11-16 v2 묻기: 이용자 글이 없는 질문에 바로 답한다. 가게·숙소는 고르지 않고, 장소는 앱이 보낸 places 안에서만 말한다. */
 var QA_SYS = '너는 동해시 여행 앱의 도깨비 "도째비"다. 여행자의 질문(q)에 짧게 답한다. 이 답은 이용자가 남긴 글이 아니라 AI 안내다. ' +
   '규칙: 쉬운 한국어 존댓말, 영어·어려운 한자어 금지, 4문장 이내(300자 안쪽). ' +
-  '장소(관광지)는 입력 places 의 이름 안에서 골라 추천해도 된다. 추천한 장소는 입력 info 에 있는 운영시간(h)을 그대로 함께 말한다("자료 기준"이라고 덧붙인다). info 에 없는 장소·역사·값·날씨·기차 시각은 지어내지 않는다. ' +
+  '장소(관광지)는 입력 places 의 이름 안에서 골라 추천해도 된다. 지금 시각(now)이 입력으로 주어지고 info 의 s 에 장소별 열림 상태가 코드로 계산돼 있다. 반드시 s 가 "지금 열림"이고 남은 시간이 40분 이상인 장소만 추천한다(닫았거나 곧 닫는 곳, 쉬는 날, 아직 안 열린 곳은 추천하지 않는다). 추천한 장소는 s 의 닫는 시각을 함께 말한다("자료 기준"). 지금 추천할 만한 곳이 없으면 그렇다고 말하고, 늘 열려 있는 곳이나 내일 갈 만한 곳(그 운영시간과 함께)을 말한다. 시간은 직접 계산하지 말고 s 를 그대로 옮긴다. info 에 없는 장소·역사·값·날씨·기차 시각은 지어내지 않는다. ' +
   '식당·카페·숙소: AI가 직접 고르거나 맛을 평가하지 않는다. 입력 posts(이용자 글, w 는 글쓴이 번호)에 나온 가게·메뉴만 말할 수 있고, 반드시 "이용자 N명이 ~라고 했어요"처럼 N 은 서로 다른 w 의 수로 센 숫자와 글의 내용 그대로 전한다. 글에 없는 가게 이름·메뉴는 말하지 않는다. posts 가 비었으면 "가게는 제가 고르지 않아요. 식당가는 가까운 순으로 보시고, 다녀간 분의 글이 올라오면 먼저 보여 드려요"라고만 한다. ' +
   '가게(식당·카페·숙소) 얘기를 한 답에만 마지막에 "고르는 건 여행자님이에요, 영업 여부는 가시기 전에 확인해 주세요" 뜻을 한 문장으로 넣는다. 관광지만 말한 답에는 이 문장을 넣지 않는다. 인사말("안녕하세요" 등)로 시작하지 않는다. 되묻는 문장은 넣지 않는다. 가게 질문이 아니면 가게 얘기("가게는 제가 고르지 않아요…")도 하지 않는다. 출력은 reply 하나.';
 var QA_SCHEMA = { type: 'OBJECT', properties: { reply: { type: 'STRING' } }, required: ['reply'] };
@@ -408,9 +408,10 @@ module.exports = async function handler(req, res) {
     if (b.task === 'qa') {
       var qq = cleanLine(b.q, 80), qpl = (Array.isArray(b.places) ? b.places : []).slice(0, 60).map(function (x) { return cleanLine(x, 20); }).filter(Boolean);
       if (!qq) { res.status(400).json({ ok: false }); return; }
-      var qinfo = (Array.isArray(b.info) ? b.info : []).slice(0, 40).map(function (x) { return { n: cleanLine(x && x.n, 24), h: cleanLine(x && x.h, 70) }; }).filter(function (x) { return x.n && x.h; });
+      var qinfo = (Array.isArray(b.info) ? b.info : []).slice(0, 40).map(function (x) { return { n: cleanLine(x && x.n, 24), h: cleanLine(x && x.h, 70), s: cleanLine(x && x.s, 40) }; }).filter(function (x) { return x.n && x.h; });
+      var qnow = cleanLine(b.now, 20);
       var qposts = (Array.isArray(b.posts) ? b.posts : []).slice(0, 8).map(function (m) { return { w: parseInt(m && m.w, 10), t: cleanLine(m && m.t, 80) }; }).filter(function (m) { return m.t && !isNaN(m.w) && m.w >= 0 && m.w < 100; });
-      var qraw = await gemini(QA_SYS, 'q: ' + qq + '\nplaces: ' + JSON.stringify(qpl) + '\ninfo: ' + JSON.stringify(qinfo) + '\nposts: ' + JSON.stringify(qposts), QA_SCHEMA, 500);
+      var qraw = await gemini(QA_SYS, 'q: ' + qq + '\nplaces: ' + JSON.stringify(qpl) + '\nnow: ' + qnow + '\ninfo: ' + JSON.stringify(qinfo) + '\nposts: ' + JSON.stringify(qposts), QA_SCHEMA, 500);
       var qj; try { qj = JSON.parse(qraw); } catch (e) { res.status(200).json({ ok: false, why: 'parse' }); return; }
       var QBAN = /1위|엄선|보증|실패\s*없|할인|예약|무료|광고/;
       var qr = cleanLine(qj.reply, 320).split(/(?<=[.!?요])\s+/).filter(function (x) { return !QBAN.test(x); }).join(' ').trim();

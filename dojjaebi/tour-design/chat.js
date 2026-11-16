@@ -124,6 +124,21 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     }
     if (stick || aiNote) scrollEnd(true);
   }
+  /* 지금 시각 기준으로 장소마다 열림 여부와 남은 시간을 코드가 계산해 AI에 넘긴다(AI가 시간을 계산하지 않게) */
+  function nowText() { var d = new Date(); return '일월화수목금토'.charAt(d.getDay()) + '요일 ' + ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); }
+  function hhmm(m) { return ('0' + Math.floor(m / 60) % 24).slice(-2) + ':' + ('0' + m % 60).slice(-2); }
+  function placeInfo() {
+    var d = new Date(), now = d.getHours() * 60 + d.getMinutes(), dow = d.getDay();
+    return ((window.TOUR_DATA && window.TOUR_DATA.places) || []).map(function (p) {
+      var o = p.open || [0, 1440], h = String(p.openText || '').replace(/\s*·\s*관광공사 자료/, ''), s;
+      if ((p.closedDow || []).indexOf(dow) >= 0) s = '오늘 쉬는 날';
+      else if (o[0] <= 0 && o[1] >= 1440) s = '지금 열림(늘 열려 있음)';
+      else if (now < o[0]) s = '아직 안 열림(' + hhmm(o[0]) + '에 열어요)';
+      else if (now >= o[1]) s = '오늘 영업 끝(' + hhmm(o[1]) + '에 닫았어요)';
+      else s = '지금 열림(' + hhmm(o[1]) + '까지, ' + (o[1] - now) + '분 남음)';
+      return { n: p.name, h: h + (p.closedText ? ' · 쉬는 날 ' + String(p.closedText).replace(/\(.*\)/, '') : ''), s: s };
+    });
+  }
   function askAI(q) {
     var R = window.V2Rank, url = window.DOJJAEBI_AI_URL;
     if (!R || !R.isQuestion(q)) { aiNote = null; return; }
@@ -135,7 +150,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
       if (aiNote === mine && el && !el.hidden) render(false);
       if (!url || !window.fetch) { if (aiNote === mine) { mine.t = ''; if (el && !el.hidden) render(false); } return; }
       var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 9000);
-      fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ task: 'qa', q: q, places: names, info: ((window.TOUR_DATA && window.TOUR_DATA.places) || []).map(function (p) { return { n: p.name, h: String(p.openText || '').replace(/\s*·\s*관광공사 자료/, '') + (p.closedText ? ' · 쉬는 날 ' + String(p.closedText).replace(/\(.*\)/, '') : '') }; }), posts: (function () { var w = {}, k = 0; return mine.found.map(function (m) { if (w[m.u] === undefined) w[m.u] = k++; return { w: w[m.u], t: m.t }; }); })() }), signal: ctl ? ctl.signal : undefined })
+      fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ task: 'qa', q: q, places: names, info: placeInfo(), now: nowText(), posts: (function () { var w = {}, k = 0; return mine.found.map(function (m) { if (w[m.u] === undefined) w[m.u] = k++; return { w: w[m.u], t: m.t }; }); })() }), signal: ctl ? ctl.signal : undefined })
         .then(function (r) { return r.json(); }).then(function (j) { mine.t = j && j.ok ? j.reply : ''; })
         .catch(function () { mine.t = ''; }).then(function () { clearTimeout(tm); if (aiNote === mine && el && !el.hidden) render(false); });
     }
