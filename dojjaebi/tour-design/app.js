@@ -81,12 +81,12 @@
   S.cond = freshCond();
   var savedSim = parseInt(lsGet(K_SIM), 10);
   if (isFinite(savedSim)) S.simNow = savedSim;
-  function isSlow() { return S.cond.companions.indexOf('부모님') >= 0 || S.cond.knee; }
+  function isSlow() { return S.cond.companions.indexOf('어르신') >= 0 || S.cond.knee; }
 
   /* ---------- 편의 시설(화장실·관광안내소·숙박·식당): 공공데이터포털 자료, 자동 생성 facilities.js + 계산 fac.js ---------- */
   var FAC = window.FACILITIES || { toilets: [], infos: [], lodging: [], eats: [], source: {} }, FU = window.TourFac;
-  S.fac = { wc: null, info: false }; // wc: null = 함께 가는 사람이 부모님·아이면 켜짐, 아니면 꺼짐(누르면 그 값을 따름)
-  function wcOn() { return S.fac.wc === null ? (S.cond.companions.indexOf('부모님') >= 0 || S.cond.companions.indexOf('아이') >= 0) : S.fac.wc; }
+  S.fac = { wc: null, info: false }; // wc: null = 함께 가는 사람이 어르신·아이면 켜짐, 아니면 꺼짐(누르면 그 값을 따름)
+  function wcOn() { return S.fac.wc === null ? (S.cond.companions.indexOf('어르신') >= 0 || S.cond.companions.indexOf('아이') >= 0) : S.fac.wc; }
   /* 게시물 아래 줄: 300m 안에 화장실이 있을 때만, 가장 가까운 곳 하나 */
   function wcLineHtml(p) {
     var hit = FU && p ? FU.nearest(FAC.toilets, p.lat, p.lng, 300) : null;
@@ -207,7 +207,7 @@
 
   /* ---------- 1. 시작: 날씨 + 올 때 / 돌아갈 때 / 누구와 ---------- */
   var HOW_NAME = { train: '기차', bus: '버스', car: '자가용' };
-  var COMPS = ['친구', '연인', '혼자', '아이', '부모님'];
+  var COMPS = ['친구', '연인', '혼자', '아이', '어르신'];
   function isoLocal(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
   /* 도착 시각 기본값: 다음 정시. 지금이 20시를 넘었으면 내일 10:00 */
   function startDefaults() {
@@ -320,7 +320,7 @@
   }
   function compOf(c) { return c.companions[0] || ''; }
   function setComp(c, name) { c.companions = name ? [name] : []; }
-  /* 누구와: 여러 명 함께 고를 수 있음(아이+부모님 등). 「혼자」는 다른 것과 같이 못 고름(서로 배타) */
+  /* 누구와: 여러 명 함께 고를 수 있음(아이+어르신 등). 「혼자」는 다른 것과 같이 못 고름(서로 배타) */
   function toggleComp(c, name) {
     var arr = c.companions || (c.companions = []);
     if (name === '혼자') { c.companions = arr.indexOf('혼자') >= 0 ? [] : ['혼자']; return; }
@@ -400,9 +400,9 @@
     if (c.backDate === c.date && eff < c.arrive) body += '<p class="note warnline">도착 시각보다 앞이에요. 날짜나 시각을 다시 골라 주세요.</p>';
     $('outBody').innerHTML = body;
     $('inNote').textContent = c.how === 'train' ? '' :c.how === 'bus' ? D.stations.bus.name + '에서 시작해요.' : D.stations.park.name + '에서 시작해요.';
-    var CE = { '친구': ['<svg class="ic" aria-hidden="true"><use href="#i-pair"/></svg>', '사진·카페·노을'], '연인': ['<svg class="ic" aria-hidden="true"><use href="#i-pair"/></svg>', '노을·카페를 천천히'], '혼자': ['<svg class="ic" aria-hidden="true"><use href="#i-solo"/></svg>', '조용히 쉬어 가요'], '아이': ['<svg class="ic" aria-hidden="true"><use href="#i-family"/></svg>', '쉬운 길, 체험 중심'], '부모님': ['<svg class="ic" aria-hidden="true"><use href="#i-parent"/></svg>', '덜 걷고 편안하게'] };
+    var CE = { '친구': ['<svg class="ic" aria-hidden="true"><use href="#i-pair"/></svg>', '사진·카페·노을'], '연인': ['<svg class="ic" aria-hidden="true"><use href="#i-pair"/></svg>', '노을·카페를 천천히'], '혼자': ['<svg class="ic" aria-hidden="true"><use href="#i-solo"/></svg>', '조용히 쉬어 가요'], '아이': ['<svg class="ic" aria-hidden="true"><use href="#i-family"/></svg>', '쉬운 길, 체험 중심'], '어르신': ['<svg class="ic" aria-hidden="true"><use href="#i-parent"/></svg>', '덜 걷고 편안하게'] };
     $('chipComp').innerHTML = COMPS.map(function (nm) { return '<button type="button" class="qs-card" aria-pressed="' + ((c.companions || []).indexOf(nm) >= 0 ? 'true' : 'false') + '" data-comp="' + nm + '"><span class="qs-e" aria-hidden="true">' + CE[nm][0] + '</span><b>' + nm + '</b><span>' + CE[nm][1] + '</span></button>'; }).join('');
-    var comp0 = c.companions || [], paceNote = comp0.indexOf('부모님') >= 0 ? '부모님과 함께라 걷기 편한 곳 위주로 짜요' : comp0.indexOf('아이') >= 0 ? '아이와 함께라 쉬운 길 위주로 짜요' : '';
+    var comp0 = c.companions || [], paceNote = comp0.indexOf('어르신') >= 0 ? '어르신과 함께라 걷기 편한 곳 위주로 짜요' : comp0.indexOf('아이') >= 0 ? '아이와 함께라 쉬운 길 위주로 짜요' : '';
     var paceNow = c.knee ? 'easy' : c.hard ? 'hard' : 'normal';
     function paceBtn(v, nm, sub) { return '<button type="button" class="pace-b" aria-pressed="' + (paceNow === v ? 'true' : 'false') + '" data-pace="' + v + '"><b>' + nm + '</b><span>' + sub + '</span></button>'; }
     $('paceBox').innerHTML = paceNote ? '<p class="pace-note">' + esc(paceNote) + '</p>' : '<div class="pace-h" id="paceH">얼마나 걷고 싶으세요?</div><div class="pace-seg" role="group" aria-labelledby="paceH">' + paceBtn('easy', '살랑살랑', '평지·실내 위주') + paceBtn('normal', '가벼운 산책', '기본 · 30분 안') + paceBtn('hard', '땀나는 탐방', '등산길 포함') + '</div>';
@@ -611,8 +611,8 @@
     if (f) return f.tmin + '~' + f.tmax + '℃ ' + (f.text || '') + (f.pop != null ? ' 비 ' + f.pop + '%' : '');
     return ''; // 실제 날씨를 모르면 말하지 않는다
   }
-  function sgSlow(c) { var a = c.companions || []; return a.indexOf('부모님') >= 0 || a.indexOf('아이') >= 0 || !!c.knee; }
-  function sgElder(c) { return (c.companions || []).indexOf('부모님') >= 0 || !!c.knee; }
+  function sgSlow(c) { var a = c.companions || []; return a.indexOf('어르신') >= 0 || a.indexOf('아이') >= 0 || !!c.knee; }
+  function sgElder(c) { return (c.companions || []).indexOf('어르신') >= 0 || !!c.knee; }
   function sgTags(c) { var t = [], a = c.companions || []; a.forEach(function (x) { if (x !== '혼자') t.push(x + (((x.charCodeAt(x.length - 1) - 44032) % 28) ? '과' : '와') + ' 함께'); }); if (c.knee) t.push('계단 걱정'); if (c.rain) t.push('비 와요'); if (sgWeather()) t.push('날씨 반영'); return t.slice(0, 4); }
   function sgTagHtml(c) { var t = sgTags(c); return t.length ? '<div class="sg-tags">' + t.map(function (x) { return '<span>' + esc(x) + '</span>'; }).join('') + '</div>' : ''; }
   function sgSrc(ai) { return '<p class="sg-src">' + (ai ? '인공지능(제미나이)이 낸 제안이에요' : '정해 둔 규칙으로 낸 제안이에요') + ' · 고르는 건 내 몫이에요</p>'; }
@@ -1191,11 +1191,11 @@
   $('runDemoDay').addEventListener('click', function () { runDemo('day'); });
   $('runDemoTour').addEventListener('click', function () { runDemo('tour'); });
   $('runDemo1bak').addEventListener('click', function () { runDemo('1bak'); });
-  /* 예시: 'normal' 13시 부모님 · 'meal' 낮 12시 "점심도 먹고 싶어요"(점심 시간 포함) · 'day' 10시 도착 · 19:40 기차 · 친구 · 가장 가까운 장날 → 먼 권역까지 가는 하루
+  /* 예시: 'normal' 13시 어르신 · 'meal' 낮 12시 "점심도 먹고 싶어요"(점심 시간 포함) · 'day' 10시 도착 · 19:40 기차 · 친구 · 가장 가까운 장날 → 먼 권역까지 가는 하루
      'bus' 터미널에서 시작·끝 · 'car' 주차장에서 시작·끝 · 'kid' 아이 · 'couple' 연인 저녁(자가용 15~21시) */
   var DEMOS = {
-    normal: { say: '6시 10분 기차, 부모님과 가요', arrive: 13 * 60 },
-    meal: { say: '6시 10분 기차, 부모님과 가요. 점심도 먹고 싶어요', arrive: 12 * 60 },
+    normal: { say: '6시 10분 기차, 어르신과 가요', arrive: 13 * 60 },
+    meal: { say: '6시 10분 기차, 어르신과 가요. 점심도 먹고 싶어요', arrive: 12 * 60 },
     day: { say: '7시 40분 기차, 친구랑 가요', arrive: 10 * 60, market: true },
     bus: { how: 'bus', arrive: 10 * 60, back: 18 * 60, comp: '친구' },
     car: { how: 'car', arrive: 10 * 60, back: 18 * 60, comp: '친구' },
@@ -2913,7 +2913,7 @@
   function renderStayInner() {
     if (S.plan && S.plan.multi) { // 여러 날 여행: 날마다 묵는 곳 안내
       var sy = S.plan.stay;
-      $('stayOpts').innerHTML = '<div class="opt on"><b>' + esc(S.plan.label) + ' 코스예요</b><p>날마다 새로 짜서, 밤에는 숙소 앞에서 마쳐요. 둘째 날 새벽에는 숙소에서 가까운 바다 쪽 일출 자리로 시작할 수 있어요(비 오는 날·아이·부모님과는 뺌).</p>' +
+      $('stayOpts').innerHTML = '<div class="opt on"><b>' + esc(S.plan.label) + ' 코스예요</b><p>날마다 새로 짜서, 밤에는 숙소 앞에서 마쳐요. 둘째 날 새벽에는 숙소에서 가까운 바다 쪽 일출 자리로 시작할 수 있어요(비 오는 날·아이·어르신과는 뺌).</p>' +
         (sy && sy.examples && sy.examples.length ? '<p>숙소 예' + (sy.area ? '(' + esc(sy.area) + ' 권역)' : S.stayPick ? '' : '(묵호역에서 가까운 순)') + ': ' + sy.examples.map(esc).join(' · ') + '</p><p class="note">출처: ' + esc(sy.source) + ' · 모텔·펜션은 자료에 없어요 · 별점·광고 없음 · 예약·요금은 직접 확인</p>' : '<p class="note">숙박업소 자료가 없어 묵호역 둘레로 잡았어요.</p>') + // 2026-10-21: "가까운 순"은 기본값(묵호역 둘레)일 때만 맞는 말이라, 권역 추천·손으로 고른 숙소일 땐 다르게 보여줌
         '<p class="note">막차·하룻밤 비교는 하루 여행에서만 보여요.</p></div>';
       return;
@@ -3998,7 +3998,7 @@
   var REC_SEED = [
     { id: 'seed-gamchusa', seed: true, name: '감추사', line: '계단을 내려가면 바위 틈에 작은 절이 앉아 있어요', photo: '사진캐시/2735620.jpg', likes: 6, ts: 3, tags: ['혼자', '연인'] },
     { id: 'seed-byeoryu', seed: true, name: '무릉별유천지', line: '석회석 광산이 에메랄드빛 호수가 된 곳이에요', photo: '사진캐시/2820546.jpg', likes: 9, ts: 2, tags: ['친구', '연인'] },
-    { id: 'seed-suibyeon', seed: true, name: '묵호항수변공원', line: '방파제를 따라 걷다 해돋이도 볼 수 있어요', photo: '사진캐시/2774728.jpg', likes: 4, ts: 1, tags: ['부모님', '혼자'] }
+    { id: 'seed-suibyeon', seed: true, name: '묵호항수변공원', line: '방파제를 따라 걷다 해돋이도 볼 수 있어요', photo: '사진캐시/2774728.jpg', likes: 4, ts: 1, tags: ['어르신', '혼자'] }
   ];
   var RS = { sort: 'like', st: null };
   function recState() { var s = jget(K_REC, null); if (!s || typeof s !== 'object') s = {}; s.posts = Array.isArray(s.posts) ? s.posts : []; s.liked = s.liked && typeof s.liked === 'object' ? s.liked : {}; return s; }

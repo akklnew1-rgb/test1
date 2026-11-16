@@ -7,7 +7,7 @@ assert.strictEqual(cleanSuggest({ arrive: '03:00', reason: '이유' }, { kind: '
 assert.strictEqual(cleanSuggest({ arrive: '12:00', back: '11:00', reason: '이유' }, { kind: 'time', needArrive: true, needBack: true }).back, undefined);
 assert.strictEqual(cleanSuggest({ arrive: '11:00', reason: '가장 유명한 시간' }, { kind: 'time', needArrive: true }), null); // 금지어
 // must
-assert.deepStrictEqual(cleanSuggest({ ids: ['a', 'b', 'zzz', 'a', 'c'], whys: ['x', 'y', 'z', 'w', 'v'] }, { kind: 'must', cands: C, with: '부모님' }), { ids: ['a', 'c'], whys: ['x', 'v'] }); // 계단 곳·없는 id·중복 제외
+assert.deepStrictEqual(cleanSuggest({ ids: ['a', 'b', 'zzz', 'a', 'c'], whys: ['x', 'y', 'z', 'w', 'v'] }, { kind: 'must', cands: C, with: '어르신' }), { ids: ['a', 'c'], whys: ['x', 'v'] }); // 계단 곳·없는 id·중복 제외
 assert.deepStrictEqual(cleanSuggest({ ids: ['a', 'c'], whys: ['x', 'y'] }, { kind: 'must', cands: C, rain: true }), { ids: ['a'], whys: ['x'] }); // 비: 실내만
 assert.strictEqual(cleanSuggest({ ids: ['q'], whys: [] }, { kind: 'must', cands: C }), null);
 assert.strictEqual(cleanSuggest({ ids: ['a', 'b', 'c', 'a'], whys: [] }, { kind: 'must', cands: C }).ids.length, 3);

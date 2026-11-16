@@ -63,7 +63,7 @@
       else if (!a && h < 12 && h * 60 + m < (nowMin == null ? 780 : nowMin)) h += 12; // "6시 10분" → 지금보다 뒤인 18:10
       r.train = h * 60 + m;
     }
-    if (has(t, /부모|엄마|아빠|어머니|아버지|어르신|할머니|할아버지/)) r.companions.push('부모님');
+    if (has(t, /부모|엄마|아빠|어머니|아버지|어르신|할머니|할아버지/)) r.companions.push('어르신');
     if (has(t, /아이|아기|애들|아들|딸|초등/)) r.companions.push('아이');
     if (has(t, /연인|애인|남자친구|여자친구|남친|여친|커플|데이트|신혼/)) r.companions.push('연인');
     if (has(t, /친구/) && !has(t, /남자친구|여자친구/)) r.companions.push('친구');
@@ -133,10 +133,10 @@
   function won(n) { return String(n).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '원'; }
   function aiReadMenu(eatery, cond, file) {
     var comp = (cond && cond.companions) || [];
-    var parents = comp.indexOf('부모님') >= 0;
+    var parents = comp.indexOf('어르신') >= 0;
     var items = ((eatery && eatery.menu) || []).map(function (m) {
       var hasP = m.price > 0; // 값은 자료에 있을 때만 적는다
-      return { name: m.name, price: hasP ? m.price : null, priceText: hasP ? '약 ' + won(m.price) : '', soft: !!m.soft, tag: (parents && m.soft) ? '부모님께 좋아요' : '' };
+      return { name: m.name, price: hasP ? m.price : null, priceText: hasP ? '약 ' + won(m.price) : '', soft: !!m.soft, tag: (parents && m.soft) ? '어르신께 좋아요' : '' };
     });
     return { demo: true, title: (eatery ? eatery.name : '') + ' 메뉴판', items: items, parents: parents,
       note: '시연: 사진 내용과 상관없이 한국관광공사 자료의 메뉴 이름을 보여 드려요. 값은 자료에 없어 적지 않았어요.',
@@ -148,7 +148,7 @@
     var comp = (cond && cond.companions) || [];
     var lead = '';
     if (comp.indexOf('아이') >= 0) lead = '도째비가 소곤소곤 들려줄게요. ';
-    else if (comp.indexOf('부모님') >= 0) lead = '천천히 들어 보세요. ';
+    else if (comp.indexOf('어르신') >= 0) lead = '천천히 들어 보세요. ';
     var text = place.story;
     return { text: text, speak: lead + text, source: place.출처, confirm: !!place.확인필요 };
   }

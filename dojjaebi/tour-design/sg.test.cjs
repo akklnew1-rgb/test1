@@ -17,11 +17,11 @@ async function run(label, mock, expectAi, apply) {
   [...d.querySelectorAll('button')].find(b => /날짜·시간을 직접/.test(b.textContent)).click();
   // 1) 시각 제안: 누구와를 고르면 나온다
   assert.ok($('sugTime').hidden, label + ': 동행 전엔 안 보임');
-  d.querySelector('[data-comp="부모님"]').click(); await wait(80);
+  d.querySelector('[data-comp="어르신"]').click(); await wait(80);
   assert.ok(!$('sugTime').hidden, label + ': 동행 뒤 보임');
   const txt = $('sugTime').textContent; assert.ok(/도착 \d\d:\d\d/.test(txt) && /떠남 \d\d:\d\d/.test(txt), label + ': 시각 두 개 ' + txt);
   assert.ok(txt.indexOf(expectAi ? '제미나이' : '정해 둔 규칙') >= 0, label + ': 출처 표시');
-  assert.ok(/부모님과 함께/.test(txt), label + ': 이유 꼬리표');
+  assert.ok(/어르신과 함께/.test(txt), label + ': 이유 꼬리표');
   assert.strictEqual($('sTime').value === '', false);
   if (apply) {
     $('sugTime').querySelector('[data-sgtime]').click(); await wait(30);
@@ -51,6 +51,6 @@ async function run(label, mock, expectAi, apply) {
   console.log(label, '통과 · 호출', calls.map(c => c.kind).join(','));
 }
 const ai = (u, o) => { if (!o || !o.body) return Promise.reject(new Error('no net')); const b = JSON.parse(o.body), k = b.kind;
-  const body = k === 'time' ? { ok: true, arrive: '11:00', back: '17:30', reason: '부모님과 함께라 여유 있게' } : k === 'must' ? { ok: true, ids: ['cheongok', 'suibyeon'], whys: ['실내라 편해요', '평지 산책'] } : { ok: true, field: 'back', q: '돌아가는 시각은 정하셨나요?' };
+  const body = k === 'time' ? { ok: true, arrive: '11:00', back: '17:30', reason: '어르신과 함께라 여유 있게' } : k === 'must' ? { ok: true, ids: ['cheongok', 'suibyeon'], whys: ['실내라 편해요', '평지 산책'] } : { ok: true, field: 'back', q: '돌아가는 시각은 정하셨나요?' };
   return Promise.resolve({ json: () => Promise.resolve(body) }); };
 (async () => { await run('규칙', () => Promise.reject(new Error('no net')), false, true); await run('AI', ai, true, false); process.exit(0); })().catch(e => { console.error(e); process.exit(1); });

@@ -112,7 +112,7 @@
         </div>
         <button type="button" class="btn primary cta" id="chatMake" hidden>조건 확인하고 코스 짜기</button>
         <label for="askText" class="visually-hidden">도째비에게 할 말</label>
-        <textarea id="askText" autocomplete="off" rows="2" placeholder="예) 이번 토요일 부모님이랑 기차 타고 가요"></textarea>
+        <textarea id="askText" autocomplete="off" rows="2" placeholder="예) 이번 토요일 어르신이랑 기차 타고 가요"></textarea>
         <div class="ask-row">
           <button type="button" class="btn primary" id="askGo">보내기</button>
           <button type="button" class="btn" id="askMic" aria-label="말로 하기 (한 번 누르고 말씀하세요)"><svg class="ic" aria-hidden="true"><use href="#i-mic"/></svg><span id="askMicTxt">말로</span></button>
@@ -122,7 +122,7 @@
         <button type="button" class="btn exbtn" id="exToggle" aria-expanded="false" aria-controls="askChips">예시 보기</button>
         <div class="ask-chips" id="askChips" role="group" aria-label="이렇게 말해 보세요">
           <p class="ask-try">이렇게 말해 보셔도 돼요</p>
-          <button type="button" class="chip pchip" data-say="부모님이랑 동해 당일치기 가요. 많이 걷지 않는 코스로 짜 주세요."><span class="pc-t">부모님과 편하게</span><span class="pc-s">많이 걷지 않는 당일 코스</span></button>
+          <button type="button" class="chip pchip" data-say="어르신이랑 동해 당일치기 가요. 많이 걷지 않는 코스로 짜 주세요."><span class="pc-t">어르신과 편하게</span><span class="pc-s">많이 걷지 않는 당일 코스</span></button>
           <button type="button" class="chip pchip" data-say="아이랑 동해에 가요. 아이가 즐길 만한 체험과 볼거리를 넣어 주세요."><span class="pc-t">아이와 함께</span><span class="pc-s">체험이 있는 가족 여행</span></button>
           <button type="button" class="chip pchip" data-say="친구랑 동해에서 하루 놀 거예요. 바다와 사진 찍기 좋은 곳 위주로 짜 주세요."><span class="pc-t">친구와 알차게</span><span class="pc-s">바다와 사진 명소</span></button>
           <button type="button" class="chip pchip" data-say="묵호항과 주변 골목, 시장을 둘러보는 반나절 코스를 짜 주세요."><span class="pc-t">묵호 골목 여행</span><span class="pc-s">항구와 시장 둘러보기</span></button>
@@ -140,7 +140,7 @@
         <h2 class="qs-h"><span class="qs-n">2</span>누구와 함께 떠나나요?</h2>
         <div class="qs-grid two" role="group" aria-label="함께 가는 사람">
           <button type="button" class="qs-card" data-qs="comp" data-v="아이" aria-pressed="false"><span class="qs-e" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-family"/></svg></span><b>아이·가족</b><span>쉬운 길, 체험 중심</span></button>
-          <button type="button" class="qs-card" data-qs="comp" data-v="부모님" aria-pressed="false"><span class="qs-e" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-parent"/></svg></span><b>부모님</b><span>덜 걷고 편안하게</span></button>
+          <button type="button" class="qs-card" data-qs="comp" data-v="어르신" aria-pressed="false"><span class="qs-e" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-parent"/></svg></span><b>어르신</b><span>덜 걷고 편안하게</span></button>
           <button type="button" class="qs-card" data-qs="comp" data-v="친구" aria-pressed="false"><span class="qs-e" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-pair"/></svg></span><b>친구·연인</b><span>사진·카페·노을</span></button>
           <button type="button" class="qs-card" data-qs="comp" data-v="혼자" aria-pressed="false"><span class="qs-e" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-solo"/></svg></span><b>나 혼자</b><span>조용히 쉬어 가요</span></button>
         </div>
@@ -165,7 +165,7 @@
     <section class="ex" aria-labelledby="exH" hidden style="display:none">
       <h2 id="exH">예시 코스</h2>
       <div class="ex-row">
-        <button type="button" class="ex-card" id="runDemo" data-ph="mukhoport" aria-label="기본 예시 — 오후 1시 도착, 부모님과 반나절"><span class="ex-img"></span><b>오후 1시 도착<br>부모님과 반나절</b></button>
+        <button type="button" class="ex-card" id="runDemo" data-ph="mukhoport" aria-label="기본 예시 — 오후 1시 도착, 어르신과 반나절"><span class="ex-img"></span><b>오후 1시 도착<br>어르신과 반나절</b></button>
         <button type="button" class="ex-card" id="runDemoMeal" data-ph="gamchusa" aria-label="점심·저녁 포함 예시 — 낮 12시 도착, 점심 시간 포함"><span class="ex-img"></span><b>점심·저녁 포함<br>예시</b></button>
         <button type="button" class="ex-card" id="runDemoDay" data-ph="byeoryu" aria-label="하루 꽉 채운 예시 — 장날 낀 하루"><span class="ex-img"></span><b>장날 낀<br>하루 꽉 채워</b></button>
         <button type="button" class="ex-card" id="runDemoTour" data-ph="suibyeon" aria-label="시티투어버스로 돌기 예시"><span class="ex-img"></span><b>시티투어버스로<br>한 바퀴</b></button>
@@ -856,7 +856,7 @@
 <script src="citytour.js"></script>
 <script src="facilities.js"></script>
 <script src="fac.js"></script>
-<script src="planner.js?v=7"></script>
+<script src="planner.js?v=8"></script>
 <script src="sun.js?v=1"></script>
 <script src="rep.js"></script>
 <script src="crowd.js"></script>
@@ -868,10 +868,10 @@
 <script src="parking.data.js"></script>
 <script src="town.js"></script>
 <script src="ai-config.js"></script>
-<script src="ai.js?v=5"></script>
+<script src="ai.js?v=6"></script>
 <script src="art.js"></script>
 <script src="tourapi.js?v=5"></script>
-<script src="app.js?v=80"></script>
+<script src="app.js?v=81"></script>
 <script src="cam.js?v=3"></script>
 <script src="chatfilter.js?v=2"></script>
 <script type="module" src="chat.js?v=6"></script>
