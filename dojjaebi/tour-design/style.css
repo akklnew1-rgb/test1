@@ -1981,3 +1981,57 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
 .nx-b.on{ background:var(--soft); }
 .nx-sub{ margin:6px 0 0; }
 .nx-say{ margin:12px 0 4px; }
+
+/* ===== 2026-11-16 디자인 마감 — '묵호의 새벽': 깊은 바다 청록 + 일출 주황 한 점 + 바다유리빛 바탕.
+   테두리 대신 청록 기운이 든 부드러운 그림자로 면을 나누고, 제목만 굵은 글꼴(Gmarket Sans)로. 눌렀을 때만 살짝 움직임. ===== */
+:root{
+  --ink:#0e2330; --muted:#47606b; --line:#d3e1e4; --soft:#e4eef0; --paper:#ffffff; --bg:#edf3f4;
+  --brand:#0f5468; --brand-dark:#0a3b4b; --brand-soft:#dcebee; --c1:#f08a2e; --c2:#f4b15a; --c3:#0f5468;
+  --wz:#0f5468; --wz-soft:#dcebee; --wz-line:#b4d1d6; --wz-ink:#0a3b4b;
+  --sh-1:0 1px 2px rgba(10,59,75,.08), 0 4px 14px rgba(10,59,75,.06);
+  --sh-2:0 10px 30px rgba(10,59,75,.16);
+  --f-head:'GmarketSans','Pretendard','Noto Sans KR','Malgun Gothic',system-ui,sans-serif;
+}
+html{ background:#dfe9eb; }
+body{ background:var(--bg); }
+h1,h2{ font-family:var(--f-head); font-weight:700; letter-spacing:-.03em; }
+h3{ letter-spacing:-.02em; }
+.wordmark{ font-family:var(--f-head); font-weight:700; font-size:1.3em; letter-spacing:-.04em; background:linear-gradient(100deg,#0f5468 0%,#127088 55%,#f08a2e 130%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; color:transparent; }
+.top{ background:rgba(255,255,255,.96); border-bottom:0; box-shadow:0 1px 0 rgba(10,59,75,.06), 0 6px 18px rgba(10,59,75,.05); }
+/* 단추·칩: 테두리를 걷고 그림자로 */
+.btn{ border-color:transparent; background:#fff; box-shadow:var(--sh-1); font-weight:700; transition:transform .12s ease-out, box-shadow .12s ease-out; }
+.btn.primary{ background:linear-gradient(180deg,#136580 0%,#0c4659 100%); border-color:transparent; color:#fff; box-shadow:0 8px 18px rgba(15,84,104,.28), inset 0 1px 0 rgba(255,255,255,.14); }
+.btn.ghost{ background:transparent; box-shadow:none; }
+.chip{ border-color:transparent; background:#fff; box-shadow:var(--sh-1); }
+.chip[aria-pressed="true"],.chip[aria-checked="true"]{ background:linear-gradient(180deg,#136580,#0c4659); box-shadow:0 6px 14px rgba(15,84,104,.25); }
+.btn:active,.chip:active,.qs-card:active,.tab:active{ transform:scale(.97); }
+@media (prefers-reduced-motion: reduce){ .btn:active,.chip:active,.qs-card:active,.tab:active{ transform:none; } .btn,.chip{ transition:none; } }
+/* 첫 화면: 사진을 화면 가득, 아래 모서리만 둥글게, 새벽빛이 아래에서 번지게. 입력 카드가 사진 위로 겹침 */
+.hero{ margin:-16px calc(-1 * var(--gut)) 0; border-radius:0 0 28px 28px; }
+.hero-shade{ background:
+  radial-gradient(120% 60% at 12% 108%, rgba(240,138,46,.42) 0%, rgba(240,138,46,0) 62%),
+  linear-gradient(to bottom, rgba(4,24,32,.40) 0%, rgba(4,24,32,0) 30%, rgba(4,24,32,.12) 50%, rgba(4,24,32,.78) 100%); }
+.hero-txt h1{ font-family:var(--f-head); font-weight:700; letter-spacing:-.04em; text-shadow:0 2px 16px rgba(0,0,0,.4); }
+.intro-card{ margin:-26px var(--gut) 0; border-radius:20px; box-shadow:0 14px 34px rgba(10,59,75,.16); background:#fff; }
+.ask{ background:transparent; }
+.bub.bot{ background:var(--brand-soft); }
+.bub.me{ background:linear-gradient(180deg,#136580,#0c4659); }
+.qs-card{ border-color:transparent !important; background:#fff; box-shadow:var(--sh-1); border-radius:16px; transition:transform .12s ease-out; }
+/* 하단 탭: 위쪽 모서리를 둥글게, 선택된 칸 위에 일출 점 하나 */
+.tabs{ background:#fff; border-top:0; border-radius:20px 20px 0 0; box-shadow:0 -8px 24px rgba(10,59,75,.10); }
+.tab{ position:relative; font-weight:700; }
+.tab[aria-current="page"]::before{ content:''; position:absolute; top:6px; width:5px; height:5px; border-radius:50%; background:var(--c1); }
+.tab[aria-current="page"]{ color:var(--brand); }
+/* 점검·저장 칸 */
+.pc-row,.nx-row,.wx{ border-color:transparent; background:#fff; box-shadow:var(--sh-1); }
+.wx{ background:#fff; }
+.fact-tag.f-ok{ background:#dff3e8; color:#0a6a40; }
+@media (prefers-color-scheme: dark){
+  :root{ --ink:#eef4f6; --muted:#9db3bc; --line:#27404a; --soft:#1a2c35; --paper:#16242d; --bg:#0c161c;
+    --brand:#3aa0b8; --brand-dark:#8fd3e2; --brand-soft:#143240; --c1:#f39a4a; --wz:#3aa0b8; --wz-soft:#143240; --wz-line:#2b6173; --wz-ink:#eef4f6; --sh-1:none; --sh-2:none; }
+  html{ background:#070d11; } body{ background:var(--bg); color:var(--ink); }
+  .top,.tabs{ background:#111d24; box-shadow:0 1px 0 #1d3139; } .tabs{ box-shadow:0 -1px 0 #1d3139; }
+  .btn,.chip,.qs-card,.pc-row,.nx-row,.wx,.intro-card{ background:#16242d; box-shadow:inset 0 0 0 1px #243a44; }
+  .btn.primary,.chip[aria-pressed="true"],.chip[aria-checked="true"],.bub.me{ background:linear-gradient(180deg,#2c93ab,#1f7388); color:#fff; box-shadow:none; }
+  .wordmark{ background:linear-gradient(100deg,#8fd3e2,#f39a4a); -webkit-background-clip:text; background-clip:text; }
+}
