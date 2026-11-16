@@ -428,7 +428,7 @@ module.exports = async function handler(req, res) {
         var pbody = (pj.response && pj.response.body) || {}, pitems = pbody.items || [];
         if (!Array.isArray(pitems)) pitems = pitems.item || [];
         var dong = pitems.filter(function (x) { return /동해시/.test(String(x.rdnmadr || '') + String(x.lnmadr || '') + String(x.institutionNm || '')); });
-        res.status(200).json({ ok: true, page: pg, total: pbody.totalCount, got: pitems.length, fields: pitems[0] ? Object.keys(pitems[0]) : [], items: dong }); return;
+        res.status(200).json({ ok: true, page: pg, hdr: JSON.stringify((pj.response && pj.response.header) || pj.header || (pj.items ? null : pj)).slice(0, 300), total: pbody.totalCount, got: pitems.length, fields: pitems[0] ? Object.keys(pitems[0]) : [], items: dong }); return;
       } finally { clearTimeout(ptm); }
     }
     if (b.task === 'mission') {
