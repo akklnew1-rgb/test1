@@ -5,11 +5,11 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   const w = dom.window, errs = []; w.scrollTo = () => {}; w.HTMLElement.prototype.scrollIntoView = function () {};
   w.IntersectionObserver = class { observe() {} disconnect() {} }; w.ResizeObserver = class { observe() {} disconnect() {} };
   w.addEventListener('error', e => errs.push(e.message)); w.localStorage.setItem('tour.here.v1', 'no');
-  let wet = true; // 예보: 어떤 날짜든 같은 값(Proxy)
+  let wet = true, aiOk = false, aiCalls = 0; // 예보: 어떤 날짜든 같은 값(Proxy)
   const fc = () => ({ error: null, days: new Proxy({}, { get: () => ({ tmin: 3, tmax: 9, text: wet ? '비' : '맑음', pop: wet ? 80 : 10 }) }) });
   const NM = ['도째비골스카이밸리','논골담길','묵호등대','묵호항','묵호항수변공원','전망대활어회센터 (묵호항전망대)','어달해변','추암 촛대바위','추암해변','추암조각공원','천곡황금박쥐동굴','노봉해변','망상해변','감추사','무릉계곡','무릉별유천지'];
   const spots = {}; NM.forEach(n => { spots[n] = new Proxy({}, { get: () => 90 }); });
-  w.fetch = (u) => /forecast/.test(u) ? Promise.resolve({ json: () => Promise.resolve(fc()) }) : /crowd/.test(u) ? Promise.resolve({ json: () => Promise.resolve({ ok: true, from: '20000101', to: '20991231', spots }) }) : new Promise(() => {});
+  w.fetch = (u) => /forecast/.test(u) ? Promise.resolve({ json: () => Promise.resolve(fc()) }) : /crowd/.test(u) ? Promise.resolve({ json: () => Promise.resolve({ ok: true, from: '20000101', to: '20991231', spots }) }) : /ai/.test(u) ? (aiCalls++, Promise.resolve({ json: () => Promise.resolve(aiOk ? { ok: true, summary: '시험용 요약', days: [{ ids: ['lighthouse', 'nolgol', 'eodal'], why: {} }] } : { ok: false }) })) : new Promise(() => {});
   const srcs = [...w.document.querySelectorAll('script[src]')].map(s => s.getAttribute('src')).filter(s => !/^http/.test(s) && !/chat\.js|mission\.js/.test(s));
   for (const s of srcs) { const f = path.resolve(__dirname, s.split('?')[0]); if (fs.existsSync(f)) { try { w.eval(fs.readFileSync(f, 'utf8')); } catch (e) { errs.push(s + ': ' + e.message); } } }
   await wait(500); const d = w.document;
@@ -20,12 +20,21 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
   assert.ok(r.some(t => /날씨/.test(t) && /주의/.test(t) && /비 소식/.test(t)), '비 예보면 날씨 주의: ' + r.join(' | '));
   assert.ok(r.some(t => /붐빔/.test(t) && /주의/.test(t) && /곳 있어요/.test(t)), '붐빔 90이면 주의: ' + r.join(' | '));
   const btn = d.querySelector('#prepCheck [data-pc="rain"]'); assert.ok(btn && btn.getBoundingClientRect, '비 코스 버튼');
-  btn.click(); await wait(400);
+  btn.click(); await wait(600); assert.ok(aiCalls >= 1, 'AI를 다시 불렀어야 함: ' + aiCalls); assert.ok(w.__tour.state.aiFail, 'AI 실패면 기본 규칙 표시');
   r = rows(); assert.ok(r.some(t => /날씨/.test(t) && /괜찮아요/.test(t) && /실내 곳 위주/.test(t)), '누른 뒤엔 반영됨: ' + r.join(' | '));
   assert.ok(!d.querySelector('#prepCheck [data-pc="rain"]'), '버튼 사라짐');
   const q = d.querySelector('#prepCheck [data-pc="quiet"]'); assert.ok(q, '한적 버튼'); const before = (w.__tour.state.plan.stops || []).map(x => x.place && x.place.id).join();
-  q.click(); await wait(400); r = rows(); assert.ok(r.some(t => /붐빔/.test(t) && /붐비는 곳을 줄여 짰어요/.test(t)), '누른 뒤: ' + r.join(' | ')); assert.ok(!d.querySelector('#prepCheck [data-pc="quiet"]'), '한적 버튼 사라짐'); assert.ok(w.__tour.state.cond.interests.indexOf('한적') >= 0, '조건에 한적');
+  aiOk = true; const c0 = aiCalls; q.click(); await wait(600); assert.ok(aiCalls > c0, '한적 버튼도 AI 호출'); assert.ok(!w.__tour.state.aiFail, 'AI 성공이면 AI 코스'); assert.ok(/lighthouse/.test((w.__tour.state.plan.stops || []).map(x => x.place && x.place.id).join()), 'AI가 고른 장소가 코스에'); r = rows(); assert.ok(r.some(t => /붐빔/.test(t) && /붐비는 곳을 줄여 짰어요/.test(t)), '누른 뒤: ' + r.join(' | ')); assert.ok(!d.querySelector('#prepCheck [data-pc="quiet"]'), '한적 버튼 사라짐'); assert.ok(w.__tour.state.cond.interests.indexOf('한적') >= 0, '조건에 한적');
   assert.ok(!d.getElementById('prepNotify'), '가짜 알림 버튼 없음');
+  // 해 진 뒤 바깥 장소 경고(11/16 일몰 17:13 → 17:33 이후)
+  const keep = w.__tour.state.plan, mk = (ind, t) => ({ multi: false, stops: [{ place: { id: 'x', name: '시험곳', indoor: ind }, startVisit: t }] });
+  w.__tour.state.plan = mk(false, 18 * 60); assert.ok(/해 진 뒤/.test(w.__tour.sunWarn()) && /시험곳/.test(w.__tour.sunWarn()), '일몰 뒤 바깥은 경고');
+  w.__tour.state.plan = mk(true, 18 * 60); assert.strictEqual(w.__tour.sunWarn(), '', '실내는 경고 없음');
+  w.__tour.state.plan = mk(false, 16 * 60); assert.strictEqual(w.__tour.sunWarn(), '', '해 있을 때는 경고 없음'); w.__tour.state.plan = keep;
+  // 현재 위치 출발: 위치 있으면 현재 위치(또는 300m 안 역)가 출발점
+  w.__tour.state.here = { lat: 37.5300, lng: 129.1100 }; w.__tour.makePlan(); assert.ok(/현재 위치/.test(w.__tour.state.plan.startStation.name), '현재 위치 출발: ' + w.__tour.state.plan.startStation.name);
+  w.__tour.state.here = { lat: 37.54690, lng: 129.10775 }; w.__tour.makePlan(); assert.strictEqual(w.__tour.state.plan.startStation.id, 'mukho', '묵호역 300m 안이면 역 출발');
+  w.__tour.state.here = null; w.__tour.makePlan(); assert.strictEqual(w.__tour.state.plan.startStation.id, 'mukho');
   assert.deepStrictEqual(errs, [], '오류 없음: ' + errs.join('|'));
   console.log('출발 전 점검 시험 통과'); process.exit(0);
 })().catch(e => { console.error(e); process.exit(1); });

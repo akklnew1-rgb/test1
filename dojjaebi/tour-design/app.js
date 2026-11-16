@@ -1152,7 +1152,7 @@
       var b = $('hereYes'); b.disabled = true; b.textContent = '확인하는 중…';
       function done(msg) { hereSet('done'); card.hidden = true; $('ask').classList.add('talking'); if (msg) chatEl('bot', msg); }
       navigator.geolocation.getCurrentPosition(function (p) {
-        if (hereKm(p.coords.latitude, p.coords.longitude) <= DH_KM) { done(''); hereApply(); }
+        if (hereKm(p.coords.latitude, p.coords.longitude) <= DH_KM) { S.here = { lat: p.coords.latitude, lng: p.coords.longitude }; done(''); hereApply(); } // 좌표는 이 화면의 메모리에만 두고 어디로도 보내지 않는다(AI에는 거기서 각 장소까지 걸리는 분만 간다)
         else done('지금은 동해 밖에 계시네요. 언제 동해에 오실 예정인가요?');
       }, function () { done('위치를 확인하지 못했어요. 언제 동해에 오실 예정인지 말씀해 주세요.'); }, { enableHighAccuracy: false, maximumAge: 60000, timeout: 8000 });
     });
@@ -1351,6 +1351,17 @@
     if (rt) return rt.list.some(function (x) { return x.dep === tv; }) ? ' (코레일 시간표)' : ' (직접 고른 시간)';
     return (D.trains[c.end] || []).indexOf(tv) >= 0 ? ' (예시 시간표)' : ' (직접 고른 시간)';
   }
+  /* 2026-11-16: 지금 동해에 있고 오늘 출발이면 '현재 위치'가 출발점. 역·터미널·주차장 300m 안이면 그곳으로 본다(나머지는 계산된 현재 위치 점) */
+  function hereStart() {
+    if (!S.here || S.cond.date !== todayIso()) return null;
+    var best = null, R = Math.PI / 180;
+    ['mukho', 'donghae', 'bus', 'park'].forEach(function (k) {
+      var s = D.stations[k]; if (!s) return;
+      var x = (s.lng - S.here.lng) * R * Math.cos(S.here.lat * R), y = (s.lat - S.here.lat) * R, m = Math.sqrt(x * x + y * y) * 6371000;
+      if (m <= 300 && (!best || m < best.m)) best = { m: m, s: s };
+    });
+    return best ? best.s : { id: 'here', name: '현재 위치', lat: S.here.lat, lng: S.here.lng };
+  }
   function startId() { return S.cond.how === 'bus' ? 'bus' : S.cond.how === 'car' ? 'park' : 'mukho'; }
   function endId() { return S.cond.backHow === 'bus' ? 'bus' : S.cond.backHow === 'car' ? 'park' : S.cond.end; }
   function isMulti() { return nDays(S.cond) > 1; }
@@ -1399,6 +1410,7 @@
     var multi = isMulti();
     if (multi) S.mustFoodNear = {}; // 2026-10-22: 여러 날은 must 를 안 쓰니(날마다 강제되는 문제 회피) 전에 하루 코스에서 쓰던 "근처: 가게이름" 표도 지워 둠(묵은 표가 남지 않게)
     var o = { now: S.simNow, train: effTrain(S.mode), how: S.cond.how, backHow: S.cond.backHow, start: startId(), end: endId(), backDate: S.cond.backDate, stay: multi ? stayInfo() : undefined, sunrise: multi && !S.cond.rain && !isKid() && !isSlow() && (isCouple() || S.cond.companions.indexOf('친구') >= 0 || S.cond.companions.indexOf('혼자') >= 0 || !S.cond.companions.length), kid: isKid(), couple: isCouple(), slow: isSlow(), avoidStairs: isSlow() || isKid(), avoidTrail: !S.cond.hard, soft: isSlow(), food: !!S.cond.food, foodWord: S.cond.foodWord || '', rain: S.cond.rain, interests: S.cond.interests, fx: S.fx, crowdFn: S.crowd ? crowdFn : null, mode: S.mode, fixed: S.fixed, date: S.cond.date, tour: !!CT, tourPrefer: !!S.tourLoop, must: multi ? [] : resolveMust(S.cond.must) }; // 꼭 갈 곳(o.must)은 하루 코스에만: planDays 는 날마다 같은 o 를 쓰므로 여러 날이면 날마다 강제돼 버린다 · 2026-10-22: resolveMust 가 'food:' 선택을 가장 가까운 볼거리 id 로 바꿔 줌
+    var hs = hereStart(); if (hs) { o.startStation = hs; o.start = undefined; }
     if (over) for (var k in over) o[k] = over[k];
     if (over && over.mode) o.train = effTrain(over.mode);
     if (multi) { o.fixed = []; o.mode = 'normal'; o.now = S.cond.arrive; }
@@ -1452,9 +1464,9 @@
       oo.date = P.addDays(c.date, i); oo.must = []; oo.onlyMust = false; oo.mustByDay = null;
       if (n > 1) { oo.fixed = []; oo.mode = 'normal'; oo.now = i ? 540 : c.arrive; oo.train = i === n - 1 ? base.train : 1260; oo.max = 8; }
       var r = P.plan(D, oo), len = (oo.train - 15 - oo.now) / 60;
-      days.push({ date: oo.date, window: toTimeValue(oo.now) + '~' + toTimeValue(Math.max(oo.now, oo.train - 15)), count: len >= 7 ? '5~6' : len >= 4 ? '4~5' : len >= 2.5 ? '3~4' : '2~3', banned: (r.skipped || []).map(function (x) { return x.id; }), crowd: quietCrowd(oo.date) });
+      days.push({ date: oo.date, window: toTimeValue(oo.now) + '~' + toTimeValue(Math.max(oo.now, oo.train - 15)), count: len >= 7 ? '5~6' : len >= 4 ? '4~5' : len >= 2.5 ? '3~4' : '2~3', banned: (r.skipped || []).map(function (x) { return x.id; }), crowd: quietCrowd(oo.date), sun: window.TourSun ? { rise: window.TourSun.hm(window.TourSun.rise(oo.date)), set: window.TourSun.hm(window.TourSun.set(oo.date)) } : null });
     }
-    var LG = P.makeLegger(base), moves = {}, approx = [], st0 = D.stations[base.start] || D.stations.mukho, fromStn = {};
+    var LG = P.makeLegger(base), moves = {}, approx = [], st0 = base.startStation || D.stations[base.start] || D.stations.mukho, fromStn = {};
     D.places.forEach(function (p) { var row = {}; D.places.forEach(function (q) { if (q.id === p.id) return; try { var l = LG.legAt(P.realPos(p), q, base.slow, 720); if (l && l.min != null) { row[q.id] = Math.round(l.min); if (!l.real && l.mode !== 'walk') approx.push(p.id + '>' + q.id); } } catch (e) { /* 계산 못 하면 비움 */ } }); moves[p.id] = row; try { var s0 = LG.legAt(st0, p, base.slow, 720); if (s0 && s0.min != null) fromStn[p.id] = Math.round(s0.min); } catch (e2) { /* 무시 */ } });
     var body = { task: 'compose', moves: moves, approx: approx, fromStation: fromStn, cond: { how: c.how, arrive: toTimeValue(c.arrive), back: c.backTouched ? toTimeValue(c.back) : '', companions: c.companions, knee: !!c.knee, rain: !!c.rain, interests: c.interests, must: c.must || [], stay: n > 1 ? '묵호 쪽 숙소(앱이 정함)' : '' }, days: days,
       places: D.places.map(function (p) { return { id: p.id, name: p.short || p.name, region: p.region, group: p.group || '', visit: p.visit, indoor: !!p.indoor, stairs: !!p.stairs, trail: !!p.trail, rainAvoid: !!p.rainAvoid, tags: p.tags || [], openText: p.openText || '', note: PLACE_NOTE[p.id] || '' }; }) };
@@ -1470,6 +1482,18 @@
     var go = function () { S.aiBusy = false; makeCourse(false, false, to); if (done) done(); };
     AIP = null; S.aiFail = false; S.aiBusy = true;
     aiCompose().then(function (ok) { if (!ok) S.aiFail = true; go(); }, function () { S.aiFail = true; go(); });
+  }
+  /* 2026-11-16: 해 진 뒤(일몰 20분 후부터) 도착하는 바깥 장소가 있으면 알린다. 일몰은 날짜와 동해 위치로 계산한 값(sun.js) */
+  function sunWarn() {
+    var pl = S.plan, TS = window.TourSun; if (!pl || !TS) return '';
+    var days = pl.multi ? pl.days.map(function (d) { return { date: d.date, stops: d.plan && d.plan.stops }; }) : [{ date: S.cond.date, stops: pl.stops }], out = [];
+    days.forEach(function (d) {
+      var ss = TS.set(d.date); if (ss == null) return;
+      placeStops(d.stops || []).forEach(function (s) { if (!s.place.indoor && s.startVisit >= ss + 20) out.push((s.place.short || s.place.name) + '(' + hhmm(s.startVisit) + ')'); });
+      d.ss = ss;
+    });
+    if (!out.length) return '';
+    return '해 진 뒤에 가게 되는 바깥 곳이 있어요: ' + out.slice(0, 3).join('·') + '. 일몰은 ' + TS.hm(days[0].ss) + '쯤이라 어두울 수 있으니 시간을 앞당기거나 실내 곳으로 바꿔 보세요.';
   }
   function aiNoteText() {
     var ap = aiActive();
@@ -1619,7 +1643,11 @@
   $('prepCheck').addEventListener('click', function (ev) {
     var b = ev.target.closest('[data-pc]'); if (!b) return; var c = S.cond, k = b.getAttribute('data-pc');
     if (k === 'rain') c.rain = true; else if (k === 'quiet' && (c.interests || []).indexOf('한적') < 0) c.interests = (c.interests || []).concat('한적');
-    replan(); renderPrep(); flash(k === 'rain' ? '실내 곳을 먼저 넣어 다시 짰어요.' : '붐비는 곳을 줄여 다시 짰어요.');
+    if (S.aiBusy) return; // 연타 방지: 다시 짜는 동안은 한 번만
+    b.disabled = true; b.textContent = '도째비가 다시 짜는 중…';
+    var msg = k === 'rain' ? '실내 곳을 먼저 넣어 다시 짰어요.' : '붐비는 곳을 줄여 다시 짰어요.';
+    S.changed = {}; // 장소와 순서는 AI가 다시 고른다(이동·운영시간은 앱이 계산해 확인). AI가 안 되면 기본 규칙으로 짜고 그렇다고 표시한다
+    aiThenMake('s-prep', function () { renderPrep(); flash(S.aiFail ? '연결이 고르지 않아 기본 규칙으로 다시 짰어요.' : msg); });
   });
   function renderPrep() {
     var c = S.cond, d = P.dayCount(todayIso(), c.date) - 1;
@@ -2336,7 +2364,7 @@
     else lead = HN + ' ' + hhmm(pl.train) + backSrc() + ' · ' + st + '에 ' + hhmm(pl.train - 15) + '까지 돌아와요';
     if (pl.multi) lead = pl.label + ' · ' + P.dateLabel(pl.date) + ' ~ ' + P.dateLabel(pl.backDate) + ' · ' + lead.replace(/^막차 /, '');
     $('courseLead').textContent = lead + ' · ' + placeStops(pl.stops).length + '곳' + (pl.meal ? ' (점심·저녁 시간 포함)' : '') + (S.ed && edDirty() ? ' · 직접 고친 코스' : '');
-    var an = $('aiNote'); if (an) { var at = aiNoteText(); an.textContent = at; an.hidden = !at; }
+    var an = $('aiNote'); if (an) { var at = (aiNoteText() + ' ' + sunWarn()).trim(); an.textContent = at; an.hidden = !at; }
     var notes = [];
     if (pl.how === 'car') notes.push('자가용 · 걸어서 10분 안은 걷고 먼 곳은 차로(주차 5분 포함)');
     if (isKid()) notes.push('아이와 함께 · 걷기 20분 안 · 짧게 보는 곳 먼저 · 계단이 확인된 곳은 뺐어요(나머지는 가시기 전에 확인)');
@@ -4786,5 +4814,5 @@
   }
 
   // 시험용 접근(자동 점검에서만 쓴다)
-  window.__tour = { makePlan: function () { S.plan = buildPlan(); return S.plan; }, map: function () { return mapApi; }, pois: function () { return buildPois().length; }, ov: function () { return { OVS: OVS, OA: OA, TN: TN }; }, ovPlay: ovPlay, townAdd: townAdd, state: S, replan: replan, ingest: ingest, ED: ED, edEnv: function () { return edEnv(); }, live: function () { return lv; }, liveStart: lvStart, liveAsk: lvOpenAsk };
+  window.__tour = { sunWarn: sunWarn, makePlan: function () { S.plan = buildPlan(); return S.plan; }, map: function () { return mapApi; }, pois: function () { return buildPois().length; }, ov: function () { return { OVS: OVS, OA: OA, TN: TN }; }, ovPlay: ovPlay, townAdd: townAdd, state: S, replan: replan, ingest: ingest, ED: ED, edEnv: function () { return edEnv(); }, live: function () { return lv; }, liveStart: lvStart, liveAsk: lvOpenAsk };
 })();

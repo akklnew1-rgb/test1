@@ -541,6 +541,7 @@
   /* 날짜별 일출 어림(분): 동해(북위 37.5, 동경 129.1) 태양 위치 공식 — 기상청 값이 아니라 계산한 어림값(확인필요). 날짜를 모르면 D.sunrise 예시 */
   function sunriseApprox(iso) {
     var d = dateInfo(iso); if (!d) return null;
+    var TS = root.TourSun || (typeof require !== 'undefined' ? (function () { try { return require('./sun.js'); } catch (e) { return null; } })() : null); if (TS) { var r0 = TS.rise(iso); if (r0 != null) return r0; }
     var N = Math.round((Date.UTC(d.y, d.m - 1, d.d) - Date.UTC(d.y, 0, 0)) / 86400000), rad = Math.PI / 180;
     var decl = 23.44 * Math.sin(2 * Math.PI * (284 + N) / 365) * rad, lat = 37.5 * rad;
     var B = 2 * Math.PI * (N - 81) / 364, eot = 9.87 * Math.sin(2 * B) - 7.53 * Math.cos(B) - 1.5 * Math.sin(B); // 분
