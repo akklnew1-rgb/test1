@@ -418,6 +418,19 @@ module.exports = async function handler(req, res) {
       if (!qr) { res.status(200).json({ ok: false, why: 'empty' }); return; }
       res.status(200).json({ ok: true, reply: qr, model: USED }); return;
     }
+    if (b.task === 'parking') {
+      // 전국주차장정보표준데이터에서 한 쪽(pageNo)을 받아 동해시 것만 돌려준다. 열쇠는 환경변수 DATA_GO_KEY (앱·채팅에 두지 않음).
+      var dk = String(process.env.DATA_GO_KEY || '').trim(); if (!dk) { res.status(200).json({ ok: false, why: 'nokey' }); return; }
+      var pg = Math.max(1, Math.min(200, parseInt(b.page, 10) || 1)), pctl = new AbortController(), ptm = setTimeout(function () { pctl.abort(); }, 8000);
+      try {
+        var pu = 'https://api.data.go.kr/openapi/tn_pubr_prkplce_info_api?serviceKey=' + (/%/.test(dk) ? dk : encodeURIComponent(dk)) + '&pageNo=' + pg + '&numOfRows=1000&type=json';
+        var pr = await fetch(pu, { signal: pctl.signal }), ptxt = await pr.text(), pj; try { pj = JSON.parse(ptxt); } catch (e) { res.status(200).json({ ok: false, why: 'notjson', status: pr.status, head: ptxt.slice(0, 200).replace(dk, '***') }); return; }
+        var pbody = (pj.response && pj.response.body) || {}, pitems = pbody.items || [];
+        if (!Array.isArray(pitems)) pitems = pitems.item || [];
+        var dong = pitems.filter(function (x) { return /동해시/.test(String(x.rdnmadr || '') + String(x.lnmadr || '') + String(x.institutionNm || '')); });
+        res.status(200).json({ ok: true, page: pg, total: pbody.totalCount, got: pitems.length, fields: pitems[0] ? Object.keys(pitems[0]) : [], items: dong }); return;
+      } finally { clearTimeout(ptm); }
+    }
     if (b.task === 'mission') {
       var mp = String((b.place && b.place.name) || '').slice(0, 24), mt = String(b.mission || '').slice(0, 60);
       if (!mp || !mt) { res.status(400).json({ ok: false }); return; }
