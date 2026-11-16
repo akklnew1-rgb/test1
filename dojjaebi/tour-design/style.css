@@ -2069,3 +2069,31 @@ h3{ letter-spacing:-.02em; }
 #s-start .hero .hero-txt h1{ font-size:clamp(23px,6.6vw,29px) !important; letter-spacing:-.01em !important; line-height:1.28 !important; text-shadow:0 1px 10px rgba(0,0,0,.45); }
 /* 사진 아래 모서리를 둥글게 하면 다크모드에서 바탕이 쐐기처럼 비쳐서, 아래는 평평하게(입력 카드가 위로 겹쳐 모서리를 만든다) */
 #s-start .hero{ border-radius:0 !important; }
+
+/* ===== 2026-11-16 밝게(같은 '묵호의 새벽' 방향 그대로, 더 밝고 맑게): 바탕은 거의 흰 바다유리빛, 청록은 한 단계 밝게, 주황은 더 선명하게, 사진 위 어두운 막은 걷어 냄 ===== */
+:root{
+  --bg:#f5fafb; --soft:#e8f4f6; --line:#d9e9ec; --brand-soft:#e1f1f4;
+  --brand:#10728c; --brand-dark:#0b566c; --wz:#10728c; --wz-soft:#e1f1f4; --wz-line:#bddbe1; --wz-ink:#0b566c;
+  --c1:#ff8f2e; --c2:#ffc072;
+  --sh-1:0 1px 2px rgba(16,114,140,.07), 0 6px 16px rgba(16,114,140,.07);
+  --sh-2:0 12px 30px rgba(16,114,140,.15);
+}
+html{ background:#e9f3f5; }
+.btn.primary,.chip[aria-pressed="true"],.chip[aria-checked="true"],.bub.me{ background:linear-gradient(180deg,#1688a4 0%,#0f6d86 100%); box-shadow:0 8px 18px rgba(16,114,140,.26), inset 0 1px 0 rgba(255,255,255,.2); }
+.wordmark{ background:linear-gradient(100deg,#10728c 0%,#1a8ea8 55%,#ff8f2e 130%); -webkit-background-clip:text; background-clip:text; }
+.top{ box-shadow:0 1px 0 rgba(16,114,140,.06), 0 6px 18px rgba(16,114,140,.05); }
+.tabs{ box-shadow:0 -6px 20px rgba(16,114,140,.09); }
+.intro-card{ box-shadow:0 12px 30px rgba(16,114,140,.15); }
+.tab[aria-current="page"]{ color:var(--brand); }
+#s-start .hero-shade{ background:
+  radial-gradient(120% 60% at 12% 108%, rgba(255,143,46,.38) 0%, rgba(255,143,46,0) 62%),
+  linear-gradient(to bottom, rgba(6,40,52,.26) 0%, rgba(6,40,52,0) 30%, rgba(6,40,52,.10) 52%, rgba(6,40,52,.62) 100%) !important; }
+@media (prefers-color-scheme: dark){
+  :root{ --ink:#f1f7f9; --muted:#a9bec7; --line:#2b4752; --soft:#1e3540; --paper:#1a2f3a; --bg:#122430;
+    --brand:#4cb8d0; --brand-dark:#a4e0ec; --brand-soft:#17394a; --c1:#ffa04f; --wz:#4cb8d0; --wz-soft:#17394a; --wz-line:#2f7186; --wz-ink:#f1f7f9; }
+  html{ background:#0b1820; } body{ background:var(--bg); color:var(--ink); }
+  .top,.tabs{ background:#162a35; box-shadow:0 1px 0 #24414d; } .tabs{ box-shadow:0 -1px 0 #24414d; }
+  .btn,.chip,.qs-card,.pc-row,.nx-row,.wx,.intro-card{ background:#1a2f3a; box-shadow:inset 0 0 0 1px #2a4551; }
+  .btn.primary,.chip[aria-pressed="true"],.chip[aria-checked="true"],.bub.me{ background:linear-gradient(180deg,#3aa6bf,#2788a0); color:#fff; box-shadow:none; }
+  .bub.bot{ background:#1d3846; }
+}
