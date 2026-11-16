@@ -115,18 +115,30 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
         '<p class="cr-t">' + esc(m.t) + '</p>' +
         (mine || m.d ? '' : '<button type="button" class="cr-rp" data-rp="' + esc(m.k) + '" aria-label="이 글 신고하기">신고</button>') + '</li>';
     }).join('') : (loaded && !dbErr ? '<li class="cr-empty">' + (filter === 'place' && ctx ? '아직 ' + esc(ctx.name) + ' 얘기가 없어요.<br>첫 마디를 남겨 보세요.' : '아직 아무도 없어요.<br>첫 마디를 남겨 보세요.') + '</li>' : '');
-    if (aiNote) $('crList').insertAdjacentHTML('beforeend', '<li class="cr-ai"><span class="cr-aitag">AI 안내예요 · 이용자 글이 아니에요</span><p class="cr-t">' + (aiNote.t === null ? '도째비가 살펴보는 중이에요…' : esc(aiNote.t)) + '</p></li>');
+    if (aiNote && (aiNote.found.length || aiNote.t !== '')) {
+      var who = {}; aiNote.found.forEach(function (m) { who[m.u] = 1; });
+      $('crList').insertAdjacentHTML('beforeend', '<li class="cr-ai">' +
+        (aiNote.found.length ? '<span class="cr-aitag">사랑방에 이런 이야기가 있어요 · 이용자 ' + Object.keys(who).length + '명</span><ul class="cr-aif">' + aiNote.found.map(function (m) { return '<li><time>' + hm(m.ts) + '</time> ' + esc(m.t) + '</li>'; }).join('') + '</ul>' : '') +
+        (aiNote.t === null ? '<span class="cr-aitag">AI 안내</span><p class="cr-t">도째비가 살펴보는 중이에요…</p>' : aiNote.t ? '<span class="cr-aitag">AI 안내예요 · 이용자 글이 아니에요</span><p class="cr-t">' + esc(aiNote.t) + '</p>' : '') + '</li>');
+    }
     if (stick || aiNote) scrollEnd(true);
   }
   function askAI(q) {
     var R = window.V2Rank, url = window.DOJJAEBI_AI_URL;
-    if (!url || !window.fetch || !R || !R.isQuestion(q)) { aiNote = null; return; }
-    var mine = aiNote = { q: q, t: null };
+    if (!R || !R.isQuestion(q)) { aiNote = null; return; }
+    var mine = aiNote = { q: q, t: null, found: [] };
     var names = ((window.TOUR_DATA && window.TOUR_DATA.places) || []).map(function (p) { return p.name; });
-    var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 9000);
-    fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ task: 'qa', q: q, places: names }), signal: ctl ? ctl.signal : undefined })
-      .then(function (r) { return r.json(); }).then(function (j) { if (aiNote === mine) aiNote = j && j.ok ? { q: q, t: j.reply } : null; })
-      .catch(function () { if (aiNote === mine) aiNote = null; }).then(function () { clearTimeout(tm); if (el && !el.hidden) render(false); });
+    function go() {
+      var cut = Date.now() - DATA_DAY;
+      mine.found = R.relevant(q, pool().filter(function (m) { return m.t && !m.d && m.ts >= cut && (m.r || 0) < HIDE_AT && !reported[m.k]; }), names).slice(0, 4);
+      if (aiNote === mine && el && !el.hidden) render(false);
+      if (!url || !window.fetch) { if (aiNote === mine) { mine.t = ''; if (el && !el.hidden) render(false); } return; }
+      var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 9000);
+      fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ task: 'qa', q: q, places: names }), signal: ctl ? ctl.signal : undefined })
+        .then(function (r) { return r.json(); }).then(function (j) { mine.t = j && j.ok ? j.reply : ''; })
+        .catch(function () { mine.t = ''; }).then(function () { clearTimeout(tm); if (aiNote === mine && el && !el.hidden) render(false); });
+    }
+    loadArch(go);
   }
 
   function subscribe() {
