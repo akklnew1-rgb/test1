@@ -2064,3 +2064,6 @@ h3{ letter-spacing:-.02em; }
 #nextBox .nx-n{ flex:1 1 0; min-width:0; }
 #nextBox .nx-row .nx-b{ width:auto; flex:0 0 auto; min-width:116px; padding:8px 14px; }
 #nextBox .nx-n b{ word-break:keep-all; }
+
+/* 첫 화면 제목: 크기·자간을 풀어 글자가 뭉개지지 않게 */
+#s-start .hero .hero-txt h1{ font-size:clamp(23px,6.6vw,29px) !important; letter-spacing:-.01em !important; line-height:1.28 !important; text-shadow:0 1px 10px rgba(0,0,0,.45); }

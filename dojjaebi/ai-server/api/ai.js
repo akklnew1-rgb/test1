@@ -293,6 +293,13 @@ module.exports = async function handler(req, res) {
       cj.reply = String(cj.reply || '').replace(/\s?\(?[월화수목금토일]요일\)?/g, '').replace(/\([월화수목금토일]\)/g, '');
       var reply = String(cj.reply || '').split(/(?<=[.!?요])\s+/).filter(function (x) { return !BAN.test(x); }).join(' ').trim().slice(0, 400); if (!reply) { res.status(200).json({ ok: false, why: 'empty' }); return; }
       var pr = (cp && cp.r) || {}, readyOk = !!cj.ready, forceChoices = null;
+      /* 이미 말한 '누구와'를 다시 묻지 않는다(모델이 가끔 놓침): 사용자 말에 동행 낱말이 있거나 이미 뽑혔으면 그 질문 문장을 빼고 다음 빠진 것을 묻는다 */
+      var COMP_RE = /부모|엄마|아빠|어머니|아버지|아이|애들|아들|딸|친구|가족|아내|남편|와이프|여친|남친|연인|커플|혼자|동료|할머니|할아버지|어르신/;
+      if ((((cp && cp.r && cp.r.companions) || []).length || umsgs.some(function (m) { return COMP_RE.test(m); })) && /누구(와|랑|하고)\s*(함께\s*)?(가|오|떠나|여행)/.test(reply)) {
+        var kept = reply.split(/(?<=[.!?요])\s+/).filter(function (x) { return !/누구(와|랑|하고)\s*(함께\s*)?(가|오|떠나|여행)/.test(x); }).join(' ').trim();
+        var nextQ = (cp && cp.r && cp.r.arrive == null && !umsgs.some(function (m) { return HERE_RE.test(m); })) ? '몇 시쯤 동해에 도착하시나요?' : '돌아가는 시각은 정하셨나요?';
+        reply = (kept ? kept + ' ' : '') + nextQ; forceChoices = null; readyOk = false;
+      }
       if (!pr.date && dh) { pr.date = dh; if (cp && cp.r) cp.r.date = dh; }
       if (cp && cp.r && cp.r.arrive == null && /^(\d{1,2}):(\d{2})$/.test(String(b.now || '')) && umsgs.some(function (m) { return HERE_RE.test(m); })) { var nm = String(b.now).split(':'); cp.r.arrive = +nm[0] * 60 + +nm[1]; }
       if (cp && cp.r && pr.date) { if (nh != null) cp.r.backDate = nh > 0 ? addDaysIso(pr.date, nh) : null; else if (cp.r.backDate && (cp.r.backDate <= pr.date || cp.r.backDate > addDaysIso(pr.date, 2))) cp.r.backDate = null; }
