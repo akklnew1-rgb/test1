@@ -322,7 +322,8 @@ module.exports = async function handler(req, res) {
         var COMP_RE = /부모|엄마|아빠|어머니|아버지|아이|애들|아들|딸|친구|가족|아내|남편|와이프|여친|남친|연인|커플|혼자|동료|할머니|할아버지|어르신/;
         var here = umsgs.some(function (m) { return HERE_RE.test(m); });
         var hasComp = ((cp && cp.r && cp.r.companions) || []).length || umsgs.some(function (m) { return COMP_RE.test(m); });
-        var hasDate = !!pr.date, hasArr = (cp && cp.r && cp.r.arrive != null) || here;
+        var kn = (b.known && typeof b.known === 'object') ? b.known : {};
+        var hasDate = !!pr.date || !!kn.date, hasArr = (cp && cp.r && cp.r.arrive != null) || kn.arrive != null || here;
         /* 낱말로 넓게 잡는다(문장 모양이 매번 달라서). 돌아가는 편·교통 이야기는 따로 두고 건드리지 않는다 */
         var ASK = { comp: /누구|동행|함께\s*(가|여행|오|하)|같이\s*(가|오|여행)|어떤\s*분/, date: /날짜|언제|며칠|몇\s*월|몇\s*일|맞나요|맞으세요/, arr: /도착|몇\s*시/ };
         var KEEPQ = /돌아|귀가|출발|떠나|기차|버스|자가용|교통|이동|숙박|묵|1박|당일|머물/;
@@ -349,6 +350,30 @@ module.exports = async function handler(req, res) {
       if (!readyOk && umsgs.length === 1 && cp && cp.r && pr.date && (cp.r.companions || []).length && cp.r.arrive != null && cp.r.train != null && !must.length && /가고\s*싶은\s*곳/.test(reply)) {
         readyOk = true; picks = []; forceChoices = []; reply = '가고 싶은 곳은 따로 안 말씀하셔서 도째비가 골라 볼게요. 말씀하신 조건대로 이대로 코스를 짜 드릴까요?';
       }
+      /* ★ 구조(2026-11-16): 다음 질문은 AI 가 아니라 코드가 정한다. AI 는 말에서 조건을 뽑기만 한다.
+         빠진 항목을 동행 → 날짜 → 도착 → 돌아갈 때 순서로 확인해 첫 번째 것을 묻고, 다 채워지면 "이대로 짜 드릴까요?".
+         맛집·장소 같은 자유 질문(추천·어디…)이나 AI 가 장소를 골라 준 턴은 AI 말을 그대로 쓴다. */
+      (function () {
+        if (!cp || !cp.r) return;
+        var kn2 = (b.known && typeof b.known === 'object') ? b.known : {};
+        var lastU = String(umsgs[0] || '').replace(/^사용자:\s*/, '');
+        if (picks.length || must.length || /추천|맛집|식당|카페|어디|뭐가|뭐\s*먹|영업|주차|메뉴|가격|얼마/.test(lastU)) return;
+        var bots = msgs.filter(function (m) { return /^도째비:/.test(m); });
+        var here2 = umsgs.some(function (m) { return HERE_RE.test(m); });
+        var COMP2 = /부모|엄마|아빠|어머니|아버지|아이|애들|아들|딸|친구|가족|아내|남편|와이프|여친|남친|연인|커플|혼자|동료|할머니|할아버지|어르신|신랑/;
+        var hasC = ((cp.r.companions || []).length || (kn2.companions || []).length || umsgs.some(function (m) { return COMP2.test(m); })) ? true : false;
+        var hasD = !!(pr.date || kn2.date);
+        var hasA = cp.r.arrive != null || kn2.arrive != null || here2;
+        var hasB = cp.r.train != null || kn2.train != null || umsgs.some(function (m) { return /돌아가는\s*(건|건데)?\s*(안|아직|모르)|(상관\s*없|정해지지|아직\s*(안|몰)|모르겠|늦게까지|막차)/.test(m); });
+        var askedB = bots.some(function (m) { return /돌아갈|돌아가는|떠날/.test(m); });
+        var q = null, ch = null;
+        if (!hasC) { q = '누구와 함께 가세요?'; ch = ['혼자', '친구', '연인', '아이', '부모님']; }
+        else if (!hasD) { q = '여행 날짜는 언제로 할까요?'; ch = ['오늘', '내일', '이번 토요일']; }
+        else if (!hasA) { q = '동해에 몇 시쯤 도착하세요?'; ch = ['오전', '점심쯤', '오후']; }
+        else if (!hasB && !askedB) { q = '돌아갈 때는 몇 시쯤, 무엇을 타고 가세요?'; ch = ['기차', '버스', '자가용']; }
+        if (q) { reply = (bots.length ? '알겠어요. ' : '') + q; forceChoices = ch; readyOk = false; }
+        else { reply = '말씀하신 조건대로 이대로 코스를 짜 드릴까요?'; forceChoices = []; readyOk = true; }
+      })();
       if (readyOk) { var miss = !pr.date ? '여행 날짜가 언제인가요?' : ''; if (miss) { readyOk = false; reply = miss; picks = []; forceChoices = []; } }
       res.status(200).json({ ok: true, reply: reply, picks: picks, choices: (forceChoices || cj.choices || []).map(function (c) { return String(c).slice(0, 14); }).filter(Boolean).slice(0, 5), ready: readyOk, must: must, parsed: cp ? cp.r : null, model: USED }); return;
     }
