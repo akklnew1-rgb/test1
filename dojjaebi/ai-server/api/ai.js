@@ -313,7 +313,7 @@ module.exports = async function handler(req, res) {
         /* 낱말로 넓게 잡는다(문장 모양이 매번 달라서). 돌아가는 편·교통 이야기는 따로 두고 건드리지 않는다 */
         var ASK = { comp: /누구|동행|함께\s*(가|여행|오|하)|같이\s*(가|오|여행)|어떤\s*분/, date: /날짜|언제|며칠|몇\s*월|몇\s*일|맞나요|맞으세요/, arr: /도착|몇\s*시/ };
         var KEEPQ = /돌아|귀가|출발|떠나|기차|버스|자가용|교통|이동|숙박|묵|1박|당일|머물/;
-        var isQ = function (x) { return /[?？]|(까요|나요|가요|세요|인가요|죠|요\?)\s*$/.test(x); };
+        var isQ = function (x) { return /[?？]|(까요|나요|가요|세요|인가요|죠|요\?|주세요|알려|말씀)\s*[.!]?\s*$|알려\s*주|말씀해/.test(x); };
         var known = { comp: hasComp, date: hasDate, arr: hasArr };
         var parts = reply.split(/(?<=[.!?요])\s+/), dropped = false;
         var keep = parts.filter(function (x) { if (!isQ(x) || KEEPQ.test(x)) return true; var bad = Object.keys(ASK).some(function (k) { return known[k] && ASK[k].test(x); }); if (bad) dropped = true; return !bad; });
