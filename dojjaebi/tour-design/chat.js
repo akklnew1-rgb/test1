@@ -135,7 +135,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
       if (aiNote === mine && el && !el.hidden) render(false);
       if (!url || !window.fetch) { if (aiNote === mine) { mine.t = ''; if (el && !el.hidden) render(false); } return; }
       var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 9000);
-      fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ task: 'qa', q: q, places: names }), signal: ctl ? ctl.signal : undefined })
+      fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ task: 'qa', q: q, places: names, posts: (function () { var w = {}, k = 0; return mine.found.map(function (m) { if (w[m.u] === undefined) w[m.u] = k++; return { w: w[m.u], t: m.t }; }); })() }), signal: ctl ? ctl.signal : undefined })
         .then(function (r) { return r.json(); }).then(function (j) { mine.t = j && j.ok ? j.reply : ''; })
         .catch(function () { mine.t = ''; }).then(function () { clearTimeout(tm); if (aiNote === mine && el && !el.hidden) render(false); });
     }
