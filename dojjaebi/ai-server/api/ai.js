@@ -293,6 +293,16 @@ module.exports = async function handler(req, res) {
       cj.reply = String(cj.reply || '').replace(/\s?\(?[월화수목금토일]요일\)?/g, '').replace(/\([월화수목금토일]\)/g, '');
       var reply = String(cj.reply || '').split(/(?<=[.!?요])\s+/).filter(function (x) { return !BAN.test(x); }).join(' ').trim().slice(0, 400); if (!reply) { res.status(200).json({ ok: false, why: 'empty' }); return; }
       var pr = (cp && cp.r) || {}, readyOk = !!cj.ready, forceChoices = null;
+      /* "내일 점심쯤"·"오후 2시" 같은 말은 도착 시각으로 읽는다(모델이 못 읽어 도착 시각을 또 묻던 것). 먹는 이야기("점심 먹고")는 제외 */
+      if (cp && cp.r && cp.r.arrive == null) {
+        for (var ui = 0; ui < umsgs.length; ui++) {
+          var ut = String(umsgs[ui] || ''), um, hm2 = null;
+          if (/먹|식사|맛집|드시|출발|돌아|나가/.test(ut)) continue;
+          if ((um = ut.match(/(오전|오후|저녁|아침)?\s*(\d{1,2})\s*시\s*(반)?/))) { var hh = +um[2]; if ((um[1] === '오후' || um[1] === '저녁') && hh < 12) hh += 12; if (hh <= 24) hm2 = hh * 60 + (um[3] ? 30 : 0); }
+          else if ((um = ut.match(/(아침|오전|점심|오후|저녁)\s*(쯤|무렵|경|에|께)/))) { hm2 = { 아침: 540, 오전: 600, 점심: 720, 오후: 840, 저녁: 1080 }[um[1]]; }
+          if (hm2 != null) { cp.r.arrive = hm2; break; }
+        }
+      }
       /* 이미 아는 것을 다시 묻지 않는다(모델이 가끔 놓침 — 제미나이·지피티 의견: 다음 질문은 코드가 정한다).
          동행·날짜·도착 시각 중 이미 채워진 것을 묻는 문장은 빼고, 아직 빠진 첫 항목을 묻는다. */
       (function () {
@@ -300,7 +310,7 @@ module.exports = async function handler(req, res) {
         var here = umsgs.some(function (m) { return HERE_RE.test(m); });
         var hasComp = ((cp && cp.r && cp.r.companions) || []).length || umsgs.some(function (m) { return COMP_RE.test(m); });
         var hasDate = !!pr.date, hasArr = (cp && cp.r && cp.r.arrive != null) || here;
-        var ASK = { comp: /누구(와|랑|하고)\s*(함께\s*)?(가|오|떠나|여행)/, date: /(여행|가실)\s*날짜|언제(로|쯤)?\s*(할까|가|떠나|오)/, arr: /(몇\s*시(쯤|에)?\s*(동해에\s*)?도착)|도착(하|\s*시각)/ };
+        var ASK = { comp: /누구(와|랑|하고)\s*(함께\s*)?(가|오|떠나|여행)|동행\s*(분|자|인|이)|함께\s*(가시|오시|하시)는\s*분/, date: /(여행|가실)\s*날짜|언제(로|쯤)?\s*(할까|가|떠나|오)/, arr: /(몇\s*시(쯤|에)?\s*(동해에\s*)?도착)|도착(하|\s*시각)/ };
         var known = { comp: hasComp, date: hasDate, arr: hasArr };
         var parts = reply.split(/(?<=[.!?요])\s+/), dropped = false;
         var keep = parts.filter(function (x) { var bad = Object.keys(ASK).some(function (k) { return known[k] && ASK[k].test(x); }); if (bad) dropped = true; return !bad; });
