@@ -4604,8 +4604,49 @@
       '<ol class="rc-list">' + c.rows.map(function (r) { return r.head ? '<li class="dh">' + esc(r.name) + '</li>' : '<li><span class="n">' + r.n + '</span>' + esc(r.name) + '<span class="tm">' + esc(r.tm) + '</span></li>'; }).join('') + '</ol>' +
       '<p class="rc-mine">' + (c.mine.length ? '<b>내가 남긴 제보</b> ' + c.mine.map(esc).join(' · ') : '아직 남긴 제보가 없어요.') + '</p>' +
       '<div class="say"><span class="note">도째비 한마디</span><br>' + esc(c.line) + '</div>';
-    renderStamp();
+    renderStamp(); renderNext();
   }
+  /* ===== 여행 뒤: 다음에 또 올 때 (2026-11-16) — 코스에 있던 곳 중 다시 가 보고 싶은 곳 저장(이 폰 안에만, tour.wish.v1), 아직 안 가 본 곳은 AI가 다음 여행으로 이어 추천.
+     AI가 안 되면 안 가 본 지역 위주로 앱이 고르고 그렇다고 표시. 저장·추천은 광고·유료 노출 없음 ===== */
+  var K_WISH = 'tour.wish.v1', NX = { ai: null, busy: false };
+  function wishGet() { var w = jget(K_WISH, []); return Array.isArray(w) ? w.filter(function (id) { return PLACE[id]; }) : []; }
+  function wishToggle(id) { var w = wishGet(), i = w.indexOf(id); if (i >= 0) w.splice(i, 1); else w.push(id); lsSet(K_WISH, JSON.stringify(w)); }
+  function nextVisited() {
+    var got = stampGet(), st = stampStops(), done = st.filter(function (s) { return got[s.id]; });
+    return (done.length ? done : st).map(function (s) { return s.id; });
+  }
+  function nextPool() { var vis = nextVisited(), w = wishGet(); return D.places.filter(function (p) { return PLACE[p.id] && vis.indexOf(p.id) < 0 && w.indexOf(p.id) < 0; }); }
+  function nextRule() { // AI 없이: 이번에 안 간 지역부터, 지역이 겹치지 않게 3곳
+    var vis = nextVisited(), seen = {}; vis.forEach(function (id) { if (PLACE[id]) seen[PLACE[id].region] = 1; });
+    var pool = nextPool().sort(function (a, b) { return (seen[a.region] ? 1 : 0) - (seen[b.region] ? 1 : 0) || (b.value || 0) - (a.value || 0); }), out = [], used = {};
+    pool.forEach(function (p) { if (out.length < 3 && !used[p.region]) { used[p.region] = 1; out.push({ id: p.id, why: seen[p.region] ? '' : '이번엔 안 가 본 ' + p.region + ' 쪽이에요.' }); } });
+    return out;
+  }
+  function nextBody() {
+    var o = function (p) { return { id: p.id, name: p.short || p.name, region: p.region, tags: (p.tags || []).slice(0, 5), indoor: !!p.indoor }; };
+    var ids = function (a) { return a.filter(function (id) { return PLACE[id]; }).map(function (id) { return o(PLACE[id]); }); };
+    var m = /^\d{4}-(\d\d)-/.exec(S.cond.date || ''); return { task: 'next', month: m ? +m[1] : 0, visited: ids(nextVisited()), wish: ids(wishGet()), pool: nextPool().map(o) };
+  }
+  function renderNext() {
+    var box = $('nextBox'); if (!box) return;
+    var st = stampStops(); if (!st.length && !wishGet().length) { box.hidden = true; box.innerHTML = ''; return; }
+    var w = wishGet(), btn = function (id, on) { return '<button type="button" class="btn nx-b' + (on ? ' on' : '') + '" data-wish="' + id + '" aria-pressed="' + (on ? 'true' : 'false') + '">' + (on ? '저장했어요' : '다음에 갈래요') + '</button>'; };
+    var row = function (id, why) { var p = PLACE[id]; return '<li class="nx-row"><div class="nx-n"><b>' + esc(p.short || p.name) + '</b><span class="note">' + esc(p.region) + (why ? ' · ' + esc(why) : '') + '</span></div>' + btn(id, w.indexOf(id) >= 0) + '</li>'; };
+    var html = '<h3 class="st-h">다음에 또 올 때</h3>';
+    if (st.length) html += '<p class="note">오늘 코스의 곳 중 다시 가 보고 싶은 곳을 저장해 두세요. 이 폰에만 남아요.</p><ul class="nx-list">' + st.map(function (s) { return row(s.id, ''); }).join('') + '</ul>';
+    var saved = w.filter(function (id) { return !st.some(function (s) { return s.id === id; }); });
+    if (saved.length) html += '<p class="note nx-sub">저장해 둔 곳</p><ul class="nx-list">' + saved.map(function (id) { return row(id, ''); }).join('') + '</ul>';
+    html += '<button type="button" class="btn primary wide" id="nxGo"' + (NX.busy ? ' disabled' : '') + '>' + (NX.busy ? '도째비가 고르는 중…' : '다음 여행 추천받기') + '</button>';
+    if (NX.ai) html += '<div class="say nx-say"><span class="note">' + (NX.ai.rule ? '기본 추천 (AI 연결이 고르지 않아 앱이 골랐어요)' : '도째비 추천') + '</span><br>' + (NX.ai.summary ? esc(NX.ai.summary) : '') + '</div><ul class="nx-list">' + NX.ai.picks.filter(function (p) { return PLACE[p.id]; }).map(function (p) { return row(p.id, p.why); }).join('') + '</ul><p class="note">영업 여부는 가기 전에 확인해 주세요. 최종 선택은 여행하는 분이 해요.</p>';
+    box.hidden = false; box.innerHTML = html;
+  }
+  if ($('nextBox')) $('nextBox').addEventListener('click', function (ev) {
+    var w = ev.target.closest('[data-wish]'); if (w) { wishToggle(w.getAttribute('data-wish')); renderNext(); return; }
+    if (!ev.target.closest('#nxGo') || NX.busy) return;
+    NX.busy = true; renderNext();
+    var fin = function (j) { NX.busy = false; NX.ai = j && j.ok && j.picks && j.picks.length ? { summary: j.summary || '', picks: j.picks } : { summary: '', picks: nextRule(), rule: true }; renderNext(); };
+    aiCall(nextBody(), 20000).then(fin, function () { fin(null); });
+  });
   /* ===== 스탬프 투어 — 오늘 코스에 든 장소마다 한 칸. 장소 200m 안에서 위치를 확인해야 찍힘(권한을 안 주면 '직접 찍기'로 기록, 표시가 다름) ·
      기록은 이 폰 안에만 저장(tour.stamp.v1) — 서버로 보내지 않음 · 상품·순위·혜택 없음 ===== */
   var K_STAMP = 'tour.stamp.v1';

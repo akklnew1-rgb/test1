@@ -1971,3 +1971,13 @@ html{ scroll-padding-bottom:calc(190px + var(--safe-b, 0px)); }
 .pc-v{ margin:8px 0 0; font-size:16px; line-height:1.55; }
 .pc-btn{ margin-top:10px; width:100%; min-height:52px; }
 .fact-tag.f-none{ background:var(--soft); color:var(--muted); }
+
+/* 다음에 또 올 때 (2026-11-16) */
+.nextbox{ margin:16px 0; }
+.nx-list{ list-style:none; margin:8px 0 12px; padding:0; display:grid; gap:8px; }
+.nx-row{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:10px 12px; border:1px solid var(--line); border-radius:14px; background:var(--paper); }
+.nx-n{ display:grid; gap:2px; min-width:0; }
+.nx-b{ min-height:48px; flex:none; font-size:16px; }
+.nx-b.on{ background:var(--soft); }
+.nx-sub{ margin:6px 0 0; }
+.nx-say{ margin:12px 0 4px; }

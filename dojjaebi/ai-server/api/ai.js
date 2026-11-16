@@ -170,6 +170,11 @@ var COMPOSE_SYS = '너는 동해시 여행 앱 "도째비 길동무"의 코스 �
   '(5) 하루의 첫 장소는 도착 시각에, 마지막 장소는 돌아갈 시각 한 시간 전에 끝나게 시간을 가늠한다(visit 은 머무는 분). 너무 많이 넣어 서두르게 하지 않는다. ' +
   '(6) why 는 각 장소를 넣은 이유를 한 줄(30자 이내)로, places 에 적힌 사실(tags, visit, indoor, region, openText)과 동선 이유만 근거로 쓴다. "맛있다·유명하다·최고" 같은 평가와 추측은 쓰지 않는다. 쉬운 말로. ' +
   '(6-1) moves[A][B] 는 앱이 계산한 A에서 B까지 이동 분(걷기·버스·택시 중 실제 쓰는 방식)이고 fromStation[X] 는 출발 지점(역이거나 손님의 현재 위치)에서 X까지 분이다. 이 숫자를 그대로 쓰고 이동 시간을 짐작하지 않는다. 한 구간이 20분을 넘는 연결은 피하고, 하루 이동 합계가 90분을 넘지 않게 하며, 장소 머무는 시간(visit)+이동 분의 합이 days[i].window 안에 들어가게 곳 수를 줄인다. (6-2) approx 에 "A>B" 로 적힌 구간은 길 데이터가 없어 직선거리로 어림한 값이라 실제와 다를 수 있다. 그런 구간은 20% 넉넉히 보고 가능하면 피한다. note 가 있는 장소는 그 내용을 지킨다. (7) summary 에는 이 코스를 왜 이렇게 짰는지 한두 문장(80자 이내)으로 쓴다.';
+var NEXT_SYS = '너는 동해시 여행 앱 "도째비 길동무"의 다음 여행 안내자다. 손님이 이번에 다녀간 곳(visited)과 저장해 둔 곳(wish), 다음에 갈 수 있는 후보(pool)가 온다. 규칙: ' +
+  '(1) pool 의 id 에서만 최대 3곳을 골라 picks 에 넣는다. visited 와 wish 에 있는 곳은 넣지 않는다. (2) 이번에 가 보지 않은 지역(region)이나 분위기(tags)가 다른 곳을 우선한다. 같은 지역만 3곳 고르지 않는다. ' +
+  '(3) why 는 한 문장(40자 안). pool 에 적힌 지역·태그·실내외 정보만 쓰고 가게 이름·영업·값·역사 같은 사실은 지어내지 않는다. 광고하듯 쓰지 않는다. (4) month 가 주어지면 그 계절에 맞는 곳을 조금 더 앞에 둔다(날씨 사실은 말하지 않는다). ' +
+  '(5) summary 는 이번 여행을 한 문장(60자 안)으로 돌아보며 다음 여행으로 이어 주는 말. 쉬운 우리말, 한자어·영문 약어 없이.';
+var NEXT_SCHEMA = { type: 'OBJECT', properties: { summary: { type: 'STRING' }, picks: { type: 'ARRAY', items: { type: 'OBJECT', properties: { id: { type: 'STRING' }, why: { type: 'STRING' } }, required: ['id', 'why'] } } }, required: ['summary', 'picks'] };
 var COMPOSE_SCHEMA = { type: 'OBJECT', properties: { days: { type: 'ARRAY', items: { type: 'OBJECT', properties: { ids: { type: 'ARRAY', items: { type: 'STRING' } }, why: { type: 'ARRAY', items: { type: 'STRING' } } }, required: ['ids'] } }, summary: { type: 'STRING' } }, required: ['days'] };
 var CHAT_SCHEMA = { type: 'OBJECT', properties: { reply: { type: 'STRING' }, picks: { type: 'ARRAY', items: { type: 'STRING' } }, choices: { type: 'ARRAY', items: { type: 'STRING' } }, ready: { type: 'BOOLEAN' }, must: { type: 'ARRAY', items: { type: 'STRING' } }, parsed: PARSE_SCHEMA }, required: ['reply'] };
 function cleanParse(raw) {
@@ -340,6 +345,18 @@ module.exports = async function handler(req, res) {
       var rl = cleanLine(rj.line, 80);
       if (!rl || MBAN.test(rl)) { res.status(200).json({ ok: false, why: 'empty' }); return; }
       res.status(200).json({ ok: true, line: rl, model: USED }); return;
+    }
+    if (b.task === 'next') {
+      function nl(a, n) { return (Array.isArray(a) ? a : []).slice(0, n).map(function (x) { return { id: String(x.id || '').slice(0, 40), name: String(x.name || '').slice(0, 24), region: String(x.region || '').slice(0, 12), tags: (Array.isArray(x.tags) ? x.tags : []).slice(0, 5).map(function (t) { return String(t).slice(0, 10); }), indoor: !!x.indoor }; }).filter(function (x) { return x.id; }); }
+      var nvis = nl(b.visited, 20), nwish = nl(b.wish, 20), npool = nl(b.pool, 40);
+      if (!npool.length) { res.status(400).json({ ok: false }); return; }
+      var nraw = await gemini(NEXT_SYS, 'month: ' + (+b.month >= 1 && +b.month <= 12 ? +b.month : '모름') + '\nvisited: ' + JSON.stringify(nvis) + '\nwish: ' + JSON.stringify(nwish) + '\npool: ' + JSON.stringify(npool), NEXT_SCHEMA, 500);
+      var nj; try { nj = JSON.parse(nraw); } catch (e) { res.status(200).json({ ok: false, why: 'parse' }); return; }
+      var okIds = {}; npool.forEach(function (x) { okIds[x.id] = 1; }); nvis.concat(nwish).forEach(function (x) { delete okIds[x.id]; });
+      var seenN = {}, npicks = (Array.isArray(nj.picks) ? nj.picks : []).filter(function (p) { var id = String(p && p.id || ''); if (!okIds[id] || seenN[id]) return false; seenN[id] = 1; return true; }).slice(0, 3).map(function (p) { return { id: String(p.id), why: cleanLine(p.why, 50) }; });
+      var nsum = cleanLine(nj.summary, 80);
+      if (!npicks.length || !nsum) { res.status(200).json({ ok: false, why: 'empty' }); return; }
+      res.status(200).json({ ok: true, summary: nsum, picks: npicks, model: USED }); return;
     }
     if (b.task === 'postcard') {
       var pst = (Array.isArray(b.stamps) ? b.stamps : []).slice(0, 8).map(function (x) { return { place: String(x.place || '').slice(0, 24), mission: String(x.mission || '').slice(0, 60), note: cleanLine(x.note, 60) }; }).filter(function (x) { return x.place; });
