@@ -58,3 +58,6 @@ html.cr-open{ overflow:hidden; }
 .rs-foot{ margin:8px 2px 0; font-size:.78em; color:var(--muted); line-height:1.45; }
 .rs-foot b{ color:var(--warn); }
 /* 코스 장소 카드의 '사랑방' 단추 · 아래 메뉴의 '사랑방' 탭은 앱의 기존 모양(.ico.pin · .tab)을 그대로 쓴다 */
+
+.cr-ai{list-style:none;margin:10px 0;padding:12px 14px;border:2px dashed currentColor;border-radius:14px;opacity:.95}
+.cr-aitag{display:block;font-size:.8rem;font-weight:800;margin-bottom:4px}

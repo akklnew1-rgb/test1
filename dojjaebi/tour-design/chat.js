@@ -36,6 +36,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
   var db = null, dbErr = null;
   try { db = getDatabase(initializeApp(CFG)); } catch (e) { dbErr = e; }
 
+  var aiNote = null;                 // 방금 올린 질문에 붙는 AI 안내 { q, t } (글로 저장하지 않는다)
   var el = null;                     // 화면 뼈대(처음 열 때 만든다)
   var ctx = null;                    // { id, name } 장소 카드에서 들어왔을 때
   var filter = 'all';                // 'all' | 'place'
@@ -114,7 +115,18 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
         '<p class="cr-t">' + esc(m.t) + '</p>' +
         (mine || m.d ? '' : '<button type="button" class="cr-rp" data-rp="' + esc(m.k) + '" aria-label="이 글 신고하기">신고</button>') + '</li>';
     }).join('') : (loaded && !dbErr ? '<li class="cr-empty">' + (filter === 'place' && ctx ? '아직 ' + esc(ctx.name) + ' 얘기가 없어요.<br>첫 마디를 남겨 보세요.' : '아직 아무도 없어요.<br>첫 마디를 남겨 보세요.') + '</li>' : '');
-    if (stick) scrollEnd(true);
+    if (aiNote) $('crList').insertAdjacentHTML('beforeend', '<li class="cr-ai"><span class="cr-aitag">AI 안내예요 · 이용자 글이 아니에요</span><p class="cr-t">' + (aiNote.t === null ? '도째비가 살펴보는 중이에요…' : esc(aiNote.t)) + '</p></li>');
+    if (stick || aiNote) scrollEnd(true);
+  }
+  function askAI(q) {
+    var R = window.V2Rank, url = window.DOJJAEBI_AI_URL;
+    if (!url || !window.fetch || !R || !R.isQuestion(q)) { aiNote = null; return; }
+    var mine = aiNote = { q: q, t: null };
+    var names = ((window.TOUR_DATA && window.TOUR_DATA.places) || []).map(function (p) { return p.name; });
+    var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 9000);
+    fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ task: 'qa', q: q, places: names }), signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { return r.json(); }).then(function (j) { if (aiNote === mine) aiNote = j && j.ok ? { q: q, t: j.reply } : null; })
+      .catch(function () { if (aiNote === mine) aiNote = null; }).then(function () { clearTimeout(tm); if (el && !el.hidden) render(false); });
   }
 
   function subscribe() {
@@ -145,7 +157,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     pr.then(function () {
       var ar = { u: rec.u, t: rec.t, ts: Date.now() }; if (rec.pl) { ar.pl = rec.pl; ar.pn = rec.pn; }
       set(ref(db, 'arch/' + pr.key), ar).catch(function () { /* 보관 실패는 무시 */ });
-      lastSend = Date.now(); lastText = r.text; inp.value = ''; btn.disabled = false; render(true);
+      lastSend = Date.now(); lastText = r.text; inp.value = ''; btn.disabled = false; askAI(r.text); render(true);
     }).catch(function () { btn.disabled = false; setMsg('보내지 못했어요. 인터넷을 확인해 주세요.', true); });
   }
 
