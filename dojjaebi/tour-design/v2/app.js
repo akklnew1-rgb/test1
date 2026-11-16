@@ -47,6 +47,8 @@ import { getDatabase, ref, push, query, limitToLast, get, set, serverTimestamp, 
     $('sum').textContent = !loaded ? '불러오는 중이에요…' : mode === 'match' ? '이용자 ' + n + '명이 남긴 글이에요' : mode === 'recent' ? '딱 맞는 글은 아직 없어요. 질문을 올리면 다녀간 분이 답해 줘요' : '아직 남겨진 글이 없어요. 첫 이야기를 남겨 주세요';
     var ab = $('askBox'), al = $('aList');
     if (mode === 'match') al.parentNode.insertBefore(al, ab); else al.parentNode.insertBefore(ab, $('aHead'));
+    var aib = $('aiBox'); aib.hidden = true;
+    if (mode !== 'match' && loaded) askAI(cur.text);
     $('aHead').hidden = mode !== 'recent' || !list.length;
     $('aList').innerHTML = list.map(function (p) {
       return '<li><time>' + hm(p.ts) + '</time>' + (p.pn ? ' <span class="tag">' + esc(p.pn) + '</span>' : '') + (p.u === uid ? '' : '<button type="button" class="rp" data-rp="' + esc(p.k) + '" aria-label="이 글 신고하기">신고</button>') + '<p class="t">' + esc(p.t) + '</p></li>';
@@ -55,6 +57,16 @@ import { getDatabase, ref, push, query, limitToLast, get, set, serverTimestamp, 
     $('askBoxT').textContent = '사랑방에 올리면 다녀간 분이 답을 남길 수 있어요.';
   }
 
+  var aiCache = {};
+  function askAI(q) {
+    function put(t) { if (cur && cur.text === q && t) { $('aiTxt').textContent = t; $('aiBox').hidden = false; var ab = $('askBox'); ab.parentNode.insertBefore($('aiBox'), ab); } }
+    if (aiCache[q] !== undefined) { put(aiCache[q]); return; }
+    var url = window.DOJJAEBI_AI_URL; if (!url || !window.fetch) return;
+    aiCache[q] = '';
+    var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 9000);
+    fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ task: 'qa', q: q, places: names }), signal: ctl ? ctl.signal : undefined })
+      .then(function (r) { return r.json(); }).then(function (j) { aiCache[q] = j && j.ok ? j.reply : ''; put(aiCache[q]); }).catch(function () { aiCache[q] = undefined; delete aiCache[q]; }).then(function () { clearTimeout(tm); });
+  }
   function msg(t) { $('msg').textContent = t; }
   function save(rec, done) {
     if (!db) { msg('연결이 안 돼서 지금은 보낼 수 없어요.'); return; }

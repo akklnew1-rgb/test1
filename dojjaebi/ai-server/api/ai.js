@@ -69,6 +69,13 @@ var REACT_SYS = '너는 동해시 여행 앱의 도깨비 "도째비"다. 여행
   '규칙: 쉬운 한국어 존댓말, 위트 있고 따뜻하게. 답을 평가·채점하거나 놀리지 않는다. 답에 없는 사실, 장소의 역사·값·운영시간을 지어내지 않는다. 답 속 연락처·링크·욕설은 되풀이하지 않는다. 영어·한자어 금지.';
 var REACT_SCHEMA = { type: 'OBJECT', properties: { line: { type: 'STRING' } }, required: ['line'] };
 
+/* 2026-11-16 v2 묻기: 이용자 글이 없는 질문에 바로 답한다. 가게·숙소는 고르지 않고, 장소는 앱이 보낸 places 안에서만 말한다. */
+var QA_SYS = '너는 동해시 여행 앱의 도깨비 "도째비"다. 여행자의 질문(q)에 짧게 답한다. 이 답은 이용자가 남긴 글이 아니라 AI 안내다. ' +
+  '규칙: 쉬운 한국어 존댓말, 영어·어려운 한자어 금지, 4문장 이내(300자 안쪽). 장소는 입력 places 의 이름만 말한다(없는 장소·역사·값·운영시간·날씨·기차 시각은 지어내지 않는다). ' +
+  '식당·카페·숙소는 가게 이름을 절대 말하지 않고, 맛·인기·순위 평가도 하지 않는다. 그런 질문이면 "가게는 제가 고르지 않아요. 식당가는 가까운 순으로 보시고, 다녀간 분의 글이 올라오면 먼저 보여 드려요"라고만 안내한다. ' +
+  '질문이 너무 막연하면 어떤 분과 얼마나 머무는지 되묻는 한 문장을 마지막에 넣는다. 출력은 reply 하나.';
+var QA_SCHEMA = { type: 'OBJECT', properties: { reply: { type: 'STRING' } }, required: ['reply'] };
+
 /* 2026-11-14: 입력 단계 도우미 — 빈 시각 제안(time) · 꼭 가고 싶은 곳 후보(must) · 확인 화면 되묻기(ask). 식당·가게는 절대 고르지 않고, 장소는 앱이 보낸 cands 안에서만 고른다. */
 var SUG_SYS = '너는 동해시 여행 앱의 도깨비 "도째비"다. 입력의 kind 에 따라 한 가지만 한다. 쉬운 존댓말, 영어·어려운 한자어 금지, 사실에 없는 날씨·기차 시각·가격·맛·인기는 절대 말하지 않는다. ' +
   'kind=time: 입력(how, date, arrive, back, with, count, rain, weather, days)을 보고 도착 시각 arrive 나 돌아갈 시각 back 을 24시간 HH:MM 으로 제안한다(필요한 것만, 08:00~22:00). 어르신·아이와 함께면 너무 이르거나 늦지 않게 여유 있게, 비가 오면 짧게 잡는다. reason 에 이유 한 줄(35자 안쪽). ' +
@@ -396,6 +403,16 @@ module.exports = async function handler(req, res) {
       var rraw = await gemini(ROOM_SYS, '장소: ' + rplace + '\nmsgs: ' + JSON.stringify(rmsgs), ROOM_SCHEMA, 600);
       var ritems = cleanRoom(rraw, rvalid); if (!ritems) { res.status(200).json({ ok: false, why: 'parse' }); return; }
       res.status(200).json({ ok: true, items: ritems, total: rmsgs.length, writers: Object.keys(rvalid).length, model: USED }); return;
+    }
+    if (b.task === 'qa') {
+      var qq = cleanLine(b.q, 80), qpl = (Array.isArray(b.places) ? b.places : []).slice(0, 60).map(function (x) { return cleanLine(x, 20); }).filter(Boolean);
+      if (!qq) { res.status(400).json({ ok: false }); return; }
+      var qraw = await gemini(QA_SYS, 'q: ' + qq + '\nplaces: ' + JSON.stringify(qpl), QA_SCHEMA, 400);
+      var qj; try { qj = JSON.parse(qraw); } catch (e) { res.status(200).json({ ok: false, why: 'parse' }); return; }
+      var QBAN = /맛있|존맛|꿀맛|일품|유명|소문|대표|줄\s*서|1위|엄선|보증|실패\s*없|최고|할인|예약|무료/;
+      var qr = cleanLine(qj.reply, 320).split(/(?<=[.!?요])\s+/).filter(function (x) { return !QBAN.test(x); }).join(' ').trim();
+      if (!qr) { res.status(200).json({ ok: false, why: 'empty' }); return; }
+      res.status(200).json({ ok: true, reply: qr, model: USED }); return;
     }
     if (b.task === 'mission') {
       var mp = String((b.place && b.place.name) || '').slice(0, 24), mt = String(b.mission || '').slice(0, 60);

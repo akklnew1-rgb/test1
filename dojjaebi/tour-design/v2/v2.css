@@ -32,3 +32,6 @@ textarea:focus,input:focus,button:focus-visible{outline:3px solid var(--acc);out
 .box p,.box label{margin:0 0 8px;display:block}
 .rp{float:right;min-height:40px;background:none;border:0;color:var(--sub);font:inherit;font-size:.8rem}
 .msg{min-height:1.4em;margin:8px 2px 0;font-weight:700;color:var(--acc)}
+
+.ai{border:2px dashed var(--line);background:transparent}
+.aitag{font-size:.8rem;font-weight:800;color:var(--acc)}
