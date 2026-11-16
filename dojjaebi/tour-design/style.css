@@ -2035,3 +2035,19 @@ h3{ letter-spacing:-.02em; }
   .btn.primary,.chip[aria-pressed="true"],.chip[aria-checked="true"],.bub.me{ background:linear-gradient(180deg,#2c93ab,#1f7388); color:#fff; box-shadow:none; }
   .wordmark{ background:linear-gradient(100deg,#8fd3e2,#f39a4a); -webkit-background-clip:text; background-clip:text; }
 }
+
+/* 첫 화면 히어로 마감(위의 여러 번 덧댄 규칙을 한 번에 정리): 사진이 화면 가득, 글은 사진 위 왼쪽 아래, 날씨는 사진 위 알약, 입력 카드가 사진 아래로 겹침 */
+#s-start .hero{ position:relative; display:flex !important; flex-direction:column; justify-content:flex-end; align-items:stretch; height:clamp(300px, 46dvh, 400px) !important; padding:0 !important; margin:-16px calc(-1 * var(--gut)) 0; border-radius:0 0 28px 28px; overflow:hidden; background:#0a3b4b; color:#fff; }
+#s-start .hero .hero-slides{ display:block !important; position:absolute !important; inset:0 !important; width:100% !important; height:100% !important; flex:none !important; border:0 !important; border-radius:0 !important; z-index:0; }
+#s-start .hero .hero-shade{ display:block !important; position:absolute; inset:0; z-index:1; background:
+  radial-gradient(120% 55% at 10% 108%, rgba(240,138,46,.45) 0%, rgba(240,138,46,0) 62%),
+  linear-gradient(to bottom, rgba(4,24,32,.42) 0%, rgba(4,24,32,0) 28%, rgba(4,24,32,.10) 46%, rgba(4,24,32,.82) 100%); }
+#s-start .hero .wx{ position:absolute !important; top:calc(14px + var(--safe-t)); left:var(--gut); z-index:3; margin:0 !important; background:rgba(255,255,255,.95) !important; border:0 !important; box-shadow:0 4px 14px rgba(4,24,32,.25); }
+#s-start .hero .wx b,#s-start .hero .wx span{ color:var(--brand-dark) !important; }
+#s-start .hero .hero-txt{ position:relative !important; z-index:3; width:auto; height:auto; clip:auto; overflow:visible; white-space:normal; padding:0 var(--gut) 46px !important; text-align:left !important; }
+#s-start .hero .hero-txt h1{ color:#fff !important; font-family:var(--f-head); font-size:clamp(26px, 7.6vw, 32px) !important; line-height:1.28; font-weight:700; letter-spacing:-.045em; text-shadow:0 2px 18px rgba(0,0,0,.45); }
+#s-start .hero .hero-sub{ display:block !important; margin:8px 0 0; font-size:16px; font-weight:500; color:rgba(255,255,255,.94); text-shadow:0 1px 10px rgba(0,0,0,.5); }
+#s-start .hero .hero-meta{ display:block !important; position:absolute !important; right:var(--gut); bottom:38px; z-index:3; margin:0 !important; padding:0 !important; height:auto !important; align-self:auto; pointer-events:none; }
+#s-start .hero .hero-meta .hero-credit{ background:none !important; padding:0; color:rgba(255,255,255,.78) !important; font-size:11px !important; text-shadow:0 1px 4px rgba(0,0,0,.6) !important; }
+#s-start .intro-card{ margin:-30px var(--gut) 0; padding:14px 14px 6px; border-radius:20px; background:#fff; box-shadow:0 16px 36px rgba(10,59,75,.18); position:relative; z-index:4; }
+@media (prefers-color-scheme: dark){ #s-start .intro-card{ background:#16242d; box-shadow:inset 0 0 0 1px #243a44; } #s-start .hero .wx{ background:rgba(17,29,36,.94) !important; } #s-start .hero .wx b,#s-start .hero .wx span{ color:#eef4f6 !important; } }
