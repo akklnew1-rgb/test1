@@ -1606,12 +1606,13 @@
       else if (quiet) rows.push({ s: 'ok', k: '붐빔', v: '붐비는 곳을 줄여 짰어요' + (busy.length ? ' (그래도 ' + busy.length + '곳은 붐빔 예상이 높아요: ' + names + ')' : '') });
       else rows.push({ s: 'ok', k: '붐빔', v: '붐빔 예상이 높은 곳은 없어요' });
     } else rows.push({ s: 'none', k: '붐빔', v: '붐빔 예상은 날짜가 가까워지면 나와요 (한국관광공사 · 30일 앞까지)' });
+    if (window.TourSun && window.TourSun.rise(c.date) != null) rows.push({ s: 'info', k: '일출·일몰', v: '일출 ' + window.TourSun.hm(window.TourSun.rise(c.date)) + ' · 일몰 ' + window.TourSun.hm(window.TourSun.set(c.date)) + ' (날짜와 동해 위치로 계산한 값이에요)' });
     if (c.how === 'train' || c.backHow === 'train') rows.push(realTrains(c) ? { s: 'ok', k: '기차', v: '코레일 시간표를 확인했어요' } : { s: 'none', k: '기차', v: '시간표가 아직 안 나왔어요. 예매 전이면 날짜가 가까워질 때 다시 확인해 주세요' });
     return rows;
   }
   function renderPrepCheck() {
     $('prepCheck').innerHTML = prepCheckRows().map(function (r) {
-      var tag = r.s === 'ok' ? '괜찮아요' : r.s === 'warn' ? '주의' : '아직 몰라요', cls = r.s === 'ok' ? 'f-ok' : r.s === 'warn' ? 'f-guess' : 'f-none';
+      var tag = r.s === 'ok' ? '괜찮아요' : r.s === 'warn' ? '주의' : r.s === 'info' ? '참고' : '아직 몰라요', cls = r.s === 'ok' ? 'f-ok' : r.s === 'warn' ? 'f-guess' : 'f-none';
       return '<li class="pc-row"><div class="pc-top"><span class="fact-k">' + esc(r.k) + '</span><span class="fact-tag ' + cls + '">' + tag + '</span></div><p class="pc-v">' + esc(r.v) + '</p>' + (r.act ? '<button type="button" class="btn pc-btn" data-pc="' + r.act + '">' + esc(r.btn) + '</button>' : '') + '</li>';
     }).join('');
   }
@@ -2832,7 +2833,7 @@
     if (ev.key === 'Enter' && ev.target.hasAttribute('data-in')) showAnswer(ev.target.getAttribute('data-in'), ev.target.value);
   });
   function showAnswer(id, q) {
-    var a = AI.aiAnswer(PLACE[id], q);
+    var a = AI.aiAnswer(PLACE[id], q, S.cond.date >= todayIso() ? S.cond.date : todayIso());
     var el = document.querySelector('[data-ans="' + id + '"]');
     el.hidden = false; el.className = 'answer' + (a.found ? '' : ' none');
     el.textContent = a.text;

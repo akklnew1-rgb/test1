@@ -155,7 +155,7 @@
 
   function norm(s) { return String(s || '').replace(/\s+/g, ''); }
   /* 도째비에게 묻기 — 준비된 질문·낱말이 맞으면 답, 아니면 기록에 없다고 말한다 */
-  function aiAnswer(place, question) {
+  function aiAnswer(place, question, iso) {
     var q = norm(question);
     if (!q) return { found: false, text: NOT_FOUND };
     var best = null, bestN = 0;
@@ -165,7 +165,7 @@
       (x.keys || []).forEach(function (k) { if (q.indexOf(norm(k)) >= 0) n++; });
       if (n > bestN) { bestN = n; best = x; }
     });
-    if (best) return { found: true, text: best.a };
+    if (best) return { found: true, text: (root.TourSun || (typeof require !== 'undefined' ? require('./sun.js') : null)) ? (root.TourSun || require('./sun.js')).fill(best.a, iso) : best.a };
     return { found: false, text: NOT_FOUND };
   }
 
