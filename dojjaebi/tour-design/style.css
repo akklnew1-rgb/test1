@@ -2119,3 +2119,17 @@ html{ background:#e9f3f5; }
   .tab[aria-current="page"]{ color:var(--brand); }
   .tab[aria-current="page"]::before{ background:var(--c1); }
 }
+
+/* ===== 2026-11-16 다크모드 밝게(제미나이 안: 짙은 남색 → 채도 낮은 청회색 슬레이트, 바탕·카드 분리, 강조는 맑은 물빛) ===== */
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#161d22; --paper:#202a31; --soft:#263842; --line:#33444d; --ink:#eef4f6; --muted:#aebdc4;
+    --brand:#4cc3e0; --brand-dark:#a9e6f2; --brand-soft:#263842; --c1:#ffa04f;
+    --wz:#4cc3e0; --wz-soft:#263842; --wz-line:#35687a; --wz-ink:#eef4f6; }
+  html{ background:#0f1519; } body{ background:var(--bg); color:var(--ink); }
+  .top,.tabs{ background:#1c252b; box-shadow:0 1px 0 #2d3d46; } .tabs{ box-shadow:0 -1px 0 #2d3d46; }
+  .btn,.chip,.qs-card,.pc-row,.nx-row,.wx,.intro-card{ background:#202a31; box-shadow:inset 0 0 0 1px #33444d; }
+  .btn.primary{ background:linear-gradient(180deg,#3fb4d1,#2a95b1); color:#06222b; box-shadow:none; }
+  .chip[aria-pressed="true"],.chip[aria-checked="true"]{ background:#263842; color:#bff0fa; box-shadow:inset 0 0 0 1.5px #4cc3e0; }
+  .bub.me{ background:#263842; color:#e6f7fb; box-shadow:none; }
+  .bub.bot{ background:#202a31; }
+}
