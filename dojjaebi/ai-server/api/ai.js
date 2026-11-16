@@ -307,6 +307,15 @@ module.exports = async function handler(req, res) {
           if (hm2 != null) { if (isBack) { if (cp.r.train == null) cp.r.train = hm2; } else if (cp.r.arrive == null) cp.r.arrive = hm2; }
         }
       }
+      /* 동행·교통도 말에 있으면 코드가 채운다(모델이 가끔 비워 두거나 "차 몰고"를 못 읽음) */
+      if (cp && cp.r) {
+        var allU = umsgs.join(' ');
+        if (!(cp.r.companions || []).length) {
+          var cc = []; if (/혼자|나홀로/.test(allU)) cc.push('혼자'); if (/부모|엄마|아빠|어머니|아버지|어르신|할머니|할아버지/.test(allU)) cc.push('부모님'); if (/아이|애들|아들|딸|손주|손자|조카/.test(allU)) cc.push('아이'); if (/친구|동료|지인/.test(allU)) cc.push('친구'); if (/연인|여친|남친|애인|커플|신랑|신부|아내|남편|와이프/.test(allU)) cc.push('연인');
+          if (cc.length && cc.indexOf('혼자') < 0 || cc.length === 1) cp.r.companions = cc;
+        }
+        if (!cp.r.how) { if (/자차|자가용|차\s*(로|를)?\s*(몰|타|끌|가져|갖고)|운전|드라이브|내\s*차/.test(allU)) cp.r.how = 'car'; else if (/기차|ktx|KTX|열차|itx|ITX|무궁화|새마을/.test(allU)) cp.r.how = 'train'; else if (/버스/.test(allU)) cp.r.how = 'bus'; }
+      }
       /* 이미 아는 것을 다시 묻지 않는다(모델이 가끔 놓침 — 제미나이·지피티 의견: 다음 질문은 코드가 정한다).
          동행·날짜·도착 시각 중 이미 채워진 것을 묻는 문장은 빼고, 아직 빠진 첫 항목을 묻는다. */
       (function () {
