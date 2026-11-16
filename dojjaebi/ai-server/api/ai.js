@@ -319,7 +319,7 @@ module.exports = async function handler(req, res) {
         var keep = parts.filter(function (x) { if (!isQ(x) || KEEPQ.test(x)) return true; var bad = Object.keys(ASK).some(function (k) { return known[k] && ASK[k].test(x); }); if (bad) dropped = true; return !bad; });
         if (!dropped) return;
         var nq = !hasComp ? '누구와 함께 가세요?' : !hasDate ? '여행 날짜는 언제로 할까요?' : !hasArr ? '몇 시쯤 동해에 도착하시나요?' : '';
-        if (!nq) { var kj = keep.join(' ').trim(); reply = kj ? (keep.some(isQ) ? kj : kj + ' 돌아갈 때 몇 시쯤, 어떤 교통수단을 이용하시나요?') : reply; if (!keep.some(isQ)) { forceChoices = null; readyOk = false; } return; }
+        if (!nq) { var kj = keep.join(' ').trim(); reply = kj ? (keep.some(isQ) ? kj : kj + ' 돌아갈 때 몇 시쯤, 어떤 교통수단을 이용하시나요?') : '돌아갈 때 몇 시쯤, 어떤 교통수단을 이용하시나요?'; if (!keep.some(isQ)) { forceChoices = null; readyOk = false; } return; }
         reply = (keep.join(' ').trim() + ' ' + nq).trim(); forceChoices = null; readyOk = false;
       })();
       if (!pr.date && dh) { pr.date = dh; if (cp && cp.r) cp.r.date = dh; }
