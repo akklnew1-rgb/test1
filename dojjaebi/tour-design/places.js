@@ -108,6 +108,7 @@
    "lng": 129.1183390829,
    "visit": 30,
    "indoor": false,
+   "rainAvoid": true,
    "stairs": false,
    "slope": true,
    "open": [
@@ -174,6 +175,7 @@
    "lng": 129.1184741143,
    "visit": 35,
    "indoor": false,
+   "rainAvoid": true,
    "stairs": true,
    "slope": true,
    "open": [
@@ -233,6 +235,7 @@
    "lng": 129.1191200483,
    "visit": 50,
    "indoor": false,
+   "rainAvoid": true,
    "stairs": false,
    "slope": false,
    "open": [
@@ -304,6 +307,7 @@
    "lng": 129.1226,
    "visit": 45,
    "indoor": false,
+   "rainAvoid": true,
    "stairs": false,
    "slope": false,
    "open": [
@@ -409,6 +413,7 @@
    "lng": 129.1602292408,
    "visit": 40,
    "indoor": false,
+   "rainAvoid": true,
    "stairs": false,
    "slope": true,
    "far": true,
@@ -531,6 +536,7 @@
    "group": "harbor",
    "visit": 25,
    "indoor": false,
+   "rainAvoid": true,
    "stairs": false,
    "stairsKnown": false,
    "slope": false,
@@ -893,6 +899,7 @@
    "far": true,
    "visit": 25,
    "indoor": false,
+   "rainAvoid": true,
    "stairs": false,
    "stairsKnown": false,
    "slope": false,
@@ -957,6 +964,7 @@
    },
    "visit": 50,
    "indoor": false,
+   "rainAvoid": true,
    "stairs": false,
    "slope": false,
    "open": [
@@ -1074,6 +1082,7 @@
    "group": "cheongok",
    "visit": 30,
    "indoor": false,
+   "rainAvoid": true,
    "stairs": false,
    "stairsKnown": false,
    "slope": false,
@@ -1132,6 +1141,7 @@
    "region": "천곡",
    "visit": 30,
    "indoor": false,
+   "rainAvoid": true,
    "stairs": true,
    "slope": true,
    "open": [
@@ -1324,6 +1334,7 @@
    "far": true,
    "visit": 30,
    "indoor": false,
+   "rainAvoid": true,
    "stairs": false,
    "stairsKnown": false,
    "slope": false,
