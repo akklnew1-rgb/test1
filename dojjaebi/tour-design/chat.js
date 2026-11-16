@@ -131,8 +131,10 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     var d = new Date(), now = d.getHours() * 60 + d.getMinutes(), dow = d.getDay();
     return ((window.TOUR_DATA && window.TOUR_DATA.places) || []).map(function (p) {
       var o = p.open || [0, 1440], h = String(p.openText || '').replace(/\s*·\s*관광공사 자료/, ''), s;
-      if ((p.closedDow || []).indexOf(dow) >= 0) s = '오늘 쉬는 날';
-      else if (o[0] <= 0 && o[1] >= 1440) s = '지금 열림(늘 열려 있음)';
+      var always = o[0] <= 0 && o[1] >= 1440;
+      if (p['확인필요'] && !always) s = '운영일·시각이 불확실해서 추천하지 않음';
+      else if ((p.closedDow || []).indexOf(dow) >= 0) s = '오늘 쉬는 날';
+      else if (always) s = '지금 열림(늘 열려 있음)';
       else if (now < o[0]) s = '아직 안 열림(' + hhmm(o[0]) + '에 열어요)';
       else if (now >= o[1]) s = '오늘 영업 끝(' + hhmm(o[1]) + '에 닫았어요)';
       else s = '지금 열림(' + hhmm(o[1]) + '까지, ' + (o[1] - now) + '분 남음)';
