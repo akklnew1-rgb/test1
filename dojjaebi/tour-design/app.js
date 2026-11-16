@@ -992,7 +992,7 @@
     var typing = chatEl('bot typing', '도째비가 생각하고 있어요…'); CH.busy = true; $('askGo').disabled = true;
     var all = CH.msgs.filter(function (m) { return m.role === 'user'; }).map(function (m) { return m.text; }).join(' ');
     var cands = chatCands(all, text), byId = {}; cands.forEach(function (x) { byId[x.key] = x; });
-    aiCall({ task: 'chat', messages: CH.msgs.slice(-8), known: CH.cond || {}, today: todayIso(), now: (function (d) { return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); })(new Date()), places: D.places.map(function (p) { return { id: p.id, name: p.short || p.name }; }), cands: cands.map(function (x) { return { id: x.key, name: x.name, menu: x.kind === 'lodge' ? (x.type || '숙소') : (MENU_GROUPS.filter(function (g) { return g[0] === menuOf(x); })[0] || ['', '', ''])[1], area: x.dong }; }) }, 22000).then(function (j) {
+    aiCall({ task: 'chat', messages: CH.msgs.slice(-8), room: (window.TourChat && window.TourChat.recent) ? window.TourChat.recent(40) : [], known: CH.cond || {}, today: todayIso(), now: (function (d) { return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2); })(new Date()), places: D.places.map(function (p) { return { id: p.id, name: p.short || p.name }; }), cands: cands.map(function (x) { return { id: x.key, name: x.name, menu: x.kind === 'lodge' ? (x.type || '숙소') : (MENU_GROUPS.filter(function (g) { return g[0] === menuOf(x); })[0] || ['', '', ''])[1], area: x.dong }; }) }, 22000).then(function (j) {
       CH.busy = false; $('askGo').disabled = false; if (typing.parentNode) typing.parentNode.removeChild(typing);
       if (j && j.reply) {
         var b = chatEl('bot', esc(j.reply)); CH.msgs.push({ role: 'bot', text: j.reply });
@@ -4855,5 +4855,6 @@
   }
 
   // 시험용 접근(자동 점검에서만 쓴다)
+  try { if (window.TourChat && window.TourChat.setPlaces) window.TourChat.setPlaces(D.places); } catch (e) { /* 무시 */ }
   window.__tour = { sunWarn: sunWarn, makePlan: function () { S.plan = buildPlan(); return S.plan; }, map: function () { return mapApi; }, pois: function () { return buildPois().length; }, ov: function () { return { OVS: OVS, OA: OA, TN: TN }; }, ovPlay: ovPlay, townAdd: townAdd, state: S, replan: replan, ingest: ingest, ED: ED, edEnv: function () { return edEnv(); }, live: function () { return lv; }, liveStart: lvStart, liveAsk: lvOpenAsk };
 })();
