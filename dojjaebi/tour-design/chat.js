@@ -1,7 +1,7 @@
 /*
  * 동해 사랑방 (2026-11-09) — 로그인 없이 이름만 받아 동해 사람들과 한 줄씩 얘기하는 방.
  *  - 방은 하나. 장소 카드에서 들어오면 그 장소 이름이 붙은 채로 열리고 "이 장소 얘기만" 볼 수 있다.
- *  - 저장소: Firebase 실시간 데이터베이스(dojjaebi 프로젝트) 의 /msgs. 글은 24시간 뒤 목록에서 빠지고 접속할 때 지운다.
+ *  - 저장소: Firebase 실시간 데이터베이스(dojjaebi 프로젝트) 의 /msgs. 글은 30일 동안 남기고, 그 뒤 목록에서 빠지며 접속할 때 지운다.
  *  - 검사 규칙(링크·전화번호·욕설·도배)은 chatfilter.js. 신고 3번이면 모두에게 가려진다.
  *  - 시연용 예시 글: 주소 뒤에 ?seed=1 을 붙여 한 번 열면 '예시' 표시가 붙은 글이 들어간다(진짜 이용자 글과 구분).
  *  - 나라 밖 서비스(gstatic)에서 받아 오므로 인터넷이 막히면 "연결이 안 돼요"가 뜨고 나머지 화면은 그대로 쓴다.
@@ -19,7 +19,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     appId: '1:968561148026:web:80d087555b2726b11bbbc3'
   };
   var F = window.ChatFilter;
-  var DAY = 24 * 3600 * 1000, HIDE_AT = 3, GAP_MS = 5000, KEEP = 150;
+  var DAY = 30 * 24 * 3600 * 1000, HIDE_AT = 3, GAP_MS = 5000, KEEP = 150;
 
   function lsGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
   function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { /* 저장 못 해도 괜찮음 */ } }
@@ -49,7 +49,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     el.id = 'chatRoom'; el.className = 'cr'; el.hidden = true;
     el.setAttribute('role', 'dialog'); el.setAttribute('aria-modal', 'true'); el.setAttribute('aria-labelledby', 'crTitle'); el.tabIndex = -1;
     el.innerHTML =
-      '<header class="cr-head"><div class="cr-ht"><h2 id="crTitle">동해 사랑방</h2><p class="cr-sub">이름도 얼굴도 몰라도 괜찮아요. 글은 24시간 뒤에 사라져요.</p></div>' +
+      '<header class="cr-head"><div class="cr-ht"><h2 id="crTitle">동해 사랑방</h2><p class="cr-sub">이름도 얼굴도 몰라도 괜찮아요. 글은 30일 동안 남아 다른 여행자의 추천에 쓰여요.</p></div>' +
       '<button type="button" class="cr-x" data-cr="close" aria-label="사랑방 닫기"><span aria-hidden="true">✕</span> 닫기</button></header>' +
       '<p class="cr-note" id="crNote">이용자가 남긴 글이에요. 도째비의 추천이 아니에요. 가게·숙소 정보는 가시기 전에 꼭 확인하세요.</p>' +
       '<div class="cr-chips" id="crChips" role="group" aria-label="글 골라 보기"><button type="button" class="cr-chip" data-crf="all" aria-pressed="true">전체</button><button type="button" class="cr-chip" data-crf="place" aria-pressed="false" hidden></button></div>' +
