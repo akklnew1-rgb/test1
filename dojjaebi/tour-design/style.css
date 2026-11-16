@@ -2059,3 +2059,8 @@ h3{ letter-spacing:-.02em; }
 .st-foot{ background:linear-gradient(to top, var(--bg) 72%, rgba(237,243,244,0)); }
 #s-start .hero .hero-txt h1{ letter-spacing:-.035em; }
 @media (prefers-color-scheme: dark){ .st-foot{ background:linear-gradient(to top, var(--bg) 72%, rgba(12,22,28,0)); } .rain-cafe{ background:#143240; } }
+/* 다음에 또 올 때: 이름 칸은 남는 폭을 쓰고 단추는 제 크기로(위의 .btn 폭 규칙에 눌려 이름이 한 글자 폭이 되던 것) */
+#nextBox .nx-row{ display:flex; align-items:center; gap:10px; }
+#nextBox .nx-n{ flex:1 1 0; min-width:0; }
+#nextBox .nx-row .nx-b{ width:auto; flex:0 0 auto; min-width:116px; padding:8px 14px; }
+#nextBox .nx-n b{ word-break:keep-all; }
