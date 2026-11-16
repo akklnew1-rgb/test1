@@ -40,11 +40,14 @@ import { getDatabase, ref, push, query, limitToLast, get, set, serverTimestamp, 
   function showAns() {
     var a = R.answer(cur.text, posts.filter(function (p) { return p.k !== cur.key; }), names, 8);
     var kids = cur.key ? posts.filter(function (p) { return p.re === cur.key && !isQ(p); }) : [];
-    var list = kids.length ? kids : a.list, mode = kids.length ? 'match' : a.mode;
+    var list = kids.length ? kids : (a.mode === 'recent' ? a.list.slice(0, 3) : a.list), mode = kids.length ? 'match' : a.mode;
     $('qq').textContent = cur.text;
     var who = {}; list.forEach(function (p) { who[p.u] = 1; });
     var n = Object.keys(who).length;
-    $('sum').textContent = !loaded ? '불러오는 중이에요…' : mode === 'match' ? '이용자 ' + n + '명이 남긴 글이에요' : mode === 'recent' ? '딱 맞는 글은 아직 없어요. 최근 올라온 이야기를 보여드려요' : '아직 남겨진 글이 없어요. 첫 이야기를 남겨 주세요';
+    $('sum').textContent = !loaded ? '불러오는 중이에요…' : mode === 'match' ? '이용자 ' + n + '명이 남긴 글이에요' : mode === 'recent' ? '딱 맞는 글은 아직 없어요. 질문을 올리면 다녀간 분이 답해 줘요' : '아직 남겨진 글이 없어요. 첫 이야기를 남겨 주세요';
+    var ab = $('askBox'), al = $('aList');
+    if (mode === 'match') al.parentNode.insertBefore(al, ab); else al.parentNode.insertBefore(ab, $('aHead'));
+    $('aHead').hidden = mode !== 'recent' || !list.length;
     $('aList').innerHTML = list.map(function (p) {
       return '<li><time>' + hm(p.ts) + '</time>' + (p.pn ? ' <span class="tag">' + esc(p.pn) + '</span>' : '') + (p.u === uid ? '' : '<button type="button" class="rp" data-rp="' + esc(p.k) + '" aria-label="이 글 신고하기">신고</button>') + '<p class="t">' + esc(p.t) + '</p></li>';
     }).join('');
