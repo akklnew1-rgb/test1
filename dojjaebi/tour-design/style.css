@@ -2097,3 +2097,25 @@ html{ background:#e9f3f5; }
   .btn.primary,.chip[aria-pressed="true"],.chip[aria-checked="true"],.bub.me{ background:linear-gradient(180deg,#3aa6bf,#2788a0); color:#fff; box-shadow:none; }
   .bub.bot{ background:#1d3846; }
 }
+
+/* ===== 2026-11-16 시험안: 크림 바탕 + 테라코타 주황 + 명조 제목 (라이트 모드만. 되돌리려면 이 블록과 index.html 의 글꼴 링크를 지우면 됨) ===== */
+@media not (prefers-color-scheme: dark){
+  :root{
+    --bg:#f6f1e7; --soft:#efe8da; --line:#e3d9c6; --paper:#fffdf8; --ink:#2b211b; --muted:#6b5d52;
+    --brand:#b5472f; --brand-dark:#8f3623; --brand-soft:#f6e3da; --c1:#d9822b; --c2:#e9b36a;
+    --wz:#b5472f; --wz-soft:#f6e3da; --wz-line:#e6c4b6; --wz-ink:#8f3623;
+    --f-head:'Noto Serif KR','Nanum Myeongjo','Batang',serif;
+    --sh-1:0 1px 2px rgba(90,60,30,.08), 0 6px 16px rgba(90,60,30,.07);
+    --sh-2:0 12px 30px rgba(90,60,30,.16);
+  }
+  html{ background:#ece4d4; }
+  h1,h2,.hero-txt h1,#s-start .hero .hero-txt h1{ font-family:var(--f-head) !important; font-weight:700; }
+  .wordmark{ font-family:var(--f-head); background:linear-gradient(100deg,#b5472f,#d9822b); -webkit-background-clip:text; background-clip:text; }
+  .btn,.chip,.qs-card,.pc-row,.nx-row,.wx,.intro-card,.top,.tabs{ background:#fffdf8; }
+  .btn.primary,.chip[aria-pressed="true"],.chip[aria-checked="true"],.bub.me{ background:linear-gradient(180deg,#c4533a 0%,#a63f29 100%); box-shadow:0 8px 18px rgba(165,63,41,.26), inset 0 1px 0 rgba(255,255,255,.2); }
+  .bub.bot{ background:#f6e3da; }
+  .btn,.chip,.qs-card,.pc-row,.nx-row,.wx{ box-shadow:var(--sh-1); }
+  .intro-card{ box-shadow:0 12px 30px rgba(90,60,30,.15); }
+  .tab[aria-current="page"]{ color:var(--brand); }
+  .tab[aria-current="page"]::before{ background:var(--c1); }
+}
