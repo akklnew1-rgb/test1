@@ -52,7 +52,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
     el.innerHTML =
       '<header class="cr-head"><div class="cr-ht"><h2 id="crTitle">동해 사랑방</h2><p class="cr-sub">이름도 얼굴도 몰라도 괜찮아요. 방에는 최근 3일 글이 보이고, 글은 따로 남아 다른 여행자의 추천에 쓰여요.</p></div>' +
       '<button type="button" class="cr-x" data-cr="close" aria-label="사랑방 닫기"><span aria-hidden="true">✕</span> 닫기</button></header>' +
-      '<p class="cr-note" id="crNote">이용자가 남긴 글이에요. 도째비의 추천이 아니에요. 가게·숙소 정보는 가시기 전에 꼭 확인하세요.</p>' +
+      '<p class="cr-note" id="crNote">이용자가 남긴 글이에요. 도째비의 추천이 아니에요. 가게·숙소 정보는 가시기 전에 꼭 확인하세요.<br>물음표가 있는 글은 AI(구글 제미나이)에도 보내 답을 만들어요. 무료 서비스라 그 내용이 구글의 서비스 개선에 쓰일 수 있어요.</p>' +
       '<div class="cr-chips" id="crChips" role="group" aria-label="글 골라 보기"><button type="button" class="cr-chip" data-crf="all" aria-pressed="true">전체</button><button type="button" class="cr-chip" data-crf="place" aria-pressed="false" hidden></button></div>' +
       '<div class="cr-rule" id="crRule"><span>서로 존중해 주세요. 링크·전화번호·홍보 글은 올릴 수 없어요. 시연 서비스라 글이 지워질 수 있어요.</span><button type="button" class="cr-ok" data-cr="rule">알겠어요</button></div>' +
       '<p class="cr-state" id="crState" role="status"></p>' +
@@ -116,11 +116,11 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
         '<p class="cr-t">' + esc(m.t) + '</p>' +
         (mine || m.d ? '' : '<button type="button" class="cr-rp" data-rp="' + esc(m.k) + '" aria-label="이 글 신고하기">신고</button>') + '</li>';
     }).join('') : (loaded && !dbErr ? '<li class="cr-empty">' + (filter === 'place' && ctx ? '아직 ' + esc(ctx.name) + ' 얘기가 없어요.<br>첫 마디를 남겨 보세요.' : '아직 아무도 없어요.<br>첫 마디를 남겨 보세요.') + '</li>' : '');
-    if (aiNote && (aiNote.found.length || aiNote.t !== '')) {
+    if (aiNote && (aiNote.found.length || aiNote.t !== '' || aiNote.fail)) {
       var who = {}; aiNote.found.forEach(function (m) { who[m.u] = 1; });
       $('crList').insertAdjacentHTML('beforeend', '<li class="cr-ai">' +
         (aiNote.found.length ? '<span class="cr-aitag">사랑방에 이런 이야기가 있어요 · 이용자 ' + Object.keys(who).length + '명</span><ul class="cr-aif">' + aiNote.found.map(function (m) { return '<li><time>' + dt(m.ts) + '</time> ' + esc(m.t) + '</li>'; }).join('') + '</ul>' : '') +
-        (aiNote.t === null ? '<span class="cr-aitag">AI 안내</span><p class="cr-t">도째비가 살펴보는 중이에요…</p>' : aiNote.t ? '<span class="cr-aitag">AI 안내예요 · 이용자 글이 아니에요</span><p class="cr-t">' + esc(aiNote.t) + '</p>' : '') + '</li>');
+        (aiNote.t === null ? '<span class="cr-aitag">AI 안내</span><p class="cr-t">도째비가 살펴보는 중이에요…</p>' : aiNote.fail ? '<span class="cr-aitag">AI 안내</span><p class="cr-t">지금은 AI 안내가 바빠서 답을 만들지 못했어요.' + (aiNote.found.length ? ' 위에 이용자 글을 먼저 봐 주세요.' : '') + ' 잠시 뒤에 다시 물어봐 주세요.</p>' : aiNote.t ? '<span class="cr-aitag">AI 안내예요 · 이용자 글이 아니에요</span><p class="cr-t">' + esc(aiNote.t) + '</p>' : '') + '</li>');
     }
     if (stick || aiNote) scrollEnd(true);
   }
@@ -150,11 +150,11 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
       var cut = Date.now() - DATA_DAY;
       mine.found = R.relevant(q, pool().filter(function (m) { return m.t && !m.d && m.ts >= cut && (m.r || 0) < HIDE_AT && !reported[m.k]; }), names).slice(0, 4);
       if (aiNote === mine && el && !el.hidden) render(false);
-      if (!url || !window.fetch) { if (aiNote === mine) { mine.t = ''; if (el && !el.hidden) render(false); } return; }
+      if (!url || !window.fetch) { if (aiNote === mine) { mine.t = ''; mine.fail = true; if (el && !el.hidden) render(false); } return; }
       var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 9000);
       fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ task: 'qa', q: q, places: names, info: placeInfo(), now: nowText(), posts: (function () { var w = {}, k = 0; return mine.found.map(function (m) { if (w[m.u] === undefined) w[m.u] = k++; return { w: w[m.u], t: m.t }; }); })() }), signal: ctl ? ctl.signal : undefined })
-        .then(function (r) { return r.json(); }).then(function (j) { mine.t = j && j.ok ? j.reply : ''; })
-        .catch(function () { mine.t = ''; }).then(function () { clearTimeout(tm); if (aiNote === mine && el && !el.hidden) render(false); });
+        .then(function (r) { return r.json(); }).then(function (j) { mine.t = j && j.ok ? j.reply : ''; if (!(j && j.ok)) mine.fail = true; })
+        .catch(function () { mine.t = ''; mine.fail = true; }).then(function () { clearTimeout(tm); if (aiNote === mine && el && !el.hidden) render(false); });
     }
     loadArch(go);
   }
