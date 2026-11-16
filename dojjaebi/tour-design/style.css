@@ -2180,3 +2180,11 @@ html{ background:#e9f3f5; }
   .wordmark{ background:linear-gradient(100deg,#9ff1fa,#ffae5c); -webkit-background-clip:text; background-clip:text; }
   .lv-pill{ background:#17506a; border-color:#3d93b0; }
 }
+
+/* ===== 2026-11-16 단순화: 사랑방(사람들 이야기)을 중심에 두고 곁가지는 지우지 않고 숨김 =====
+   하단 탭은 코스·길안내·사랑방 3칸만. 미션·내 여행(엽서)·동네·다음에 또 올 때는 코드는 그대로 두고 화면에서만 뺀다.
+   되살리려면 이 블록만 지우면 된다. */
+#tabMission,#toCard,#toStay,#nextBox{ display:none !important; }
+.tabs .tab{ flex:1 1 0; }
+/* 마법사 진입은 AI 연결이 안 될 때를 위한 보조 길로만 남김: 큰 단추 대신 작은 글 단추 */
+#askSheet{ background:transparent !important; box-shadow:none !important; border:0 !important; min-height:48px; font-size:.95rem; font-weight:600; color:var(--muted) !important; text-decoration:underline; text-underline-offset:3px; }
