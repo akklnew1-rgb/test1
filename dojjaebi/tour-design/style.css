@@ -2213,3 +2213,6 @@ html{ background:#e9f3f5; }
 .st-mv{ margin:0 0 8px 52px; font-size:.9em; font-weight:700; color:var(--muted); }
 .st-stay{ margin:8px 0; padding:14px; border-radius:16px; background:var(--soft); display:grid; gap:4px; }
 @media (prefers-color-scheme:dark){ .st-b{ background:#17343c; } .st-b b,.st-hi{ color:#9fd3df; } .st-stay{ background:#1d2a30; } }
+
+/* 인증샷: 도깨비불 그림·크기 단추 숨김(2026-11-17) */
+#camChar, #camSmall, #camBig{ display:none !important; }

@@ -90,7 +90,7 @@
   }
   function drawChar(g, k, r, done) {
     var w = Math.max(60, st.w * r.width), cx = st.x * r.width, top = st.y * r.height - w * 1.2 / 2;
-    var im = new Image(); im.onload = function () { g.drawImage(im, (cx - w / 2) * k, top * k, w * k, w * 1.2 * k); done(); }; im.onerror = done; im.src = CHAR;
+    done(); // 2026-11-17: 도깨비불 그림은 사진에 넣지 않는다(형님 요청)
   }
   function finish(cv) {
     cv.toBlob(function (b) {
