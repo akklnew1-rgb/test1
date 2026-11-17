@@ -1584,7 +1584,7 @@
     replan({ noHighlight: true });
     edRestore(); // 같은 조건으로 전에 고쳐 둔 코스가 있으면 그대로 불러온다
     logEvent('plan', { mode: 'normal' });
-    show(toScreen || 's-course');
+    show(!toScreen || toScreen === 's-course' ? 's-story' : toScreen); // 2026-11-17: 코스가 만들어지면 세로로 쭉 읽는 화면이 먼저, 기존 코스 화면은 '자세히 보기'
     var pl = S.plan;
     if (!quiet && toScreen !== 's-prep' && placeStops(pl.stops).length) autoSay(pl.startStation.name + '에서 출발해서 ' + placeStops(pl.stops).length + '곳을 이야기와 함께 돌아요. 첫 번째 장은 ' + placeStops(pl.stops)[0].place.name + '이에요. ' + hhmm(pl.back.arrive) + '에 ' + pl.endStation.name + '에 도착해요.');
   }
@@ -1677,7 +1677,7 @@
     renderPrepCheck();
   }
   $('prepTodo').addEventListener('change', function (ev) { var t = ev.target.closest('[data-todo]'); if (!t) return; lsSet('tour.prep.' + t.getAttribute('data-todo'), t.checked ? '1' : '0'); });
-  $('prepGoCourse').addEventListener('click', function () { show('s-course'); });
+  $('prepGoCourse').addEventListener('click', function () { show('s-story'); });
 
   /* ---------- 코스 화면 ---------- */
   var ART = window.TourArt;
