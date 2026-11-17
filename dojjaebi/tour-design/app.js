@@ -139,8 +139,8 @@
   function autoSay(text) { if (!S.muteAuto) say(text, null); }
 
   /* ---------- 화면 전환 ---------- */
-  var SCREENS = ['s-start', 's-input', 's-prep', 's-course', 's-map', 's-report', 's-stay', 's-card', 's-watch'];
-  var TAB_SCREENS = ['s-course', 's-map', 's-report', 's-stay', 's-card'];
+  var SCREENS = ['s-start', 's-input', 's-prep', 's-course', 's-map', 's-report', 's-stay', 's-card', 's-watch', 's-story'];
+  var TAB_SCREENS = ['s-course', 's-map', 's-report', 's-stay', 's-card', 's-story'];
   function show(id) {
     closeStory(true); closeSheet(true); ttClose(true); closeImage(); hideSnack();
     SCREENS.forEach(function (s) { $(s).hidden = (s !== id); });
@@ -148,7 +148,7 @@
     S.screen = id;
     stopSpeak();
     if ($('backTown')) $('backTown').hidden = !(id === 's-map' && S.fromTown);
-    var ttl = { 's-start': '여행 준비', 's-input': '여행 준비', 's-prep': '여행 준비', 's-course': '오늘 코스', 's-map': '코스 지도', 's-report': '동해 추천', 's-stay': '동네', 's-card': '내 여행', 's-watch': '시청 화면' }[id] || '';
+    var ttl = { 's-start': '여행 준비', 's-input': '여행 준비', 's-prep': '여행 준비', 's-course': '오늘 코스', 's-map': '코스 지도', 's-report': '동해 추천', 's-stay': '동네', 's-card': '내 여행', 's-watch': '시청 화면', 's-story': '여행 이야기' }[id] || '';
     if ($('scrTitle')) $('scrTitle').textContent = ttl;
     if ($('toMapTop')) $('toMapTop').hidden = !(id === 's-course' && S.plan);
     document.body.classList.toggle('no-top', id === 's-start' || TAB_SCREENS.indexOf(id) >= 0);
@@ -165,6 +165,7 @@
     if (id === 's-stay') renderTownTab();
     if (id === 's-course') { ovKakaoEnsure(); renderRainCafe(); renderPicks(); }
     if (id === 's-watch') renderWatch();
+    if (id === 's-story') renderStory();
     if (id === 's-prep') renderPrep();
     if (window.TourNav) { if (navBack) window.TourNav.quiet(id); else window.TourNav.screen(id); }
   }
@@ -4854,6 +4855,41 @@
     });
   }
 
+
+  /* ===== 여행 이야기(2026-11-17) — 코스·동네·사랑방을 아래로 쭉 읽는 한 화면. 새 자료 없이 이미 있는 코스(S.plan)를 다시 보여 줄 뿐 · 가게는 고르지 않고 식당가 화면으로 보냄 ===== */
+  function storyStop(s, n) {
+    var p = s.place, st = AI.aiStory(p, S.cond), when = hhmm(s.arrive) + ' 도착 · 약 ' + p.visit + '분';
+    var mv = (s.mode && s.legMin) ? '<div class="st-mv" aria-hidden="true">' + esc(mvShort(s)) + '</div>' : '';
+    return mv + '<article class="st-stop"><div class="st-n" aria-hidden="true">' + n + '</div><div class="st-c"><h3>' + esc(p.short || p.name) + '</h3><p class="st-t">' + esc(when) + '</p>' +
+      '<p class="st-b"><b>도째비</b>' + esc(st.text) + '</p><p class="st-s">출처: ' + esc(st.source) + ' · 영업 여부는 방문 전 확인</p>' +
+      '<div class="st-a"><button type="button" class="btn" data-st="map" data-id="' + p.id + '">지도에서 보기</button><button type="button" class="btn" data-st="room" data-id="' + p.id + '">사랑방 이야기</button></div></div></article>';
+  }
+  function renderStory() {
+    var pl = S.plan, b = $('storyBody'); if (!b) return;
+    if (!pl) { b.innerHTML = '<p class="note pad-in">먼저 코스를 만들어 주세요.</p>'; return; }
+    var days = pl.multi ? pl.days : [{ n: 1, label: '오늘', plan: pl, stay: null }], h = '', n = 0;
+    h += '<header class="st-hd"><p class="st-hi">도째비와 함께 걸어요</p><p class="st-lead">' + esc($('courseLead') ? $('courseLead').textContent : '') + '</p></header>';
+    days.forEach(function (d) {
+      h += '<section class="st-day"><h2>' + esc(d.label || (d.n + '일째')) + '</h2>';
+      placeStops(d.plan.stops).forEach(function (s) { h += storyStop(s, ++n); });
+      if (d.stay) h += '<div class="st-stay"><b>밤에는 ' + esc(d.stay.name || '묵호역') + ' 쪽에서 쉬어요</b><span>숙소는 권역으로만 안내해요. 예약·요금은 직접 확인하세요.</span></div>';
+      h += '</section>';
+    });
+    h += '<section class="st-day st-end"><h2>이어서 볼 것</h2><p class="st-s">식당은 가게를 고르지 않고, 코스 가까운 식당가를 거리순으로 보여 드려요. 광고·유료 노출은 없어요.</p>' +
+      '<div class="st-a"><button type="button" class="btn" data-st="eat">식당가 보기</button><button type="button" class="btn" data-st="lodge">숙소 권역 보기</button><button type="button" class="btn" data-st="top">맨 위로</button></div></section>';
+    b.innerHTML = h;
+  }
+  $('storyOpen').addEventListener('click', function () { show('s-story'); });
+  $('storyBack').addEventListener('click', function () { show('s-course'); });
+  $('storyBody').addEventListener('click', function (ev) {
+    var t = ev.target.closest('[data-st]'); if (!t) return;
+    var k = t.getAttribute('data-st'), id = t.getAttribute('data-id'), p = PLACE[id];
+    if (k === 'top') window.scrollTo(0, 0);
+    else if (k === 'eat') goTown('block');
+    else if (k === 'lodge') goTown('lodge');
+    else if (k === 'room' && p && window.TourChat) window.TourChat.open({ id: p.id, name: p.short || p.name });
+    else if (k === 'map' && p) openMapAt({ lat: p.lat, lng: p.lng }, { spot: true, focusName: (p.short || p.name), di: dayOfPlace(id) });
+  });
   // 시험용 접근(자동 점검에서만 쓴다)
   try { if (window.TourChat && window.TourChat.setPlaces) window.TourChat.setPlaces(D.places); } catch (e) { /* 무시 */ }
   window.__tour = { sunWarn: sunWarn, makePlan: function () { S.plan = buildPlan(); return S.plan; }, map: function () { return mapApi; }, pois: function () { return buildPois().length; }, ov: function () { return { OVS: OVS, OA: OA, TN: TN }; }, ovPlay: ovPlay, townAdd: townAdd, state: S, replan: replan, ingest: ingest, ED: ED, edEnv: function () { return edEnv(); }, live: function () { return lv; }, liveStart: lvStart, liveAsk: lvOpenAsk };

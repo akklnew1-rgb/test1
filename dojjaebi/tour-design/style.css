@@ -2196,3 +2196,20 @@ html{ background:#e9f3f5; }
 .rs-raw li{ padding:8px 0; border-top:1px solid var(--line); font-size:.95rem; line-height:1.45; overflow-wrap:anywhere; }
 .rs-raw time{ display:inline-block; margin-right:6px; color:var(--muted); font-size:.82rem; font-variant-numeric:tabular-nums; }
 .rs-raw em{ color:var(--muted); font-style:normal; font-size:.82rem; }
+
+/* 여행 이야기(2026-11-17): 세로 타임라인 */
+.story-open{ background:var(--brand); border-color:var(--brand); color:#fff; font-size:1.05em; }
+.stbody{ padding:0 16px 32px; }
+.st-hd{ padding:8px 0 16px; } .st-hi{ margin:0; font-size:1.5em; font-weight:800; color:var(--brand-dark); } .st-lead{ margin:6px 0 0; color:var(--muted); }
+.st-day{ position:relative; margin-top:20px; } .st-day>h2{ margin:0 0 12px; font-size:1.25em; }
+.st-stop{ position:relative; display:flex; gap:12px; padding-bottom:6px; }
+.st-stop::before{ content:""; position:absolute; left:19px; top:40px; bottom:-14px; width:3px; background:var(--wz-line); }
+.st-n{ flex:none; width:40px; height:40px; border-radius:50%; background:var(--brand); color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; z-index:1; }
+.st-c{ flex:1; min-width:0; padding:0 0 18px; } .st-c h3{ margin:0; font-size:1.2em; }
+.st-t{ margin:2px 0 8px; color:var(--muted); font-weight:700; }
+.st-b{ margin:0 0 6px; padding:12px 14px; border-radius:4px 16px 16px 16px; background:var(--brand-soft); line-height:1.6; } .st-b b{ display:block; color:var(--brand-dark); margin-bottom:2px; }
+.st-s{ margin:4px 0 8px; font-size:.85em; color:var(--muted); }
+.st-a{ display:grid; gap:8px; } .st-stop .st-a{ grid-template-columns:1fr 1fr; }
+.st-mv{ margin:0 0 8px 52px; font-size:.9em; font-weight:700; color:var(--muted); }
+.st-stay{ margin:8px 0; padding:14px; border-radius:16px; background:var(--soft); display:grid; gap:4px; }
+@media (prefers-color-scheme:dark){ .st-b{ background:#17343c; } .st-b b,.st-hi{ color:#9fd3df; } .st-stay{ background:#1d2a30; } }

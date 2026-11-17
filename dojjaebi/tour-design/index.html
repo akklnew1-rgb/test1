@@ -12,7 +12,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 40 48%27%3E%3Cpath d=%27M20 3c2 9 14 14 14 27a14 14 0 0 1-28 0C6 22 12 19 14 12c2 3 3 4 4 4 1-4 1-8 2-13z%27 fill=%27%2317a398%27/%3E%3C/svg%3E">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@700&display=swap">
-  <link rel="stylesheet" href="style.css?v=76">
+  <link rel="stylesheet" href="style.css?v=77">
 <link rel="stylesheet" href="ds.css?v=3">
 <link rel="stylesheet" href="chat.css?v=5">
 <link rel="stylesheet" href="mission.css?v=2">
@@ -399,6 +399,7 @@
   <div class="repal pad-in" id="repAlerts" aria-live="polite" hidden></div>
 
   <div class="qlinks pad-in" aria-label="바로가기"><button type="button" class="btn" data-ql="block">식당</button><button type="button" class="btn" data-ql="park">주차장</button><button type="button" class="btn" data-ql="stamp">스탬프</button></div>
+  <div class="pad-in"><button type="button" class="btn story-open" id="storyOpen">이야기로 쭉 읽기</button></div>
 
   <!-- 여러 날 여행: 날짜 고르기는 지도 위에(지도와 아래 일정이 모두 고른 날을 따른다) -->
   <div class="daytabs" id="dayTabs" role="group" aria-label="날짜별 일정" hidden></div>
@@ -664,6 +665,11 @@
 </section>
 
 <!-- 6. 시청 화면 -->
+<section id="s-story" class="screen" hidden aria-labelledby="h-story">
+  <h2 id="h-story" class="visually-hidden">여행 이야기</h2>
+  <div class="pad-in"><button type="button" class="btn" id="storyBack">코스 화면으로</button></div>
+  <div id="storyBody" class="stbody"></div>
+</section>
 <section id="s-watch" class="screen" hidden aria-labelledby="h-watch">
   <h2 id="h-watch">시청 화면 · 오늘의 현장 기록</h2>
   <p class="note">이 시연 기기에 쌓인 기록이에요. 본선에서는 모든 이용자의 기록이 모여요. 위치 정보(좌표)는 어디에도 남기지 않아요.</p>
@@ -871,7 +877,7 @@
 <script src="ai.js?v=6"></script>
 <script src="art.js"></script>
 <script src="tourapi.js?v=5"></script>
-<script src="app.js?v=81"></script>
+<script src="app.js?v=82"></script>
 <script src="cam.js?v=3"></script>
 <script src="chatfilter.js?v=2"></script>
 <script src="v2/rank.js?v=2"></script>
