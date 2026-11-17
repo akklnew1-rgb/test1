@@ -4861,7 +4861,7 @@
     var p = s.place, st = AI.aiStory(p, S.cond), when = hhmm(s.arrive) + ' 도착 · 약 ' + p.visit + '분';
     var mv = (s.mode && s.legMin) ? '<div class="st-mv" aria-hidden="true">' + esc(mvShort(s)) + '</div>' : '';
     return mv + '<article class="st-stop"><div class="st-n" aria-hidden="true">' + n + '</div><div class="st-c"><h3>' + esc(p.short || p.name) + '</h3><p class="st-t">' + esc(when) + '</p>' +
-      '<p class="st-b"><b>도째비</b>' + esc(st.text) + '</p><p class="st-s">출처: ' + esc(st.source) + ' · 영업 여부는 방문 전 확인</p>' +
+      artFig(p) + '<details class="st-more"><summary>이야기 읽기</summary><p class="st-b"><b>도째비</b>' + esc(st.text) + '</p></details><p class="st-s">출처: ' + esc(st.source) + ' · 영업 여부는 방문 전 확인</p>' +
       '<div class="st-a"><button type="button" class="btn" data-st="map" data-id="' + p.id + '">지도에서 보기</button><button type="button" class="btn" data-st="room" data-id="' + p.id + '">사랑방 이야기</button></div></div></article>';
   }
   function renderStory() {

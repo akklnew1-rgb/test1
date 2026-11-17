@@ -2216,3 +2216,10 @@ html{ background:#e9f3f5; }
 
 /* 인증샷: 도깨비불 그림·크기 단추 숨김(2026-11-17) */
 #camChar, #camSmall, #camBig{ display:none !important; }
+
+/* 여행 이야기: 글 대신 사진(2026-11-17) */
+.st-stop .p-art{ border-radius:16px; overflow:hidden; margin:0 0 8px; }
+.st-stop .p-box{ height:auto; aspect-ratio:4/3; }
+.st-stop .p-credit{ border-bottom:0; }
+.st-more summary{ min-height:48px; display:flex; align-items:center; font-weight:700; color:var(--brand-dark); cursor:pointer; }
+@media (prefers-color-scheme:dark){ .st-more summary{ color:#9fd3df; } }
