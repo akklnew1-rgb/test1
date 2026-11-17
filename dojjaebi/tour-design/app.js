@@ -4880,6 +4880,7 @@
     b.innerHTML = h;
   }
   $('storyOpen').addEventListener('click', function () { show('s-story'); });
+  $('myStory').addEventListener('click', function () { if (S.plan) show('s-story'); else flash('먼저 코스를 만들어 주세요.'); });
   $('storyBack').addEventListener('click', function () { show('s-course'); });
   $('storyBody').addEventListener('click', function (ev) {
     var t = ev.target.closest('[data-st]'); if (!t) return;
