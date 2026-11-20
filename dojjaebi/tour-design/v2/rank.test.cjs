@@ -17,4 +17,5 @@ ok(R.isQuestion('혼자 힐링하고 싶다')&&R.isQuestion('오늘 당일치기
 ok(!R.isQuestion('곰치국 해장에 좋아요 호불호는 좀 갈려요')&&!R.isQuestion('대우칼국수 줄이 길어요')&&!R.isQuestion('묵호에 비와요'),'경험글은 질문 아님');
 ok(R.isQuestion('오늘 날씨어때')&&R.isQuestion('오늘 날씨 어때')&&R.isQuestion('근처 칼국수집 추천해줘')&&R.isQuestion('주차장 어디야')&&R.isQuestion('막차 몇시에 끊겨요'),'물음표 없는 질문도 질문');
 ok(!R.isQuestion('오늘 추워요')&&!R.isQuestion('바람이 세요'),'추워요·바람은 질문 아님');
+ok(R.isQuestion('오늘 날씨 어떤데')&&R.isQuestion('거기 어떤지 궁금'),'어떤데도 질문');
 console.log('fail='+f);process.exit(f?1:0);

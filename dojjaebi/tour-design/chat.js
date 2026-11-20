@@ -120,7 +120,7 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
       var who = {}; aiNote.found.forEach(function (m) { who[m.u] = 1; });
       $('crList').insertAdjacentHTML('beforeend', '<li class="cr-ai">' +
         (aiNote.found.length ? '<span class="cr-aitag">사랑방에 이런 이야기가 있어요 · 이용자 ' + Object.keys(who).length + '명</span><ul class="cr-aif">' + aiNote.found.map(function (m) { return '<li><time>' + dt(m.ts) + '</time> ' + esc(m.t) + '</li>'; }).join('') + '</ul>' : '') +
-        (aiNote.t === null ? '<span class="cr-aitag">AI 안내</span><p class="cr-t">도째비가 살펴보는 중이에요…</p>' : aiNote.fail ? '<span class="cr-aitag">AI 안내</span><p class="cr-t">지금은 AI 안내가 바빠서 답을 만들지 못했어요.' + (aiNote.found.length ? ' 위에 이용자 글을 먼저 봐 주세요.' : '') + ' 잠시 뒤에 다시 물어봐 주세요.</p>' : aiNote.t ? '<span class="cr-aitag">AI 안내예요 · 이용자 글이 아니에요</span><p class="cr-t">' + esc(aiNote.t) + '</p>' : '') + '</li>');
+        (aiNote.t === null ? '<span class="cr-aitag">AI 안내</span><p class="cr-t">도째비가 살펴보는 중이에요…</p>' : aiNote.fail ? '<span class="cr-aitag">AI 안내</span><p class="cr-t">지금은 AI 안내가 바빠서 답을 만들지 못했어요.' + (aiNote.found.length ? ' 위에 이용자 글을 먼저 봐 주세요.' : '') + ' 잠시 뒤에 다시 물어봐 주세요.</p>' : aiNote.t ? '<span class="cr-aitag">' + (aiNote.tag || 'AI 안내예요 · 이용자 글이 아니에요') + '</span><p class="cr-t">' + esc(aiNote.t) + '</p>' : '') + '</li>');
     }
     if (stick || aiNote) scrollEnd(true);
   }
@@ -141,17 +141,34 @@ import { getDatabase, ref, push, query, limitToLast, onValue, serverTimestamp, r
       return { n: p.name, h: h + (p.closedText ? ' · 쉬는 날 ' + String(p.closedText).replace(/\(.*\)/, '') : ''), s: s };
     });
   }
+  var WX_Q = /날씨|기온|온도|몇\s*도|춥|추워|더워|덥|비\s*(와|오|올)|바람/;
+  function wxText(w) {
+    var t = '지금 동해는 ' + Math.round(w.temp) + '℃' + (w.text ? ', ' + w.text : '') + ' 상태예요.';
+    if (w.pty > 0) t += ' 비가 오니 우산을 챙기세요.'; else if (w.wind >= 8) t += ' 바람이 세요(' + w.wind + 'm/s).';
+    return t + ' (기상청 지금 날씨' + (w.baseTime ? ' · ' + parseInt(w.baseTime, 10) + '시 기준' : '') + ')';
+  }
   function askAI(q) {
     var R = window.V2Rank, url = window.DOJJAEBI_AI_URL;
     if (!R || !R.isQuestion(q)) { aiNote = null; return; }
     var mine = aiNote = { q: q, t: null, found: [] };
+    if (WX_Q.test(q) && window.fetch) { // 날씨 질문은 AI 없이 기상청 실황 값으로 바로 답한다 (못 받으면 아래 AI 경로로)
+      var wxUrl = url ? String(url).replace(/\/api\/ai\/?$/, '/api/weather') : '/api/weather';
+      fetch(wxUrl, { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (w) {
+        if (w && !w.error && w.temp != null) {
+          if (aiNote !== mine) return;
+          mine.t = wxText(w); mine.tag = '기상청 지금 날씨 · 이용자 글이 아니에요'; mine.found = [];
+          if (el && !el.hidden) render(false);
+        } else { loadArch(go); }
+      }).catch(function () { loadArch(go); });
+      return;
+    }
     var names = ((window.TOUR_DATA && window.TOUR_DATA.places) || []).map(function (p) { return p.name; });
     function go() {
       var cut = Date.now() - DATA_DAY;
       mine.found = R.relevant(q, pool().filter(function (m) { return m.t && !m.d && m.ts >= cut && (m.r || 0) < HIDE_AT && !reported[m.k]; }), names).slice(0, 4);
       if (aiNote === mine && el && !el.hidden) render(false);
       if (!url || !window.fetch) { if (aiNote === mine) { mine.t = ''; mine.fail = true; if (el && !el.hidden) render(false); } return; }
-      var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 9000);
+      var ctl = window.AbortController ? new AbortController() : null, tm = setTimeout(function () { if (ctl) ctl.abort(); }, 12000);
       fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ task: 'qa', q: q, places: names, info: placeInfo(), now: nowText(), posts: (function () { var w = {}, k = 0; return mine.found.map(function (m) { if (w[m.u] === undefined) w[m.u] = k++; return { w: w[m.u], t: m.t }; }); })() }), signal: ctl ? ctl.signal : undefined })
         .then(function (r) { return r.json(); }).then(function (j) { mine.t = j && j.ok ? j.reply : ''; if (!(j && j.ok)) mine.fail = true; })
         .catch(function () { mine.t = ''; mine.fail = true; }).then(function () { clearTimeout(tm); if (aiNote === mine && el && !el.hidden) render(false); });

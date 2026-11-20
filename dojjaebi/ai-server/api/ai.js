@@ -411,7 +411,7 @@ module.exports = async function handler(req, res) {
       var qinfo = (Array.isArray(b.info) ? b.info : []).slice(0, 40).map(function (x) { return { n: cleanLine(x && x.n, 24), h: cleanLine(x && x.h, 70), s: cleanLine(x && x.s, 40) }; }).filter(function (x) { return x.n && x.h; });
       var qnow = cleanLine(b.now, 20);
       var qposts = (Array.isArray(b.posts) ? b.posts : []).slice(0, 8).map(function (m) { return { w: parseInt(m && m.w, 10), t: cleanLine(m && m.t, 80) }; }).filter(function (m) { return m.t && !isNaN(m.w) && m.w >= 0 && m.w < 100; });
-      var qraw = await gemini(QA_SYS, 'q: ' + qq + '\nplaces: ' + JSON.stringify(qpl) + '\nnow: ' + qnow + '\ninfo: ' + JSON.stringify(qinfo) + '\nposts: ' + JSON.stringify(qposts), QA_SCHEMA, 500);
+      var qraw = await gemini(QA_SYS, 'q: ' + qq + '\nplaces: ' + JSON.stringify(qpl) + '\nnow: ' + qnow + '\ninfo: ' + JSON.stringify(qinfo) + '\nposts: ' + JSON.stringify(qposts), QA_SCHEMA, 500, 7500);
       var qj; try { qj = JSON.parse(qraw); } catch (e) { res.status(200).json({ ok: false, why: 'parse' }); return; }
       var QBAN = /1위|엄선|보증|실패\s*없|할인|예약|무료|광고/;
       var qr = cleanLine(qj.reply, 320).split(/(?<=[.!?요])\s+/).filter(function (x) { return !QBAN.test(x); }).join(' ').trim();
